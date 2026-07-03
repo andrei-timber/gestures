@@ -1,7 +1,7 @@
 /**
  * Reactive settings store (`gestures-spec.md` §5). Wraps the framework-free
  * settings core (`@/lib/session/settings`) in a `$state` rune and mirrors it to
- * localStorage for remember-last. Consumers mutate fields directly
+ * localStorage (settings are always remembered). Consumers mutate fields directly
  * (`settings.mode = 'quick'`) and persistence follows automatically.
  *
  * localStorage is guarded so this module is import-safe in non-browser contexts
@@ -24,9 +24,7 @@ export const settings = $state<Settings>(load())
 
 function persist(): void {
   if (!hasStorage) return
-  // Remember-last off means leave no trace between visits.
-  if (settings.rememberLast) localStorage.setItem(STORAGE_KEY, serialize(settings))
-  else localStorage.removeItem(STORAGE_KEY)
+  localStorage.setItem(STORAGE_KEY, serialize(settings))
 }
 
 // Mirror every field change to storage. A root effect scope (no owning

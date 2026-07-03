@@ -151,7 +151,7 @@ Enter **number of poses N** + a **uniform interval**: `30s / 60s / 2min / 5min /
 | Interval (Quick only) | 30s / 60s / 2m / 5m / custom-min | ✅ 60s |
 | **Rest between poses** | Optional dim/blank pause slide | **10s** ✅ |
 | Randomization | Shuffle, no within-session repeats | ✅ on |
-| Remember last settings | Restore prior config on return | ⭐ on |
+| Remember last settings | Restore prior config on return — always on, no toggle (kept the setup lean) | ✅ implicit |
 | Auto total-time FYI | Live-computed, shown during setup | ✅ on |
 
 ### Pose picking — spacing & no-repeats ✅

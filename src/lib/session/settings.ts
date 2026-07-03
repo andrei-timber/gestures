@@ -1,8 +1,9 @@
 /**
  * Session settings (`gestures-spec.md` §5 shared params) — the framework-free
  * core: the {@link Settings} shape, its defaults, and JSON (de)serialization for
- * remember-last persistence. The reactive store (`src/state/settings.svelte.ts`)
- * wraps this; keeping the logic pure keeps it node-testable and storage-agnostic.
+ * persistence (settings are always remembered). The reactive store
+ * (`src/state/settings.svelte.ts`) wraps this; keeping the logic pure keeps it
+ * node-testable and storage-agnostic.
  *
  * `parse` is defensive: persisted JSON is untrusted (older app versions, hand
  * edits, corruption), so every field falls back to its default independently
@@ -28,18 +29,15 @@ export interface Settings {
   restSeconds: number
   /** Shuffle poses, no within-session repeats. */
   randomize: boolean
-  /** Restore this config on return (persist to localStorage). */
-  rememberLast: boolean
 }
 
-/** Spec §5 defaults: Class mode, 10 poses, 60s interval, 10s rest, shuffle + remember on. */
+/** Spec §5 defaults: Class mode, 10 poses, 60s interval, 10s rest, shuffle on. */
 export const DEFAULT_SETTINGS: Settings = {
   mode: 'class',
   poseCount: MIN_POSES,
   intervalSeconds: DEFAULT_INTERVAL_SECONDS,
   restSeconds: DEFAULT_REST_SECONDS,
   randomize: true,
-  rememberLast: true,
 }
 
 /** Serialize settings for persistence. */
@@ -59,8 +57,6 @@ export function parse(raw: string | null): Settings {
     intervalSeconds: positiveInt(rec.intervalSeconds) ?? DEFAULT_SETTINGS.intervalSeconds,
     restSeconds: nonNegativeInt(rec.restSeconds) ?? DEFAULT_SETTINGS.restSeconds,
     randomize: typeof rec.randomize === 'boolean' ? rec.randomize : DEFAULT_SETTINGS.randomize,
-    rememberLast:
-      typeof rec.rememberLast === 'boolean' ? rec.rememberLast : DEFAULT_SETTINGS.rememberLast,
   }
 }
 

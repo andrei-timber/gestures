@@ -12,7 +12,6 @@ describe('DEFAULT_SETTINGS', () => {
       intervalSeconds: DEFAULT_INTERVAL_SECONDS,
       restSeconds: DEFAULT_REST_SECONDS,
       randomize: true,
-      rememberLast: true,
     })
   })
 })
@@ -29,7 +28,6 @@ describe('serialize / parse round-trip', () => {
       intervalSeconds: 120,
       restSeconds: 0,
       randomize: false,
-      rememberLast: false,
     }
     expect(parse(serialize(custom))).toEqual(custom)
   })

@@ -121,10 +121,6 @@
       <input type="checkbox" bind:checked={settings.randomize} />
       <span>Shuffle poses</span>
     </label>
-    <label class="check">
-      <input type="checkbox" bind:checked={settings.rememberLast} />
-      <span>Remember these settings</span>
-    </label>
   </div>
 
   <p class="fyi">
