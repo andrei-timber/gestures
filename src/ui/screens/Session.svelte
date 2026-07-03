@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatClock } from '@/lib/format'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
 
@@ -30,6 +31,7 @@
 
   <div class="hud">
     <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
+    <span class="clock" class:resting={session.resting}>{formatClock(session.remaining)}</span>
     <button class="end" onclick={() => screen.show('summary')}>End</button>
   </div>
 </section>
@@ -118,6 +120,16 @@
 
   .count {
     letter-spacing: 0.03em;
+  }
+
+  .clock {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+  }
+
+  .clock.resting {
+    opacity: 0.5;
   }
 
   .end {

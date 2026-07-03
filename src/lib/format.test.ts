@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDuration } from './format'
+import { formatClock, formatDuration } from './format'
 
 describe('formatDuration', () => {
   it('rounds to whole minutes under an hour', () => {
@@ -15,5 +15,20 @@ describe('formatDuration', () => {
 
   it('handles zero', () => {
     expect(formatDuration(0)).toBe('0 min')
+  })
+})
+
+describe('formatClock', () => {
+  it('renders m:ss with a zero-padded seconds field', () => {
+    expect(formatClock(0)).toBe('0:00')
+    expect(formatClock(5)).toBe('0:05')
+    expect(formatClock(60)).toBe('1:00')
+    expect(formatClock(90)).toBe('1:30')
+    expect(formatClock(600)).toBe('10:00')
+  })
+
+  it('floors fractional seconds and clamps negatives to 0:00', () => {
+    expect(formatClock(59.9)).toBe('0:59')
+    expect(formatClock(-3)).toBe('0:00')
   })
 })
