@@ -3,6 +3,17 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-03 — **Cloudflare setup + deploy moves from before-M0 to after the creative-direction pass.**
+Context: spec §13's original sequencing put the Cloudflare setup guide between dev setup and M0 to "deploy
+the skeleton early." Concern: that step was skipped — M0 is being built and browser-verified locally with
+no hosting stood up, so the "deployable skeleton live early" rationale no longer holds, and the companion
+tracks (🎨 creative direction, ☁️ Cloudflare) were invisible in STATUS. Decision: reorder to dev setup ✓ →
+M0 → creative direction → Cloudflare guide + first deploy → M1+, and surface the two companion tracks as
+sequenced rows in the STATUS Milestones table (pointing to spec §14, not restating). Tradeoff: nothing is
+deployed until after M0 + the restyle, so the first public URL comes later; accepted because there's no
+value in hosting an unstyled core, and building/styling locally first is friction-free. Canonical
+sequencing lives in spec §13; STATUS reflects it.
+
 2026-07-03 — **Deploy target is Cloudflare Workers Static Assets, not Pages.** Context: the app is a
 static SPA served under `andreitim.com/apps/gestures`. Concern: Pages custom domains bind a whole
 domain/subdomain, so subpath routing is awkward, and Pages is in migrate-to-Workers mode for new

@@ -56,15 +56,21 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 Finished milestones' ledgers live in `docs/history.md` (Dev setup pass ✓).
 
 ## Milestones
-| | Milestone | State |
+Sequenced order (spec §13). Companion tracks 🎨/☁️ are interleaved deliverables, not milestones — content
+in `gestures-spec.md` §14.
+
+| | Deliverable | State |
 |---|---|---|
 | — | Dev setup pass (skeleton, repo, rituals) | ✓ |
-| M0 | Delightful core — local-folder source, session engine, in-session helpers | ☐ |
+| M0 | Delightful core — local-folder source, session engine, in-session helpers | ☐ in progress |
+| 🎨 | Creative-direction session — originate design system, then restyle M0 (§14) | ☐ |
+| ☁️ | Cloudflare setup guide + first deploy (§14; Workers Static Assets — `docs/deploy-notes.md`) | ☐ |
 | M1 | Drive read (Tier 1, public folder link) | ☐ |
 | M2 | Drive write / capture (Tier 2, `drive.file`) | ☐ |
 | M3 | Review composites + dated timeline | ☐ |
 
-Full roadmap and each milestone's contents: `gestures-spec.md` §13.
+Full roadmap, sequencing rationale, and each item's contents: `gestures-spec.md` §13 (roadmap) · §14
+(companion tracks).
 
 ## Follow-ups
 Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in <step> (yyyy-mm-dd)`.

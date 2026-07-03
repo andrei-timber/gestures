@@ -34,7 +34,8 @@ empty corner. Three stacked whitespace gaps we own:
 
 ## 2. Publishing & context
 
-- **Host:** Cloudflare Pages (static/JAMstack). Path: **`andreitim.com/apps/gestures`** ✅.
+- **Host:** Cloudflare Workers Static Assets (static SPA; supersedes the earlier "Pages" plan — see
+  `docs/decisions.md` 2026-07-03 · `docs/deploy-notes.md`). Path: **`andreitim.com/apps/gestures`** ✅.
 - **Cloudflare status:** only the domain is purchased — nothing else set up. Owner is new to Cloudflare and
   wants **education + step-by-step guidance** (separate setup guide to be produced — see §14).
 - **Audience:** public, no account for the core timer; Google sign-in only for the Phase-2 write/review
@@ -219,7 +220,7 @@ instant; the bottleneck is Google's thumbnail CDN (handled by lazy-load + preloa
 is ~a tie; the real differentiators are **animation ergonomics, codebase minimalism, and
 template-consistency.**
 
-**Firm regardless of framework:** static SPA on Cloudflare Pages, **no backend** in v1. Drive: API-key
+**Firm regardless of framework:** static SPA on Cloudflare Workers Static Assets (see §2), **no backend** in v1. Drive: API-key
 `files.list` (Tier 1); GIS `initTokenClient` + Google Picker + Drive v3 `files.create` (Tier 2). Canvas +
 `createImageBitmap` for compositing. Vite 8 + TypeScript (strict). Plain modern CSS + custom-property
 design tokens (see styling decision below). Vitest for logic; colocated tests; pre-push gate.
@@ -273,17 +274,19 @@ milestone/session rituals, per-dir coverage gating, the 5-doc constitution layer
 
 **Plan is fully locked** — no blocking open questions. ✅ Framework = Svelte 5 (educate-as-we-go) · local
 folder included + M0 source · Drive model · session engine + health caps · defaults 10/60s · styling =
-plain CSS + tokens · sequencing (dev setup → Cloudflare → M0 → creative direction → M1+). Fine-tuning
+plain CSS + tokens · sequencing (dev setup → M0 → creative direction → Cloudflare → M1+; §13). Fine-tuning
 (exact numbers, token values, copy) happens live during each milestone.
 
 ## 13. Roadmap
 
-> **Sequencing (owner-set):** 🧭 **Dev setup pass (NEXT STEP)** → ☁️ **Cloudflare setup guide** → **M0**
-> (build core against local folder, deploy it) → 🎨 **creative-direction session** (originate the design
-> system, then restyle M0) → **M1+**. Getting a deployable skeleton live early; aesthetics layered on once
-> the core feels right.
+> **Sequencing (owner-set · revised 2026-07-03):** 🧭 **Dev setup pass** ✓ → **M0** (build core against a
+> local folder) → 🎨 **creative-direction session** (originate the design system, then restyle M0) → ☁️
+> **Cloudflare setup guide + first deploy** → **M1+**. *Reorder:* Cloudflare was originally slotted before
+> M0 to "deploy the skeleton early," but that step was skipped and M0 built locally instead — so hosting now
+> follows the creative pass, once there's a core worth deploying that already looks right. Build and style
+> locally first; stand up hosting when there's something finished to put on it.
 >
-> **🧭 Dev setup pass (the immediate next deliverable)** — stand up the project skeleton + repo before any
+> **🧭 Dev setup pass (done ✓ — ledger archived in `docs/history.md`)** — stood up the project skeleton + repo before any
 > product code: scaffold **Svelte 5 + Vite 8 + TS (strict)**; the Ondalu adoption subset (strict tsconfig
 > flags, `@/*` alias, Vitest, ESLint flat config with Svelte plugins, colocated tests,
 > `src/lib/{unreachable,constants}.ts`, `src/{ui,state,lib}` layout); **pnpm** + pinned `engines`/`.nvmrc`;
