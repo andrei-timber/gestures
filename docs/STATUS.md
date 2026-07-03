@@ -5,9 +5,10 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 ## Now
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI. Session A (steps 1–5, engine logic) is **done**.
-- **Next step:** Session B, step 6 — Settings store: reactive settings + remember-last (localStorage).
-  Verify: vitest load/save; §5 defaults (`pnpm test`).
+  8+ are browser-verified UI. Sessions A–C (steps 1–10) are **done** — engine logic, reactive
+  settings/session/screen/source stores, and the shell + Setup screen with live total-time FYI.
+- **Next step:** Session D, step 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance
+  (wires session runtime 7 + pose order 5). Verify: browser — start a session, watch it advance.
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -22,13 +23,13 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 - [x] 5 — Pose order: shuffle, no within-session repeats, RNG injected. Verify: permutation, deterministic under seed.
 
 **Session B — reactive state** (`src/state/*.svelte.ts`)
-- [ ] 6 — Settings store: reactive settings + remember-last (localStorage). Verify: vitest load/save; §5 defaults.
-- [ ] 7 — Session runtime store: state machine idle→running→paused→ended, index/remaining/tick. Verify: vitest with fake clock.
+- [x] 6 — Settings store: reactive settings + remember-last (localStorage). Verify: vitest load/save; §5 defaults.
+- [x] 7 — Session runtime store: state machine idle→running→paused→ended, index/remaining/tick. Verify: vitest with fake clock.
 
 **Session C — shell, source, setup** (UI · browser-verify)
-- [ ] 8 — App shell: static shell + screen switch (Setup ↔ Session ↔ Summary).
-- [ ] 9 — Local-folder source: folder/file input, filter `.jpg/.png/.webp`, emit image list. Verify: real folder, count/filtering.
-- [ ] 10 — Setup screen: mode toggle, param inputs, live total-time FYI, Start (wires 6 + 1–4).
+- [x] 8 — App shell: static shell + screen switch (Setup ↔ Session ↔ Summary).
+- [x] 9 — Local-folder source: folder/file input, filter `.jpg/.png/.webp`, emit image list. Verify: real folder, count/filtering.
+- [x] 10 — Setup screen: mode toggle, param inputs, live total-time FYI, Start (wires 6 + 1–4).
 
 **Session D — slideshow runtime** (UI · browser-verify)
 - [ ] 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance (wires 7 + 5).
@@ -68,3 +69,4 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 
 - [ ] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a (2026-07-03); low priority.
 - [ ] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — do it when a third consumer appears (`quick.ts` already imports them) — spawned in step 3 (2026-07-03); low priority.
+- [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
