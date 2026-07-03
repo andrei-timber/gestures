@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { distribute } from './distribute'
-import {
-  MAX_ACTIVE_SECONDS,
-  MIN_POSES,
-  capTenMinPoses,
-  classCeiling,
-  classPlan,
-  clampN,
-} from './caps'
+import { capTenMinPoses, classCeiling, classPlan, clampN } from './caps'
+import { MAX_ACTIVE_SECONDS, MIN_POSES } from './limits'
 
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 const tens = (xs: number[]) => xs.filter((s) => s === 600).length

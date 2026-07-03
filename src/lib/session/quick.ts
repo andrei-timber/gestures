@@ -4,7 +4,7 @@
  * The same ≤90-min active cap binds here, clamping N for the chosen interval.
  */
 
-import { MAX_ACTIVE_SECONDS, MIN_POSES } from './caps'
+import { MAX_ACTIVE_SECONDS, MIN_POSES } from './limits'
 
 /** Preset interval choices offered in the UI, in seconds (custom adds more). */
 export const QUICK_INTERVALS_SECONDS = [30, 60, 120, 300] as const

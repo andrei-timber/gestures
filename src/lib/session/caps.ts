@@ -6,11 +6,8 @@
  */
 
 import { distribute } from './distribute'
+import { MAX_ACTIVE_SECONDS, MIN_POSES } from './limits'
 
-/** Class mode requires at least this many poses (spec §5 shared params). */
-export const MIN_POSES = 10
-/** Hard cap on summed pose durations; rests are excluded. */
-export const MAX_ACTIVE_SECONDS = 90 * 60
 /** Hard cap on the number of 10-min poses in a Class session. */
 export const MAX_TEN_MIN_POSES = 3
 

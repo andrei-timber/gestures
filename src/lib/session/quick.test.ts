@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_POSES } from './caps'
+import { MIN_POSES } from './limits'
 import {
   DEFAULT_INTERVAL_SECONDS,
   clampNQuick,

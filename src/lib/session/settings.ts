@@ -10,7 +10,7 @@
  * rather than rejecting the whole blob.
  */
 
-import { MIN_POSES } from './caps'
+import { MIN_POSES } from './limits'
 import { DEFAULT_INTERVAL_SECONDS } from './quick'
 import { DEFAULT_REST_SECONDS } from './timing'
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { APP_NAME } from '@/lib/constants'
-  import { MIN_POSES } from '@/lib/session/caps'
+  import { MIN_POSES } from '@/lib/session/limits'
   import { formatDuration } from '@/lib/format'
   import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
