@@ -122,3 +122,40 @@ leaning the landing page (owner's call); a returning user almost always wants th
 opt-out earned its own line of chrome for a rare case. Spec §5 marks remember-last implicit. Tradeoff: no
 in-app "leave no trace" escape hatch — clearing localStorage is now the only reset; accepted for a
 single-user local tool.
+
+2026-07-03 — **Truthful recap: actual elapsed + poses-drawn live in the runtime; End/Esc is a real
+transition.** Context: the summary restated the *planned* run, so ending early via End/Esc overstated it;
+End/Esc also only navigated, leaving the store's 1s interval ticking. Decision: (a) add an `end()`
+transition to the pure runtime (running/paused/rest → ended, idempotent, freezes the clock, keeps `index`)
+and have the store command run it + `stopTimer()`; (b) accumulate an `elapsed` counter inside `tick`
+(excludes paused time, includes rests, follows add-time) and expose a `posesDrawn` selector (`index+1`);
+the summary reads these. Rationale: elapsed is deterministic given the tick stream, so it belongs in the
+tested machine beside the clock rather than a component timer; on a full run it equals the planned figures,
+so only an early end diverges. Tradeoff: the deterministic engine gains an accumulator field (like `aids`,
+mild presentation-flavour); accepted — wall-time-in-run is genuinely the runtime's concern and stays fully
+vitest-covered. formatDuration's whole-minute rounding means a very short early end reads "0 min"; fine.
+
+2026-07-03 — **Folder pick prefers the File System Access API, webkitdirectory is the fallback.** Context:
+`<input webkitdirectory>` forces Chrome's misleading "upload all files to this site" prompt though nothing
+is uploaded (spec §9). Decision: feature-detect `showDirectoryPicker` and prefer it (Chromium, the deploy
+target) for its accurate "view files" prompt; keep the `webkitdirectory` `<input>` as the fallback
+(Firefox/Safari) triggered programmatically. Walk the returned handle with a recursive, structurally-typed
+`collectFiles` (node-testable, no DOM) so nested reference subfolders load like the old tree walk. Add a
+one-line "nothing is uploaded" reassurance that also defuses the scary prompt on the fallback path.
+Rationale: the owner's own browser gets the clean prompt now; recursion preserves the subfolder-organized
+library. Tradeoff: two code paths + a hand-narrowed `showDirectoryPicker` type (not yet in TS DOM lib);
+accepted. The native dialog can't be automated, so the API path is browser-verified via a faked handle.
+Full design: `docs/folder-picker-permission.md`. Worth a line in spec §9 at the next spec pass.
+
+2026-07-03 — **NaN-clamp lives at the input blur, and the poses field never actually NaN'd.** Context:
+follow-up flagged clearing a setup number input writing NaN → "0 min" FYI. Finding on reproduction: Svelte
+5's empty number binding yields `null` → 0, which the plan floors (`clampN`/`clampNQuick` → `MIN_POSES`),
+so Poses/Rest self-heal already; the visible offender was **custom-minutes** (`Number('')` → 0 → interval
+0s). Decision: add pure, tested `clamp{PoseCount,RestSeconds,IntervalSeconds}` helpers in `settings.ts` and
+route each input's `onblur` through the matching one, snapping a cleared field to its `min`. Rationale:
+blur-clamp keeps typing unobstructed and commits a valid value; custom-minutes is the real fix, poses/rest
+are defensive. Clamping the custom interval to its 30s floor snaps it onto the 30s preset (the field
+collapses), which is honest. Also this session (no separate decisions): dep alignment (@types/node→22,
+Vite→8.1.3), `session/limits.ts` extraction (shared `MIN_POSES`/`MAX_ACTIVE_SECONDS`, past the third
+consumer), and window-prefetch decodes (`docs/prefetch-window.md`; pure `prefetchWindow` + browser-only
+`warm`). The grid-overlay image-bounds follow-up was deliberately **left untouched** (owner's call).

@@ -3,18 +3,20 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** M0 (Delightful core) is **complete** — all 22 steps across Sessions A–G done. Session G
-  closed it: step 21 (gentle end cue — countdown warms amber over the last ~3s, verified) and step 22
-  (shortcuts help, satisfied by the always-on inline HUD legend). Also this session: removed the
-  "Remember these settings" checkbox — remember-last is now always on (setup lean; spec §5 · `rememberLast`
-  field dropped end-to-end).
-- **Next step:** Work down the unresolved **Follow-ups** queue below (all low / nice-to-have) before any
-  new track — triage them into do-now vs. keep-parked at session-start, then knock out the cheap ones.
-  Candidate quick wins: Setup NaN-input clamp, grid-overlay image-bounds fit, End/`Esc` halting the 1s
-  interval. Milestone grooming (archive M0 ledger → `docs/history.md`) and the 🎨 creative-direction
-  session are **deliberately deferred** — don't start them until the follow-up sweep is done.
-- **Verify:** per follow-up — logic under vitest, UI browser-verified. M0 baseline gate green
-  (114 tests, typecheck, lint) as of 2026-07-03.
+- **Focus:** M0 (Delightful core) is **complete** and the **Follow-ups sweep is done** — this session
+  cleared six queued items plus the End/`Esc` timer-halt, each as its own commit: dep alignment
+  (@types/node→22, Vite→8.1.3), `session/limits.ts` extraction, Setup NaN blur-clamp, End/`Esc` halting
+  the runtime clock, truthful early-end recap (actual `elapsed` + `posesDrawn` in the runtime),
+  window-prefetch decodes, and the folder picker moving to `showDirectoryPicker` (webkitdirectory
+  fallback + "nothing is uploaded" reassurance). Only the grid-overlay image-bounds follow-up remains,
+  **deliberately left untouched** (owner's call this session).
+- **Next step:** Pick the next track — **milestone grooming** (archive the M0 step ledger → `docs/history.md`
+  and clear it from STATUS) then either the **🎨 creative-direction session** (originate the design system,
+  restyle M0 — formalises the interim `.glass`/amber literals) or the **☁️ Cloudflare deploy** (§14).
+  Agree scope at session-start. Verify: milestone grooming has no gate; 🎨/☁️ per their own steps.
+- **Verify:** M0 baseline gate green — **136 tests, typecheck, lint, build** as of 2026-07-03 (was 114;
+  +22 across the follow-up sweep). Follow-up work verified per item — logic under vitest, UI browser-verified
+  against `~/Art Practice/Refs`.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
 Ordering logic: A is the tested foundation; B wraps it in reactive stores; C makes it runnable
@@ -88,13 +90,13 @@ Full roadmap, sequencing rationale, and each item's contents: `gestures-spec.md`
 ## Follow-ups
 Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in <step> (yyyy-mm-dd)`.
 
-- [ ] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a (2026-07-03); low priority.
-- [ ] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — do it when a third consumer appears (`quick.ts` already imports them) — spawned in step 3 (2026-07-03); low priority.
-- [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
+- [x] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a, done 2026-07-03.
+- [x] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — third consumer appeared; done 2026-07-03 (`MAX_TEN_MIN_POSES` stays in `caps.ts`, Class-only).
+- [x] Setup: clearing a number input degraded the FYI until refilled — done 2026-07-03 via pure blur-clamps in `settings.ts`. Finding: Poses/Rest already self-heal (Svelte 5 empty→null→0→floored); **custom-minutes** was the real offender (`Number('')`→0s interval).
 - [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
-- [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
-- [ ] Window-prefetch pose decodes for instant swaps — decode `index+1…index+N` (N≈2–3) ahead via `img.decode()`, side-effect layer only. Full design: `docs/prefetch-window.md` — spawned while exploring the source-load path (2026-07-03); nice-to-have.
-- [ ] Folder pick shows a scary "upload thousands of files" browser dialog (`webkitdirectory` semantics — nothing is actually uploaded). Move to `showDirectoryPicker()` with a `webkitdirectory` fallback, plus a one-line "nothing is uploaded" reassurance. Full design: `docs/folder-picker-permission.md` — spawned while exploring the source-picker UX (2026-07-03); nice-to-have.
+- [x] End recap reported the *planned* run; ending early overstated it — done 2026-07-03. Runtime now accumulates actual `elapsed` (in `tick`) + a `posesDrawn` selector; summary reads both. On a full run they equal the planned figures.
+- [x] Window-prefetch pose decodes for instant swaps — done 2026-07-03 (`src/lib/source/preload.ts`: pure `prefetchWindow` + browser-only `warm`/`decode`; `$effect` keyed on `session.index`; Setup pre-warms the opening frame). Full design: `docs/prefetch-window.md`.
+- [x] Folder pick showed the scary "upload thousands of files" dialog — done 2026-07-03. Moved to `showDirectoryPicker()` (recursive `collectFiles`) with the `webkitdirectory` `<input>` as fallback + a "nothing is uploaded" reassurance. Full design: `docs/folder-picker-permission.md`.
 - [ ] Grid overlay (`r`) spans the full viewport, not the letterboxed image bounds — over a `contain`
   image with wide margins the thirds lines don't land on the drawing. Tighten to the rendered image rect
   (measure the contained bounds) if it proves distracting — spawned in step 20 (2026-07-03); low priority.
@@ -103,6 +105,6 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [x] Session HUD legend split so it never crosses the reference: per-pose view aids (`m/v/g/r`) sit left
   by the pose counter, timing/navigation keys (space, arrows, `+`) sit right by End and wrap to multiple
   lines as the window narrows — found in M0 testing, resolved 2026-07-03.
-- [ ] End / `Esc` navigate to the summary but don't stop the session's 1s interval — it keeps ticking in the background until the next `session.load()` clears it (harmless: summary reads planned totals, and Start always reloads). Have End/`Esc` also halt the clock if we ever read live elapsed time on the summary — spawned in step 16b/Esc-to-end polish (2026-07-03); low priority. Related: the early-end recap follow-up above.
+- [x] End / `Esc` left the 1s interval ticking in the background — done 2026-07-03. Added a pure `end()` runtime transition + store command that stops the timer; `endSession()` routes through it. Needed anyway once the summary began reading live `elapsed` (truthful-recap item above).
 - [x] Session-G chrome polish pulled forward during Session E (2026-07-03): glass-pill treatment for the clock + nav arrows (legible over bright refs), pause is now a large glass icon with the dim halved, `Esc` ends the run (End cues "(esc)"), and a one-line shortcut legend sits beside End. Glass is an **interim** `.glass` class in `Session.svelte` — the 🎨 creative-direction pass (spec §14) formalises the tokens and may restyle it; the legend partially satisfies step 22 (full shortcuts help still due). See `decisions.md`.
 - [x] Class mode floored the pose count to `MIN_POSES` (10) *after* Setup capped it to the folder size, so a Class run on a <10-image folder played 10 poses against 4 images (blank slides past the pool) — resolved: Class now requires ≥10 images and falls back to Quick with a note; `buildPlan`'s `poolCap` can pull the count below `MIN_POSES` so Quick runs a folder-limited session (spec §5 · `decisions.md`) — spawned in step 15, fixed 2026-07-03.
