@@ -79,7 +79,10 @@
 
   <div class="hud">
     <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-    <button class="end" onclick={endSession}>End (esc)</button>
+    <div class="right">
+      <span class="legend">space pause · ← → prev/next · + extend</span>
+      <button class="end" onclick={endSession}>End (esc)</button>
+    </div>
   </div>
 </section>
 
@@ -121,9 +124,9 @@
 
   /*
    * Frosted-glass "pill" — an Apple-style translucent surface so controls stay
-   * legible over bright references. Applied to the clock and nav arrows now; the
-   * rest of the chrome migrates to the design system in the creative-direction
-   * pass (spec §14).
+   * legible over bright references. Applied to the clock, nav arrows, and pause
+   * badge now; the rest of the chrome migrates to the design system in the
+   * creative-direction pass (spec §14).
    */
   .glass {
     background: color-mix(in srgb, var(--bg) 52%, transparent);
@@ -221,6 +224,20 @@
 
   .count {
     letter-spacing: 0.03em;
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  /* One-line shortcut guide, sat left of End. Placeholder chrome — folded into
+     the design system / shortcuts legend (steps 21–22, spec §14) later. */
+  .legend {
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
   }
 
   .end {
