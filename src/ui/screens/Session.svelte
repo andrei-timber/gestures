@@ -110,14 +110,19 @@
   <!-- Countdown: glass pill, bottom-centre, legible over bright references. -->
   <span class="clock glass" class:resting={session.resting}>{formatClock(session.remaining)}</span>
 
+  <!-- HUD split so neither legend stretches across the reference: the per-pose
+       view aids sit left by the counter, the timing/navigation keys sit right by
+       End. The right cluster shrinks and wraps to multiple lines as the window
+       narrows, growing upward from the corner rather than invading the image. -->
   <div class="hud">
     <div class="left">
       <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-      <span class="legend"
-        >space pause · ← → prev/next · + extend · m/v mirror · g gray · r grid</span
-      >
+      <span class="legend">m/v mirror · g gray · r grid</span>
     </div>
-    <button class="end" onclick={endSession}>End (esc)</button>
+    <div class="right">
+      <span class="legend">space pause · ← → prev/next · + extend</span>
+      <button class="end" onclick={endSession}>End (esc)</button>
+    </div>
   </div>
 </section>
 
@@ -266,9 +271,9 @@
     position: absolute;
     inset: auto 0 0 0;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 1.5rem;
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
     color: var(--fg-muted);
@@ -279,7 +284,7 @@
     white-space: nowrap;
   }
 
-  /* Info cluster: pose counter with the shortcut legend beside it. */
+  /* Left cluster: pose counter with the per-pose view-aid legend beside it. */
   .left {
     display: flex;
     align-items: baseline;
@@ -287,15 +292,31 @@
     min-width: 0;
   }
 
-  /* One-line shortcut guide, sat left of End. Placeholder chrome — folded into
-     the design system / shortcuts legend (steps 21–22, spec §14) later. */
+  /* Right cluster: timing/navigation legend beside End. min-width:0 lets it
+     shrink and wrap to multiple lines as the window narrows; align-items:flex-end
+     keeps End anchored to the corner while the wrapped legend grows upward. */
+  .right {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  /* Shortcut guides. Placeholder chrome — folded into the design system /
+     shortcuts legend (steps 21–22, spec §14) later. */
   .legend {
     font-size: 0.78rem;
     letter-spacing: 0.02em;
     opacity: 0.7;
+    min-width: 0;
+  }
+
+  .right .legend {
+    text-align: right;
   }
 
   .end {
+    flex-shrink: 0;
     font: inherit;
     font-size: 0.85rem;
     color: var(--fg-muted);
