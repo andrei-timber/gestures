@@ -11,6 +11,7 @@
     clampRestSeconds,
   } from '@/lib/session/settings'
   import { selectRun } from '@/lib/session/select'
+  import { warm } from '@/lib/source/preload'
   import { totalSeconds } from '@/lib/session/timing'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
@@ -60,6 +61,9 @@
     const images = selectRun(source.images, plan.length, rng, settings.randomize)
     session.load(plan, images, settings.restSeconds)
     session.start()
+    // Warm the opening frame during the transition so the first pose paints
+    // instantly; the in-session window prefetch takes over from there.
+    void warm([images[0].url])
     screen.show('session')
   }
 </script>

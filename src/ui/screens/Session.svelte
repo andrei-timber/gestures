@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatClock } from '@/lib/format'
+  import { prefetchWindow, warm } from '@/lib/source/preload'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
 
@@ -8,6 +9,14 @@
   // ends the run, hand off to the summary (the calm recap lands in step 14).
   $effect(() => {
     if (session.phase === 'ended') screen.show('summary')
+  })
+
+  // Window prefetch (docs/prefetch-window.md): as the cursor moves, decode the
+  // next couple of poses (and keep the one behind warm) into the browser cache
+  // so each swap paints without the JPEG-decode hitch. Pure side-effect layer —
+  // re-runs on every `index` change; memory stays bounded to the window.
+  $effect(() => {
+    void warm(prefetchWindow(session.imageUrls, session.index))
   })
 
   // Keyboard dispatcher: a key→action map so later helpers (prev/next, add-time)

@@ -95,6 +95,10 @@ function createSessionStore() {
     get currentImage(): SourceImage | null {
       return images[state.index] ?? null
     },
+    /** Ordered run image URLs (parallel to the plan) — the prefetch window reads this. */
+    get imageUrls(): readonly string[] {
+      return images.map((img) => img.url)
+    },
 
     /**
      * Load a run: a per-pose duration plan, its display-ordered images
