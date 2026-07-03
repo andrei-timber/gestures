@@ -21,15 +21,19 @@ export interface RuntimeState {
   phase: Phase
   /** Per-pose durations in seconds; also fixes the pose count. */
   readonly plan: readonly number[]
+  /** Rest slide between poses, seconds; 0 disables rests. */
+  readonly restSeconds: number
   /** 0-based index of the current pose. */
   index: number
-  /** Seconds left on the current pose. */
+  /** Seconds left on the current pose — or on the rest slide while resting. */
   remaining: number
+  /** True during the rest slide that falls after `index`'s pose. */
+  resting: boolean
 }
 
 /** A fresh idle runtime parked on the first pose of `plan`. */
-export function createRuntime(plan: readonly number[]): RuntimeState {
-  return { phase: 'idle', plan, index: 0, remaining: plan[0] ?? 0 }
+export function createRuntime(plan: readonly number[], restSeconds = 0): RuntimeState {
+  return { phase: 'idle', plan, restSeconds, index: 0, remaining: plan[0] ?? 0, resting: false }
 }
 
 /** Begin a session (idle → running). No-op from any other phase. */
@@ -55,8 +59,8 @@ export function resume(state: RuntimeState): RuntimeState {
 export function next(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   const index = state.index + 1
-  if (index >= state.plan.length) return { ...state, phase: 'ended', remaining: 0 }
-  return { ...state, index, remaining: state.plan[index] }
+  if (index >= state.plan.length) return { ...state, phase: 'ended', remaining: 0, resting: false }
+  return { ...state, index, remaining: state.plan[index], resting: false }
 }
 
 /**
@@ -68,24 +72,36 @@ export function prev(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   if (state.index === 0) return state
   const index = state.index - 1
-  return { ...state, index, remaining: state.plan[index] }
+  return { ...state, index, remaining: state.plan[index], resting: false }
 }
 
 /**
- * Advance the clock by `delta` seconds while running. Draining the current
- * pose rolls into the next with any overflow carried forward; draining the
- * final pose ends the session. No-op unless running.
+ * Advance the clock by `delta` seconds while running. Draining an active pose
+ * rolls into a rest slide (when `restSeconds > 0`) and then the next pose;
+ * draining a rest rolls into the next pose; draining the final pose ends the
+ * session (no rest trails it). Overflow is carried forward across a big delta.
+ * No-op unless running.
  */
 export function tick(state: RuntimeState, delta = 1): RuntimeState {
   if (state.phase !== 'running') return state
-  let { index, remaining } = state
+  let { index, remaining, resting } = state
   remaining -= delta
   while (remaining <= 0) {
-    if (index + 1 >= state.plan.length) {
-      return { ...state, phase: 'ended', index, remaining: 0 }
+    if (resting) {
+      // The rest after this pose finished → move on to the next pose.
+      index += 1
+      resting = false
+      remaining += state.plan[index]
+    } else if (index + 1 >= state.plan.length) {
+      return { ...state, phase: 'ended', index, remaining: 0, resting: false }
+    } else if (state.restSeconds > 0) {
+      // Active pose finished → rest before the next one.
+      resting = true
+      remaining += state.restSeconds
+    } else {
+      index += 1
+      remaining += state.plan[index]
     }
-    index += 1
-    remaining += state.plan[index]
   }
-  return { ...state, index, remaining }
+  return { ...state, index, remaining, resting }
 }

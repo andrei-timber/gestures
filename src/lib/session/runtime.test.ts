@@ -11,7 +11,14 @@ function run(state: RuntimeState, seconds: number): RuntimeState {
 describe('createRuntime', () => {
   it('parks idle on the first pose with its full duration', () => {
     const s = createRuntime([60, 120, 300])
-    expect(s).toEqual({ phase: 'idle', plan: [60, 120, 300], index: 0, remaining: 60 })
+    expect(s).toEqual({
+      phase: 'idle',
+      plan: [60, 120, 300],
+      restSeconds: 0,
+      index: 0,
+      remaining: 60,
+      resting: false,
+    })
   })
 
   it('tolerates an empty plan', () => {
@@ -67,6 +74,42 @@ describe('tick', () => {
     const ended = run(start(createRuntime([1])), 1)
     expect(ended.phase).toBe('ended')
     expect(tick(ended, 5)).toBe(ended)
+  })
+})
+
+describe('rests between poses', () => {
+  it('enters a rest slide when an active pose drains', () => {
+    const s = run(start(createRuntime([3, 60], 5)), 3)
+    expect(s).toMatchObject({ phase: 'running', index: 0, remaining: 5, resting: true })
+  })
+
+  it('leaves the rest into the next pose at its full duration', () => {
+    const s = run(start(createRuntime([3, 60], 5)), 8) // 3s pose + 5s rest
+    expect(s).toMatchObject({ phase: 'running', index: 1, remaining: 60, resting: false })
+  })
+
+  it('never rests after the final pose — it ends instead', () => {
+    const s = run(start(createRuntime([2, 2], 5)), 9) // 2 + 5 rest + 2
+    expect(s).toMatchObject({ phase: 'ended', index: 1, resting: false })
+  })
+
+  it('skips rests entirely when restSeconds is 0', () => {
+    const s = run(start(createRuntime([3, 60], 0)), 3)
+    expect(s).toMatchObject({ index: 1, remaining: 60, resting: false })
+  })
+
+  it('carries overflow across a rest on a large delta', () => {
+    // 3s pose0 + 2s rest + 1s into pose1 (4s) = 6s.
+    const s = tick(start(createRuntime([3, 4, 10], 2)), 6)
+    expect(s).toMatchObject({ index: 1, remaining: 3, resting: false })
+  })
+
+  it('clears the rest when skipping with next/prev', () => {
+    const resting = run(start(createRuntime([3, 60, 60], 5)), 3)
+    expect(resting.resting).toBe(true)
+    expect(next(resting)).toMatchObject({ index: 1, resting: false })
+    const back = run(start(createRuntime([3, 60, 60], 5)), 3)
+    expect(prev(next(back))).toMatchObject({ index: 0, resting: false })
   })
 })
 

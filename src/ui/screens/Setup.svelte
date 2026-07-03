@@ -44,7 +44,7 @@
     // spaced, display-ordered images, then play them alongside the plan.
     const rng = makeRng(Math.floor(Math.random() * 0x1_0000_0000))
     const images = selectRun(source.images, plan.length, rng, settings.randomize)
-    session.load(plan, images)
+    session.load(plan, images, settings.restSeconds)
     session.start()
     screen.show('session')
   }

@@ -59,18 +59,22 @@ function createSessionStore() {
     get poseCount(): number {
       return state.plan.length
     },
+    /** True during the rest slide between two poses. */
+    get resting(): boolean {
+      return state.resting
+    },
     /** The reference image for the current pose, or `null` before a run loads. */
     get currentImage(): SourceImage | null {
       return images[state.index] ?? null
     },
 
     /**
-     * Load a run: a per-pose duration plan and its display-ordered images
-     * (parallel arrays). Returns to idle.
+     * Load a run: a per-pose duration plan, its display-ordered images
+     * (parallel arrays), and the rest between poses. Returns to idle.
      */
-    load(plan: readonly number[], runImages: readonly SourceImage[] = []): void {
+    load(plan: readonly number[], runImages: readonly SourceImage[] = [], restSeconds = 0): void {
       stopTimer()
-      state = createRuntime(plan)
+      state = createRuntime(plan, restSeconds)
       images = runImages
     },
     start(): void {

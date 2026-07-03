@@ -15,6 +15,11 @@
     <img class="pose" src={session.currentImage.url} alt="Pose reference" />
   {/if}
 
+  <!-- Rest slide: a dim pause between poses, the reference faint behind it. -->
+  {#if session.resting}
+    <div class="rest"><span>Rest</span></div>
+  {/if}
+
   <!-- Faint side controls: skip a pose either way to scrub through the run. -->
   <button class="nav prev" aria-label="Previous pose" onclick={() => session.prev()}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
@@ -42,6 +47,21 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  .rest {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+  }
+
+  .rest span {
+    color: var(--fg-muted);
+    font-size: 1.1rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
   }
 
   .nav {
