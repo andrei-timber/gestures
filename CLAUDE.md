@@ -43,6 +43,9 @@ Y-statement log). Product decisions stay in `gestures-spec.md`; `docs/decisions.
 ## Habits
 - One canonical home per fact; derived docs are maps, not copies.
 - Test the logic; browser-verify UI. Visual layers stay out of coverage.
+- Subtle visual/timing polish (fades, warm-ups, easings, anim durations): verify the *logic*
+  numerically (assert the state/class/threshold flips), then hand the fine visual check to the owner —
+  don't burn tool calls trying to screenshot a moving target.
 - Scoped conventional commits; never auto-commit. Memory is suggest-only.
 - **Add structure, not vigilance** — when the same mistake recurs, add a small gate/affordance where the
   friction is, rather than resolving to be careful. Willpower doesn't scale across sessions.
