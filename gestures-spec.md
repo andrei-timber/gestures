@@ -146,6 +146,19 @@ Enter **number of poses N** + a **uniform interval**: `30s / 60s / 2min / 5min /
 | Remember last settings | Restore prior config on return | ⭐ on |
 | Auto total-time FYI | Live-computed, shown during setup | ✅ on |
 
+### Pose picking — spacing & no-repeats ✅
+Reference libraries are often **ordered**: the same pose appears at several angles across a run of
+consecutive files. Picking `pose0007`, `pose0008`, `pose0009` would draw the *same* pose three times.
+So selection enforces a **minimum source-index gap** between the N chosen images:
+- Target gap **30** images (a same-pose run rarely exceeds that). Chosen images are pairwise ≥ gap apart
+  in the folder's natural order, so near-duplicates never co-occur.
+- **Small folders** can't afford 30. The gap then shrinks to what fits — spread the N picks evenly
+  across the pool (`gap ≈ ⌊poolSize / N⌋`, "modulo-divided") so coverage stays maximal.
+- **Never show the same image twice** in a session. Picks are always distinct; if the folder holds fewer
+  images than the requested N, the session uses every image once (effective N = pool size).
+
+Randomization controls only the *display order* of this spaced, deduped selection (shuffle when on).
+
 ## 6. In-session helpers (research Part A)
 
 **In for v1:**

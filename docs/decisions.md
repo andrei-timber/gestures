@@ -33,3 +33,13 @@ conflict — 10 poses would be 100 min. Concern: `clampNQuick` must pick one whe
 the cap is the "impossible to exceed" invariant, so it wins — the count drops below 10 rather than
 overshoot 90 min (10-min interval → 9 poses). Tradeoff: a Quick session can fall under the nominal
 floor for very long intervals; alternative is to have the UI forbid such intervals (revisit at step 10).
+
+2026-07-03 — **Pose picking enforces a source-index gap, not just a shuffle.** Context: reference
+libraries are often ordered — the same pose at several angles spans a run of consecutive files — so
+random picks would draw near-duplicates. Concern: how to dedup without hurting small folders or ever
+repeating an image. Decision: select N distinct indices pairwise ≥ a target gap (30) apart, spread
+uniformly at random (`pickSpaced` in `src/lib/session/pick.ts`); on a pool too small for 30 the gap
+shrinks to `⌊(pool-1)/(n-1)⌋` (even "modulo" spread); if the pool holds fewer than N images, effective
+N = pool size (every image once, never repeated). Randomization then controls only display order.
+Tradeoff: on huge ordered libraries a random min-gap pick doesn't guarantee full front-to-back coverage
+(slack is random), accepted since dedup — not coverage — is the goal; the average spread is still wide.

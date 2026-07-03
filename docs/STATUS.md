@@ -8,7 +8,8 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
   8+ are browser-verified UI. Sessions A–C (steps 1–10) are **done** — engine logic, reactive
   settings/session/screen/source stores, and the shell + Setup screen with live total-time FYI.
 - **Next step:** Session D, step 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance
-  (wires session runtime 7 + pose order 5). Verify: browser — start a session, watch it advance.
+  (wires session runtime 7 + pose order 5 + spaced pick `pick.ts`). Verify: browser — start a session,
+  watch it advance. Picking: `pickSpaced(pool, N)` → distinct spaced indices → shuffle for display.
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -70,3 +71,4 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a (2026-07-03); low priority.
 - [ ] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — do it when a third consumer appears (`quick.ts` already imports them) — spawned in step 3 (2026-07-03); low priority.
 - [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
+- [ ] Setup FYI: when the loaded folder has fewer images than the requested N, effective N caps at the pool size (spec §5 pose picking) — reflect that cap in the total-time FYI so it isn't overstated — spawned during step-11 planning (2026-07-03); do it with step 11.
