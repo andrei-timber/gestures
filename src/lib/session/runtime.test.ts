@@ -9,6 +9,7 @@ import {
   resume,
   start,
   tick,
+  toggleGrayscale,
   toggleMirrorH,
   toggleMirrorV,
   type RuntimeState,
@@ -31,7 +32,7 @@ describe('createRuntime', () => {
       index: 0,
       remaining: 60,
       resting: false,
-      aids: { mirrorH: false, mirrorV: false },
+      aids: { mirrorH: false, mirrorV: false, grayscale: false },
     })
   })
 
@@ -194,10 +195,10 @@ describe('addTime', () => {
 describe('mirror aids', () => {
   it('toggles H and V independently and composes them', () => {
     const s = start(createRuntime([60, 120]))
-    expect(toggleMirrorH(s).aids).toEqual({ mirrorH: true, mirrorV: false })
-    expect(toggleMirrorV(s).aids).toEqual({ mirrorH: false, mirrorV: true })
+    expect(toggleMirrorH(s).aids).toMatchObject({ mirrorH: true, mirrorV: false })
+    expect(toggleMirrorV(s).aids).toMatchObject({ mirrorH: false, mirrorV: true })
     const both = toggleMirrorV(toggleMirrorH(s))
-    expect(both.aids).toEqual({ mirrorH: true, mirrorV: true })
+    expect(both.aids).toMatchObject({ mirrorH: true, mirrorV: true })
     // A second press flips it back off.
     expect(toggleMirrorH(toggleMirrorH(s)).aids.mirrorH).toBe(false)
   })
@@ -218,22 +219,51 @@ describe('mirror aids', () => {
   it('resets when scrubbing to the next or previous pose', () => {
     const flipped = toggleMirrorH(run(start(createRuntime([60, 120, 300])), 5))
     expect(flipped.aids.mirrorH).toBe(true)
-    expect(next(flipped).aids).toEqual({ mirrorH: false, mirrorV: false })
+    expect(next(flipped).aids).toMatchObject({ mirrorH: false, mirrorV: false })
     const onPose2 = toggleMirrorV(next(flipped))
     expect(onPose2.aids.mirrorV).toBe(true)
-    expect(prev(onPose2).aids).toEqual({ mirrorH: false, mirrorV: false })
+    expect(prev(onPose2).aids).toMatchObject({ mirrorH: false, mirrorV: false })
   })
 
   it('resets when the clock auto-advances to the next pose', () => {
     const flipped = toggleMirrorH(start(createRuntime([3, 60])))
     expect(flipped.aids.mirrorH).toBe(true)
-    expect(run(flipped, 3).aids).toEqual({ mirrorH: false, mirrorV: false })
+    expect(run(flipped, 3).aids).toMatchObject({ mirrorH: false, mirrorV: false })
   })
 
   it('survives ticks within the same pose, resets across a rest', () => {
     const flipped = toggleMirrorH(start(createRuntime([5, 60], 3)))
     expect(run(flipped, 2).aids.mirrorH).toBe(true) // still pose 0
     expect(run(flipped, 6).aids.mirrorH).toBe(true) // 5s pose + 1s rest — pose 0 not yet left
-    expect(run(flipped, 8).aids).toEqual({ mirrorH: false, mirrorV: false }) // into pose 1
+    expect(run(flipped, 8).aids).toMatchObject({ mirrorH: false, mirrorV: false }) // into pose 1
+  })
+})
+
+describe('grayscale aid', () => {
+  it('toggles on and off, independent of the mirror flags', () => {
+    const s = start(createRuntime([60, 120]))
+    expect(toggleGrayscale(s).aids).toMatchObject({ grayscale: true, mirrorH: false })
+    expect(toggleGrayscale(toggleGrayscale(s)).aids.grayscale).toBe(false)
+    // Composes with a mirror without disturbing it.
+    expect(toggleGrayscale(toggleMirrorH(s)).aids).toMatchObject({ grayscale: true, mirrorH: true })
+  })
+
+  it('works while paused', () => {
+    const paused = pause(start(createRuntime([60])))
+    expect(toggleGrayscale(paused)).toMatchObject({ phase: 'paused', aids: { grayscale: true } })
+  })
+
+  it('is inert from idle or ended phases', () => {
+    const idle = createRuntime([60])
+    expect(toggleGrayscale(idle)).toBe(idle)
+    const ended = run(start(createRuntime([1])), 1)
+    expect(toggleGrayscale(ended)).toBe(ended)
+  })
+
+  it('resets on the next pose (scrub and auto-advance)', () => {
+    const gray = toggleGrayscale(run(start(createRuntime([3, 60])), 1))
+    expect(gray.aids.grayscale).toBe(true)
+    expect(next(gray).aids.grayscale).toBe(false)
+    expect(run(gray, 3).aids.grayscale).toBe(false) // auto-advanced into pose 1
   })
 })

@@ -27,9 +27,10 @@ export type Phase = 'idle' | 'running' | 'paused' | 'ended'
 export interface Aids {
   mirrorH: boolean
   mirrorV: boolean
+  grayscale: boolean
 }
 
-const NO_AIDS: Aids = { mirrorH: false, mirrorV: false }
+const NO_AIDS: Aids = { mirrorH: false, mirrorV: false, grayscale: false }
 
 export interface RuntimeState {
   phase: Phase
@@ -124,6 +125,12 @@ export function toggleMirrorH(state: RuntimeState): RuntimeState {
 export function toggleMirrorV(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   return { ...state, aids: { ...state.aids, mirrorV: !state.aids.mirrorV } }
+}
+
+/** Desaturate the current pose to value only (spec §6 grayscale). No-op outside a run. */
+export function toggleGrayscale(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  return { ...state, aids: { ...state.aids, grayscale: !state.aids.grayscale } }
 }
 
 /**

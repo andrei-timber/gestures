@@ -17,6 +17,7 @@ import {
   resume as resumeRuntime,
   start as startRuntime,
   tick,
+  toggleGrayscale as toggleGrayscaleRuntime,
   toggleMirrorH as toggleMirrorHRuntime,
   toggleMirrorV as toggleMirrorVRuntime,
   type Aids,
@@ -122,6 +123,10 @@ function createSessionStore() {
     /** Flip the current pose vertically (per-pose sanity check). */
     toggleMirrorV(): void {
       state = toggleMirrorVRuntime(state)
+    },
+    /** Desaturate the current pose to value only (per-pose sanity check). */
+    toggleGrayscale(): void {
+      state = toggleGrayscaleRuntime(state)
     },
   }
 }

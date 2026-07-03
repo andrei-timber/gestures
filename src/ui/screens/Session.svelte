@@ -20,9 +20,10 @@
     // Both the shifted "+" and its unshifted "=" so no modifier is needed.
     '+': () => session.addTime(),
     '=': () => session.addTime(),
-    // Mirror the current pose — per-pose sanity checks that reset on advance.
+    // Per-pose sanity checks — mirror / grayscale — that reset on advance.
     m: () => session.toggleMirrorH(),
     v: () => session.toggleMirrorV(),
+    g: () => session.toggleGrayscale(),
     // Esc ends the run, same as the End button.
     Escape: endSession,
   }
@@ -33,6 +34,7 @@
       .filter(Boolean)
       .join(' ') || 'none',
   )
+  const poseFilter = $derived(session.aids.grayscale ? 'grayscale(1)' : 'none')
 
   function togglePause(): void {
     if (session.phase === 'running') session.pause()
@@ -60,6 +62,7 @@
       src={session.currentImage.url}
       alt="Pose reference"
       style:transform={poseTransform}
+      style:filter={poseFilter}
     />
   {/if}
 
@@ -95,7 +98,7 @@
   <div class="hud">
     <div class="left">
       <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-      <span class="legend">space pause · ← → prev/next · + extend · m/v mirror</span>
+      <span class="legend">space pause · ← → prev/next · + extend · m/v mirror · g gray</span>
     </div>
     <button class="end" onclick={endSession}>End (esc)</button>
   </div>
