@@ -16,9 +16,12 @@ import {
   tick,
   type Phase,
 } from '@/lib/session/runtime'
+import type { SourceImage } from '@/state/source.svelte'
 
 function createSessionStore() {
   let state = $state(createRuntime([]))
+  // Display-ordered run images, parallel to the plan (images[i] ↔ plan[i]).
+  let images = $state<readonly SourceImage[]>([])
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stopTimer(): void {
@@ -54,11 +57,19 @@ function createSessionStore() {
     get poseCount(): number {
       return state.plan.length
     },
+    /** The reference image for the current pose, or `null` before a run loads. */
+    get currentImage(): SourceImage | null {
+      return images[state.index] ?? null
+    },
 
-    /** Load a fresh per-pose duration plan and return to idle. */
-    load(plan: readonly number[]): void {
+    /**
+     * Load a run: a per-pose duration plan and its display-ordered images
+     * (parallel arrays). Returns to idle.
+     */
+    load(plan: readonly number[], runImages: readonly SourceImage[] = []): void {
       stopTimer()
       state = createRuntime(plan)
+      images = runImages
     },
     start(): void {
       state = startRuntime(state)

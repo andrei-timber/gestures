@@ -1,8 +1,10 @@
 <script lang="ts">
   import { APP_NAME } from '@/lib/constants'
   import { formatDuration } from '@/lib/format'
+  import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
   import { QUICK_INTERVALS_SECONDS, customIntervalSeconds } from '@/lib/session/quick'
+  import { selectRun } from '@/lib/session/select'
   import { totalSeconds } from '@/lib/session/timing'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
@@ -10,11 +12,19 @@
   import { source } from '@/state/source.svelte'
   import FolderInput from '../FolderInput.svelte'
 
+  // A folder with fewer images than requested caps the effective pose count
+  // (spec §5 pose picking — no repeats beyond the pool), so build the plan
+  // against the effective count and the FYI won't overstate the run.
+  const effectiveCount = $derived(
+    source.count > 0 ? Math.min(settings.poseCount, source.count) : settings.poseCount,
+  )
   // Live plan + total-time FYI recompute from settings as the user tweaks.
-  const plan = $derived(buildPlan(settings))
+  const plan = $derived(buildPlan({ ...settings, poseCount: effectiveCount }))
   const total = $derived(totalSeconds(plan, settings.restSeconds))
-  // The health caps may clamp the requested count; surface it when they bite.
-  const capped = $derived(plan.length > 0 && plan.length !== settings.poseCount)
+  // Two reasons the run may be shorter than asked: health caps clamp the count,
+  // or the folder holds fewer images than requested.
+  const healthCapped = $derived(plan.length > 0 && plan.length < effectiveCount)
+  const folderCapped = $derived(source.count > 0 && source.count < settings.poseCount)
 
   const presets = QUICK_INTERVALS_SECONDS as readonly number[]
   const isCustomInterval = $derived(!presets.includes(settings.intervalSeconds))
@@ -30,7 +40,12 @@
 
   function start(): void {
     if (!ready) return
-    session.load(plan) // pose order + start are wired in step 11
+    // Seed once per run (deterministic core, random seed at the edge): pick the
+    // spaced, display-ordered images, then play them alongside the plan.
+    const rng = makeRng(Math.floor(Math.random() * 0x1_0000_0000))
+    const images = selectRun(source.images, plan.length, rng, settings.randomize)
+    session.load(plan, images)
+    session.start()
     screen.show('session')
   }
 </script>
@@ -98,7 +113,8 @@
 
   <p class="fyi">
     ≈ {formatDuration(total)} · {plan.length} pose{plan.length === 1 ? '' : 's'}
-    {#if capped}<span class="capped">(capped for health)</span>{/if}
+    {#if healthCapped}<span class="capped">(capped for health)</span>
+    {:else if folderCapped}<span class="capped">(limited by folder)</span>{/if}
   </p>
 
   <button class="start" disabled={!ready} onclick={start}>Start session</button>
