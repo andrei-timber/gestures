@@ -47,9 +47,17 @@
     <div class="veil"><span>Rest</span></div>
   {/if}
 
-  <!-- Paused: same faint veil, held until space resumes the run. -->
+  <!-- Paused: a large glass pause badge over a lightly-dimmed reference,
+       held until space resumes the run. -->
   {#if session.phase === 'paused'}
-    <div class="veil"><span>Paused</span></div>
+    <div class="veil paused">
+      <div class="pause-badge glass" aria-label="Paused" role="img">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="7" y="5" width="3.4" height="14" rx="1.2" />
+          <rect x="13.6" y="5" width="3.4" height="14" rx="1.2" />
+        </svg>
+      </div>
+    </div>
   {/if}
 
   <!-- Glass side controls: skip a pose either way to scrub through the run. -->
@@ -92,6 +100,12 @@
     background: color-mix(in srgb, var(--bg) 88%, transparent);
   }
 
+  /* Pause dims the reference only lightly (half the rest veil) — the artist
+     keeps studying the pose while stopped. */
+  .veil.paused {
+    background: color-mix(in srgb, var(--bg) 44%, transparent);
+  }
+
   .veil span {
     color: var(--fg-muted);
     font-size: 1.1rem;
@@ -113,6 +127,21 @@
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
       0 6px 20px rgb(0 0 0 / 0.28);
+  }
+
+  .pause-badge {
+    display: grid;
+    place-items: center;
+    width: 5.25rem;
+    height: 5.25rem;
+    border-radius: 50%;
+    color: var(--fg);
+  }
+
+  .pause-badge svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    fill: currentColor;
   }
 
   .nav {
