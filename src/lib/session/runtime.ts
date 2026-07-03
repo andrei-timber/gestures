@@ -48,6 +48,30 @@ export function resume(state: RuntimeState): RuntimeState {
 }
 
 /**
+ * Jump to the next pose, resetting its clock to the full duration — a manual
+ * skip for scrubbing (arrow buttons / `→`). Works while running or paused;
+ * stepping past the final pose ends the session. No-op otherwise.
+ */
+export function next(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  const index = state.index + 1
+  if (index >= state.plan.length) return { ...state, phase: 'ended', remaining: 0 }
+  return { ...state, index, remaining: state.plan[index] }
+}
+
+/**
+ * Jump to the previous pose, resetting its clock to the full duration. Works
+ * while running or paused; clamps at the first pose (no-op there). No-op from
+ * other phases.
+ */
+export function prev(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  if (state.index === 0) return state
+  const index = state.index - 1
+  return { ...state, index, remaining: state.plan[index] }
+}
+
+/**
  * Advance the clock by `delta` seconds while running. Draining the current
  * pose rolls into the next with any overflow carried forward; draining the
  * final pose ends the session. No-op unless running.

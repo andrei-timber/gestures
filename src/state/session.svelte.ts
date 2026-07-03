@@ -10,7 +10,9 @@
 
 import {
   createRuntime,
+  next as nextRuntime,
   pause as pauseRuntime,
+  prev as prevRuntime,
   resume as resumeRuntime,
   start as startRuntime,
   tick,
@@ -82,6 +84,15 @@ function createSessionStore() {
     resume(): void {
       state = resumeRuntime(state)
       if (state.phase === 'running') startTimer()
+    },
+    /** Skip to the next pose (scrubbing); ends the run past the last pose. */
+    next(): void {
+      state = nextRuntime(state)
+      if (state.phase !== 'running') stopTimer()
+    },
+    /** Skip to the previous pose (scrubbing). Clamps at the first pose. */
+    prev(): void {
+      state = prevRuntime(state)
     },
   }
 }

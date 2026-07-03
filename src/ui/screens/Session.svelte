@@ -15,6 +15,14 @@
     <img class="pose" src={session.currentImage.url} alt="Pose reference" />
   {/if}
 
+  <!-- Faint side controls: skip a pose either way to scrub through the run. -->
+  <button class="nav prev" aria-label="Previous pose" onclick={() => session.prev()}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  </button>
+  <button class="nav next" aria-label="Next pose" onclick={() => session.next()}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+  </button>
+
   <div class="hud">
     <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
     <button class="end" onclick={() => screen.show('summary')}>End</button>
@@ -34,6 +42,46 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  .nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 4.5rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    opacity: 0.25;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .nav:hover,
+  .nav:focus-visible {
+    opacity: 0.85;
+  }
+
+  .nav.prev {
+    left: 0.5rem;
+  }
+
+  .nav.next {
+    right: 0.5rem;
+  }
+
+  .nav svg {
+    width: 2rem;
+    height: 2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .hud {

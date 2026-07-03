@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRuntime, pause, resume, start, tick, type RuntimeState } from './runtime'
+import { createRuntime, next, pause, prev, resume, start, tick, type RuntimeState } from './runtime'
 
 /** Drive a runtime through `seconds` one-second ticks (the real interval cadence). */
 function run(state: RuntimeState, seconds: number): RuntimeState {
@@ -67,5 +67,41 @@ describe('tick', () => {
     const ended = run(start(createRuntime([1])), 1)
     expect(ended.phase).toBe('ended')
     expect(tick(ended, 5)).toBe(ended)
+  })
+})
+
+describe('next / prev', () => {
+  it('jumps to the next pose at its full duration', () => {
+    const s = run(start(createRuntime([60, 120, 300])), 5) // 5s into pose 1
+    expect(next(s)).toMatchObject({ index: 1, remaining: 120, phase: 'running' })
+  })
+
+  it('jumps back to the previous pose at its full duration', () => {
+    const s = run(start(createRuntime([60, 120, 300])), 65) // 5s into pose 2
+    expect(prev(s)).toMatchObject({ index: 0, remaining: 60, phase: 'running' })
+  })
+
+  it('ends the session when stepping past the final pose', () => {
+    const s = start(createRuntime([60, 120]))
+    expect(next(next(s))).toMatchObject({ phase: 'ended', remaining: 0 })
+  })
+
+  it('clamps prev at the first pose', () => {
+    const s = start(createRuntime([60, 120]))
+    expect(prev(s)).toBe(s)
+  })
+
+  it('works while paused (scrubbing without the clock running)', () => {
+    const paused = pause(start(createRuntime([60, 120, 300])))
+    expect(next(paused)).toMatchObject({ index: 1, remaining: 120, phase: 'paused' })
+    expect(prev(next(next(paused)))).toMatchObject({ index: 1, phase: 'paused' })
+  })
+
+  it('is inert from idle or ended phases', () => {
+    const idle = createRuntime([60, 120])
+    expect(next(idle)).toBe(idle)
+    expect(prev(idle)).toBe(idle)
+    const ended = run(start(createRuntime([1])), 1)
+    expect(next(ended)).toBe(ended)
   })
 })
