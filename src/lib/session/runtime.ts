@@ -75,6 +75,20 @@ export function prev(state: RuntimeState): RuntimeState {
   return { ...state, index, remaining: state.plan[index], resting: false }
 }
 
+/** Seconds a single add-time (`+`) press grants the current pose. */
+export const ADD_TIME_SECONDS = 30
+
+/**
+ * Extend the current pose by `seconds` — steal more drawing time without
+ * leaving it (spec §6 add-time). Adds to the live clock; works while running or
+ * paused. Ignored during a rest slide (no pose to extend) and from other phases.
+ */
+export function addTime(state: RuntimeState, seconds = ADD_TIME_SECONDS): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  if (state.resting) return state
+  return { ...state, remaining: state.remaining + seconds }
+}
+
 /**
  * Advance the clock by `delta` seconds while running. Draining an active pose
  * rolls into a rest slide (when `restSeconds > 0`) and then the next pose;

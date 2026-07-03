@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { createRuntime, next, pause, prev, resume, start, tick, type RuntimeState } from './runtime'
+import {
+  ADD_TIME_SECONDS,
+  addTime,
+  createRuntime,
+  next,
+  pause,
+  prev,
+  resume,
+  start,
+  tick,
+  type RuntimeState,
+} from './runtime'
 
 /** Drive a runtime through `seconds` one-second ticks (the real interval cadence). */
 function run(state: RuntimeState, seconds: number): RuntimeState {
@@ -146,5 +157,33 @@ describe('next / prev', () => {
     expect(prev(idle)).toBe(idle)
     const ended = run(start(createRuntime([1])), 1)
     expect(next(ended)).toBe(ended)
+  })
+})
+
+describe('addTime', () => {
+  it('extends the current pose by the default increment, clock keeps ticking', () => {
+    const s = run(start(createRuntime([60, 120])), 5) // 55s left on pose 1
+    const extended = addTime(s)
+    expect(extended).toMatchObject({ index: 0, remaining: 55 + ADD_TIME_SECONDS, phase: 'running' })
+    // Still a live pose: a further tick drains normally from the extended clock.
+    expect(tick(extended, 1).remaining).toBe(54 + ADD_TIME_SECONDS)
+  })
+
+  it('accepts a custom amount and works while paused', () => {
+    const paused = pause(run(start(createRuntime([60])), 10)) // 50s left, paused
+    expect(addTime(paused, 15)).toMatchObject({ remaining: 65, phase: 'paused' })
+  })
+
+  it('is ignored during a rest slide', () => {
+    const resting = run(start(createRuntime([60, 120], 10)), 60) // just entered the rest
+    expect(resting.resting).toBe(true)
+    expect(addTime(resting)).toBe(resting)
+  })
+
+  it('is inert from idle or ended phases', () => {
+    const idle = createRuntime([60])
+    expect(addTime(idle)).toBe(idle)
+    const ended = run(start(createRuntime([1])), 1)
+    expect(addTime(ended)).toBe(ended)
   })
 })

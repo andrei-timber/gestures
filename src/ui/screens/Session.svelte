@@ -17,6 +17,9 @@
     ' ': togglePause,
     ArrowLeft: () => session.prev(),
     ArrowRight: () => session.next(),
+    // Both the shifted "+" and its unshifted "=" so no modifier is needed.
+    '+': () => session.addTime(),
+    '=': () => session.addTime(),
   }
 
   function togglePause(): void {

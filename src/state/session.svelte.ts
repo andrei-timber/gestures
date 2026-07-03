@@ -9,6 +9,7 @@
  */
 
 import {
+  addTime as addTimeRuntime,
   createRuntime,
   next as nextRuntime,
   pause as pauseRuntime,
@@ -102,6 +103,10 @@ function createSessionStore() {
     /** Skip to the previous pose (scrubbing). Clamps at the first pose. */
     prev(): void {
       state = prevRuntime(state)
+    },
+    /** Extend the current pose, adding time to its live countdown. */
+    addTime(): void {
+      state = addTimeRuntime(state)
     },
   }
 }
