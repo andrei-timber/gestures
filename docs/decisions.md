@@ -26,3 +26,10 @@ avoid placeholder cruft.
 needs asset URLs prefixed with the base. Concern: a build-only base lets base-path bugs hide until
 deploy. Decision: set `base` unconditionally so dev mirrors prod (dev serves at
 `localhost:5173/apps/gestures/`). Tradeoff: a slightly less tidy local dev URL, accepted for prod-parity.
+
+2026-07-03 — **Quick-mode: the 90-min hard cap wins over the 10-pose minimum.** Context: spec §5 sets
+both a min of 10 poses and a hard ≤90-min active cap; a large custom interval (e.g. 10 min) makes these
+conflict — 10 poses would be 100 min. Concern: `clampNQuick` must pick one when they collide. Decision:
+the cap is the "impossible to exceed" invariant, so it wins — the count drops below 10 rather than
+overshoot 90 min (10-min interval → 9 poses). Tradeoff: a Quick session can fall under the nominal
+floor for very long intervals; alternative is to have the UI forbid such intervals (revisit at step 10).

@@ -5,9 +5,9 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 ## Now
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI.
-- **Next step:** Session A, step 1 — Class-mode distribution `distribute(N)`. Verify: spec examples
-  N=10→26m, N=16→46m, N=20→55m (`pnpm test`).
+  8+ are browser-verified UI. Session A (steps 1–5, engine logic) is **done**.
+- **Next step:** Session B, step 6 — Settings store: reactive settings + remember-last (localStorage).
+  Verify: vitest load/save; §5 defaults (`pnpm test`).
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -15,11 +15,11 @@ Ordering logic: A is the tested foundation; B wraps it in reactive stores; C mak
 end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is the finishing feel.
 
 **Session A — engine logic** (pure, framework-free · vitest)
-- [ ] 1 — Class-mode distribution: `distribute(N)` → per-pose seconds via geometric halving (§5 `c1/c2/c3`). Verify: N=10→26m, N=16→46m, N=20→55m.
-- [ ] 2 — Health caps + N clamp: ≤90 min active, ≤3 ten-min poses, ceiling helper. Verify: N=30→3×10m/81m, over-ceiling clamps.
-- [ ] 3 — Quick-mode plan: N + uniform interval → per-pose seconds. Verify: uniform arrays, custom-minutes.
-- [ ] 4 — Total-time FYI: active-sum + rests → total. Verify: matches §5 totals incl. rests.
-- [ ] 5 — Pose order: shuffle, no within-session repeats, RNG injected. Verify: permutation, deterministic under seed.
+- [x] 1 — Class-mode distribution: `distribute(N)` → per-pose seconds via geometric halving (§5 `c1/c2/c3`). Verify: N=10→26m, N=16→46m, N=20→55m.
+- [x] 2 — Health caps + N clamp: ≤90 min active, ≤3 ten-min poses, ceiling helper. Verify: N=30→3×10m/81m, over-ceiling clamps.
+- [x] 3 — Quick-mode plan: N + uniform interval → per-pose seconds. Verify: uniform arrays, custom-minutes.
+- [x] 4 — Total-time FYI: active-sum + rests → total. Verify: matches §5 totals incl. rests.
+- [x] 5 — Pose order: shuffle, no within-session repeats, RNG injected. Verify: permutation, deterministic under seed.
 
 **Session B — reactive state** (`src/state/*.svelte.ts`)
 - [ ] 6 — Settings store: reactive settings + remember-last (localStorage). Verify: vitest load/save; §5 defaults.
@@ -67,3 +67,4 @@ Full roadmap and each milestone's contents: `gestures-spec.md` §13.
 Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in <step> (yyyy-mm-dd)`.
 
 - [ ] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a (2026-07-03); low priority.
+- [ ] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — do it when a third consumer appears (`quick.ts` already imports them) — spawned in step 3 (2026-07-03); low priority.
