@@ -18,6 +18,8 @@ rather than restating it.
 ## Commands
 `pnpm dev` · `build` · `test` (vitest) · `lint` (eslint) · `typecheck` (svelte-check + tsc).
 The Husky **pre-push** gate runs test + lint + typecheck (no pre-commit).
+Browser-verifying the session? Use the owner's real reference library at `~/Art Practice/Refs`
+(subfolders of `.jpg` poses) as the local-folder source — don't generate throwaway images.
 
 ## Work cadence  (`/session-start` and `/session-wrap` point here)
 State lives in `docs/STATUS.md` (single status surface) and `docs/decisions.md` (append-only dated
