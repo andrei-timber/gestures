@@ -20,11 +20,17 @@
     // Both the shifted "+" and its unshifted "=" so no modifier is needed.
     '+': () => session.addTime(),
     '=': () => session.addTime(),
+    // Esc ends the run, same as the End button.
+    Escape: endSession,
   }
 
   function togglePause(): void {
     if (session.phase === 'running') session.pause()
     else if (session.phase === 'paused') session.resume()
+  }
+
+  function endSession(): void {
+    screen.show('summary')
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -73,7 +79,7 @@
 
   <div class="hud">
     <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-    <button class="end" onclick={() => screen.show('summary')}>End</button>
+    <button class="end" onclick={endSession}>End (esc)</button>
   </div>
 </section>
 
