@@ -67,15 +67,17 @@
     />
   {/if}
 
-  <!-- Rule-of-thirds construction grid — a per-pose placement check.
-       Spans the viewport (not the letterboxed image bounds); tightening it to
-       the image is a follow-up. `non-scaling-stroke` keeps hairlines crisp. -->
+  <!-- Fine construction grid — a per-pose placement / proportion check.
+       Ninths (3× finer than rule-of-thirds) in bright light blue so the lattice
+       reads over white references. Spans the viewport (not the letterboxed image
+       bounds); tightening it to the image is a follow-up. `non-scaling-stroke`
+       keeps hairlines crisp. -->
   {#if session.aids.grid}
-    <svg class="grid" viewBox="0 0 3 3" preserveAspectRatio="none" aria-hidden="true">
-      <line x1="1" y1="0" x2="1" y2="3" />
-      <line x1="2" y1="0" x2="2" y2="3" />
-      <line x1="0" y1="1" x2="3" y2="1" />
-      <line x1="0" y1="2" x2="3" y2="2" />
+    <svg class="grid" viewBox="0 0 9 9" preserveAspectRatio="none" aria-hidden="true">
+      {#each [1, 2, 3, 4, 5, 6, 7, 8] as n (n)}
+        <line x1={n} y1="0" x2={n} y2="9" />
+        <line x1="0" y1={n} x2="9" y2={n} />
+      {/each}
     </svg>
   {/if}
 
@@ -134,7 +136,7 @@
     object-fit: contain;
   }
 
-  /* Rule-of-thirds overlay: four hairlines, faint, never intercepting clicks. */
+  /* Fine construction overlay: a lattice of hairlines, never intercepting clicks. */
   .grid {
     position: absolute;
     inset: 0;
@@ -143,9 +145,11 @@
     pointer-events: none;
   }
 
+  /* Bright light blue so the grid stays legible over white references. */
   .grid line {
-    stroke: color-mix(in srgb, var(--fg) 40%, transparent);
+    stroke: #3ba6ff;
     stroke-width: 1;
+    opacity: 0.55;
     vector-effect: non-scaling-stroke;
   }
 
