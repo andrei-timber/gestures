@@ -88,6 +88,7 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
 - [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
 - [ ] Window-prefetch pose decodes for instant swaps — decode `index+1…index+N` (N≈2–3) ahead via `img.decode()`, side-effect layer only. Full design: `docs/prefetch-window.md` — spawned while exploring the source-load path (2026-07-03); nice-to-have.
+- [ ] Folder pick shows a scary "upload thousands of files" browser dialog (`webkitdirectory` semantics — nothing is actually uploaded). Move to `showDirectoryPicker()` with a `webkitdirectory` fallback, plus a one-line "nothing is uploaded" reassurance. Full design: `docs/folder-picker-permission.md` — spawned while exploring the source-picker UX (2026-07-03); nice-to-have.
 - [ ] Grid overlay (`r`) spans the full viewport, not the letterboxed image bounds — over a `contain`
   image with wide margins the thirds lines don't land on the drawing. Tighten to the rendered image rect
   (measure the contained bounds) if it proves distracting — spawned in step 20 (2026-07-03); low priority.
