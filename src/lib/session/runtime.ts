@@ -78,6 +78,18 @@ export function resume(state: RuntimeState): RuntimeState {
 }
 
 /**
+ * End the session now — the manual End button / `Esc`. Running, paused, or
+ * mid-rest all collapse to `ended`; idempotent once ended. Freezes the clock at
+ * 0 and clears the view aids, keeping `index` for the recap. The reactive store
+ * halts its 1s interval on this transition (the pure machine owns no clock).
+ */
+export function end(state: RuntimeState): RuntimeState {
+  return state.phase === 'ended'
+    ? state
+    : { ...state, phase: 'ended', remaining: 0, resting: false, aids: NO_AIDS }
+}
+
+/**
  * Jump to the next pose, resetting its clock to the full duration — a manual
  * skip for scrubbing (arrow buttons / `→`). Works while running or paused;
  * stepping past the final pose ends the session. No-op otherwise.

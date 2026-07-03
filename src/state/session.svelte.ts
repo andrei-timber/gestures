@@ -11,6 +11,7 @@
 import {
   addTime as addTimeRuntime,
   createRuntime,
+  end as endRuntime,
   next as nextRuntime,
   pause as pauseRuntime,
   prev as prevRuntime,
@@ -103,6 +104,11 @@ function createSessionStore() {
     resume(): void {
       state = resumeRuntime(state)
       if (state.phase === 'running') startTimer()
+    },
+    /** End the run now (manual End / `Esc`): stop the clock and freeze the recap. */
+    end(): void {
+      state = endRuntime(state)
+      stopTimer()
     },
     /** Skip to the next pose (scrubbing); ends the run past the last pose. */
     next(): void {

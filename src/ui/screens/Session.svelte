@@ -54,7 +54,11 @@
     else if (session.phase === 'paused') session.resume()
   }
 
+  // End the run: stop the runtime (halting its 1s tick) before navigating, so no
+  // interval keeps ticking in the background behind the summary. The ended-phase
+  // effect above also fires; showing the summary here keeps the intent explicit.
   function endSession(): void {
+    session.end()
     screen.show('summary')
   }
 

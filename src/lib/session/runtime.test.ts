@@ -3,6 +3,7 @@ import {
   ADD_TIME_SECONDS,
   addTime,
   createRuntime,
+  end,
   next,
   pause,
   prev,
@@ -55,6 +56,36 @@ describe('transitions', () => {
     expect(pause(idle)).toBe(idle) // can't pause before starting
     expect(resume(idle)).toBe(idle)
     expect(start(start(idle))).toEqual(start(idle)) // start is idempotent past idle
+  })
+})
+
+describe('end (manual End / Esc)', () => {
+  it('ends from running, freezing the clock and clearing aids but keeping index', () => {
+    const running = run(start(createRuntime([60, 120, 300])), 65) // 5s into pose 2
+    const ended = end(toggleGrayscale(running))
+    expect(ended.phase).toBe('ended')
+    expect(ended.remaining).toBe(0)
+    expect(ended.resting).toBe(false)
+    expect(ended.aids.grayscale).toBe(false)
+    expect(ended.index).toBe(1) // preserved for the recap
+  })
+
+  it('ends from paused and from a mid-rest slide', () => {
+    expect(end(pause(start(createRuntime([60])))).phase).toBe('ended')
+    const resting = run(start(createRuntime([3, 60], 5)), 3) // in the rest after pose 1
+    expect(resting.resting).toBe(true)
+    expect(end(resting)).toMatchObject({ phase: 'ended', resting: false, remaining: 0 })
+  })
+
+  it('is idempotent once ended and inert while idle stays idle-endable', () => {
+    const ended = end(start(createRuntime([60])))
+    expect(end(ended)).toBe(ended) // no-op once ended
+    expect(end(createRuntime([60])).phase).toBe('ended') // idle collapses too
+  })
+
+  it('stops tick from advancing after ending', () => {
+    const ended = end(run(start(createRuntime([60, 120])), 5))
+    expect(run(ended, 300)).toBe(ended) // tick is a no-op once ended
   })
 })
 
