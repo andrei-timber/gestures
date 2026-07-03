@@ -1,33 +1,14 @@
 <script lang="ts">
-  import { type DirEntry, collectFiles } from '@/lib/source/directory'
   import { source } from '@/state/source.svelte'
 
-  // Prefer the File System Access API where present (Chromium, the deploy
-  // target): its permission prompt reads "view files", not the misleading
-  // "upload all files from … to this site" that a webkitdirectory <input>
-  // forces (docs/folder-picker-permission.md). Nothing is ever uploaded either
-  // way — source.load only reads File objects locally (spec §9). Where the API
-  // is missing (Firefox/Safari) we fall back to the classic input.
-  // Not yet in the TS DOM lib; narrow to the one method we call.
-  type DirectoryPicker = { showDirectoryPicker(): Promise<unknown> }
-  const canPickDirectory = 'showDirectoryPicker' in window
-
-  let fallbackInput: HTMLInputElement
-
-  async function pick(): Promise<void> {
-    if (canPickDirectory) {
-      let handle: DirEntry
-      try {
-        handle = (await (window as unknown as DirectoryPicker).showDirectoryPicker()) as DirEntry
-      } catch {
-        return // the user dismissed the picker — leave the current set untouched
-      }
-      source.load(await collectFiles(handle))
-    } else {
-      fallbackInput.click()
-    }
-  }
-
+  // Folder pick uses the classic `<input webkitdirectory>`: it enumerates the
+  // whole tree completely, including files with odd/mojibake names. The nicer
+  // `showDirectoryPicker()` prompt was tried and reverted — Chrome silently
+  // drops files whose names contain characters it dislikes (nbsp, soft hyphen,
+  // combining marks), handing back a partial or empty set with no error, which
+  // is worse than a scary prompt for a reference library (docs/folder-picker-
+  // permission.md). `multiple` also lets a plain multi-file selection through;
+  // non-images are dropped by source.load.
   function onChange(event: Event): void {
     const input = event.currentTarget as HTMLInputElement
     source.load(input.files ? Array.from(input.files) : [])
@@ -35,17 +16,12 @@
 </script>
 
 <div class="folder">
-  <button type="button" class="pick" onclick={pick}>Choose a reference folder</button>
-  <!-- Fallback picker, triggered programmatically only when the API is absent. -->
-  <input
-    class="fallback"
-    type="file"
-    accept="image/*"
-    multiple
-    webkitdirectory
-    bind:this={fallbackInput}
-    onchange={onChange}
-  />
+  <label>
+    <input type="file" accept="image/*" multiple webkitdirectory onchange={onChange} />
+    <span>Choose a reference folder</span>
+  </label>
+  <!-- Reassurance: the webkitdirectory prompt reads as "upload all files…", but
+       nothing leaves the browser — source.load only reads File objects locally. -->
   <p class="reassure">Files stay in your browser — nothing is uploaded.</p>
   {#if source.count > 0}
     <p class="count">{source.count} image{source.count === 1 ? '' : 's'} loaded</p>
@@ -59,10 +35,8 @@
     gap: 0.5rem;
   }
 
-  .pick {
-    font: inherit;
-    color: var(--fg);
-    background: transparent;
+  label span {
+    display: inline-block;
     border: 1px solid var(--fg-muted);
     border-radius: 0.4rem;
     padding: 0.5rem 1.1rem;
@@ -70,11 +44,11 @@
     transition: border-color 0.15s ease;
   }
 
-  .pick:hover {
+  label:hover span {
     border-color: var(--fg);
   }
 
-  .fallback {
+  input {
     position: absolute;
     width: 1px;
     height: 1px;

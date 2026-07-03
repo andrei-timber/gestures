@@ -159,3 +159,16 @@ collapses), which is honest. Also this session (no separate decisions): dep alig
 Vite→8.1.3), `session/limits.ts` extraction (shared `MIN_POSES`/`MAX_ACTIVE_SECONDS`, past the third
 consumer), and window-prefetch decodes (`docs/prefetch-window.md`; pure `prefetchWindow` + browser-only
 `warm`). The grid-overlay image-bounds follow-up was deliberately **left untouched** (owner's call).
+
+2026-07-03 — **Folder picker reverted to webkitdirectory — showDirectoryPicker silently drops
+odd-named files.** Context: the same-day decision to prefer `showDirectoryPicker()` for its accurate
+"view files" prompt. Finding on the owner's real library: a folder of 1085 jpgs with mojibake filenames
+(valid UTF-8, but full of nbsp U+00A0 / soft-hyphen U+00AD / combining marks) loaded **0 images** — Chrome
+filters such names out *before* handing the directory handle to JS, so the async iterator yields nothing
+with no error and no way to recover in code (webkitdirectory read all 1085 fine; other clean-named folders
+worked via either path). Decision: revert to `<input webkitdirectory>` as the sole picker, keep the
+"nothing is uploaded" reassurance line, and delete the `showDirectoryPicker`/`collectFiles` path
+(`directory.ts` + its tests). Rationale: silent, undetectable partial/total file loss is unacceptable for
+a reference library; the API's only win was a cosmetic prompt, and the reassurance line already softens the
+webkitdirectory warning for this single-user tool. Tradeoff: the scary "upload all files" prompt returns;
+accepted — completeness and honesty beat a nicer dialog. Supersedes the earlier same-day picker decision.

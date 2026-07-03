@@ -1,6 +1,13 @@
 # Design note — folder-picker permission prompt
 
-**Status:** proposed, not built. Parked as a Follow-up in `STATUS.md`.
+**Status:** **tried and reverted (2026-07-03).** The File System Access approach below (§1) was built,
+then backed out: on the owner's real library, `showDirectoryPicker()` returned **0 files** for a folder of
+1085 mojibake-named jpgs — Chrome silently drops files whose names hold odd characters (nbsp U+00A0,
+soft-hyphen U+00AD, combining marks) *before* JS sees the handle, with no error and no in-code recovery
+(`webkitdirectory` read all 1085). Silent, undetectable file loss is worse than a scary prompt for a
+reference library, so the picker stays on `<input webkitdirectory>` + the §2 reassurance line (which we
+kept). See `decisions.md` (2026-07-03, two entries). The §1 write-up is retained below as the rationale
+for *why not*, not a live proposal.
 **Origin:** the browser shows a scary upload disclaimer when picking a folder (2026-07-03).
 
 ## Problem
