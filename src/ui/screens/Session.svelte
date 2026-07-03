@@ -37,6 +37,18 @@
   )
   const poseFilter = $derived(session.aids.grayscale ? 'grayscale(1)' : 'none')
 
+  // Gentle end cue (step 21): the countdown warms + brightens over the last few
+  // seconds of an active pose — a calm "wrap up" nudge, no sound. Only while the
+  // clock is actually draining a pose (not resting, paused, or handing to the
+  // summary), so it never fires on a rest slide or the final handoff.
+  const END_CUE_SECONDS = 3
+  const ending = $derived(
+    session.phase === 'running' &&
+      !session.resting &&
+      session.remaining > 0 &&
+      session.remaining <= END_CUE_SECONDS,
+  )
+
   function togglePause(): void {
     if (session.phase === 'running') session.pause()
     else if (session.phase === 'paused') session.resume()
@@ -108,7 +120,7 @@
   </button>
 
   <!-- Countdown: glass pill, bottom-centre, legible over bright references. -->
-  <span class="clock glass" class:resting={session.resting}>{formatClock(session.remaining)}</span>
+  <span class="clock glass" class:resting={session.resting} class:ending>{formatClock(session.remaining)}</span>
 
   <!-- HUD split so neither legend stretches across the reference: the per-pose
        view aids sit left by the counter, the timing/navigation keys sit right by
@@ -260,11 +272,25 @@
     font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.05em;
-    transition: opacity 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      color 0.6s ease,
+      box-shadow 0.6s ease;
   }
 
   .clock.resting {
     opacity: 0.55;
+  }
+
+  /* Gentle end cue: the countdown warms toward a calm amber and lifts a soft
+     glow over the final few seconds. Interim colour literal — the 🎨 pass
+     formalises the warm accent token (spec §14), like the .glass treatment. */
+  .clock.ending {
+    color: #f0b878;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+      0 6px 20px rgb(0 0 0 / 0.28),
+      0 0 16px color-mix(in srgb, #f0b878 45%, transparent);
   }
 
   .hud {

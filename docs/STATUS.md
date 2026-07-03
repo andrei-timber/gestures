@@ -3,15 +3,16 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
-  Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI. Sessions A–F (steps 1–20) are **done** — Session F added the in-session
-  view aids: mirror `m`/`v` (step 18), grayscale `g` (step 19), grid `r` (step 20). All three live as a
-  per-pose `aids` object in the runtime state machine (reset on every pose change, spec §6) and stack on
-  the `<svelte:window>` keymap; the legend beside the pose counter lists them.
-- **Next step:** Session G, step 21 — Gentle end cue: soft beep for the last ~3s of a pose + a subtle
-  visual. Verify: browser — near a pose's end, confirm the soft cue fires and stays calm (no jarring).
-- **Verify:** per step below — logic under vitest, UI browser-verified.
+- **Focus:** M0 (Delightful core) is **complete** — all 22 steps across Sessions A–G done. Session G
+  closed it: step 21 (gentle end cue — countdown warms amber over the last ~3s, verified) and step 22
+  (shortcuts help, satisfied by the always-on inline HUD legend). Also this session: removed the
+  "Remember these settings" checkbox — remember-last is now always on (setup lean; spec §5 · `rememberLast`
+  field dropped end-to-end).
+- **Next step:** Milestone boundary — groom M0's step ledger into `docs/history.md` and pick the next
+  track. Sequenced next is the 🎨 creative-direction session (originate the design system, then restyle
+  M0), which also formalises the interim `.glass` + amber-cue literals. Confirm direction at next start.
+- **Verify:** M0 steps verified per-step (logic under vitest, UI browser-verified); full gate green
+  (114 tests, typecheck, lint) as of 2026-07-03.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
 Ordering logic: A is the tested foundation; B wraps it in reactive stores; C makes it runnable
@@ -52,9 +53,12 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
   letterboxed image bounds (follow-up to tighten). Line-of-action variant deferred.
 
 **Session G — cues & polish**
-- [ ] 21 — Gentle end cue: soft beep last ~3s + subtle visual.
-- [ ] 22 — Shortcuts help: documented, discoverable key legend. *Partly pulled forward* — a one-line
-  live legend beside End landed in the Session-E polish (2026-07-03); a fuller discoverable help is still due.
+- [x] 21 — Gentle end cue: the countdown warms to a calm amber + soft glow over the last ~3s of an
+  active pose (gated `running && !resting && 0<rem≤3`; never on rests/pause/final handoff). Visual-only —
+  the soft beep was dropped by choice (owner, 2026-07-03). Interim amber literal; 🎨 pass formalises the token.
+- [x] 22 — Shortcuts help: documented, discoverable key legend. Satisfied by the always-on inline
+  legend beside the pose counter (view aids) and End (timing/nav keys), landed in the Session-E polish
+  (2026-07-03) — deemed sufficient; no separate help panel needed.
 
 Some Session-G chrome polish was pulled forward during Session E (glass chrome, pause icon, Esc-to-end,
 inline legend) — see the Follow-ups entry + `decisions.md` (2026-07-03); the glass treatment is interim
@@ -69,7 +73,7 @@ in `gestures-spec.md` §14.
 | | Deliverable | State |
 |---|---|---|
 | — | Dev setup pass (skeleton, repo, rituals) | ✓ |
-| M0 | Delightful core — local-folder source, session engine, in-session helpers | ☐ in progress |
+| M0 | Delightful core — local-folder source, session engine, in-session helpers | ✓ |
 | 🎨 | Creative-direction session — originate design system, then restyle M0 (§14) | ☐ |
 | ☁️ | Cloudflare setup guide + first deploy (§14; Workers Static Assets — `docs/deploy-notes.md`) | ☐ |
 | M1 | Drive read (Tier 1, public folder link) | ☐ |
