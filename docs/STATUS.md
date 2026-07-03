@@ -8,10 +8,12 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
   (shortcuts help, satisfied by the always-on inline HUD legend). Also this session: removed the
   "Remember these settings" checkbox — remember-last is now always on (setup lean; spec §5 · `rememberLast`
   field dropped end-to-end).
-- **Next step:** Milestone boundary — groom M0's step ledger into `docs/history.md` and pick the next
-  track. Sequenced next is the 🎨 creative-direction session (originate the design system, then restyle
-  M0), which also formalises the interim `.glass` + amber-cue literals. Confirm direction at next start.
-- **Verify:** M0 steps verified per-step (logic under vitest, UI browser-verified); full gate green
+- **Next step:** Work down the unresolved **Follow-ups** queue below (all low / nice-to-have) before any
+  new track — triage them into do-now vs. keep-parked at session-start, then knock out the cheap ones.
+  Candidate quick wins: Setup NaN-input clamp, grid-overlay image-bounds fit, End/`Esc` halting the 1s
+  interval. Milestone grooming (archive M0 ledger → `docs/history.md`) and the 🎨 creative-direction
+  session are **deliberately deferred** — don't start them until the follow-up sweep is done.
+- **Verify:** per follow-up — logic under vitest, UI browser-verified. M0 baseline gate green
   (114 tests, typecheck, lint) as of 2026-07-03.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)

@@ -106,3 +106,19 @@ carries presentation-flavoured flags rather than staying purely about lifecycle/
 (component state + an effect watching `index`) would push the reset wiring out of test coverage.
 The grid is a viewport-spanning rule-of-thirds (not fitted to the `contain` image bounds — parked
 follow-up); the line-of-action variant named in spec §6 is deferred.
+
+2026-07-03 — **Gentle end cue is visual-only (no beep).** Context: step 21 spec'd "a soft beep for the
+last ~3s + subtle visual." Decision: drop the audio entirely; the cue is the countdown warming to a calm
+amber + soft glow over the last 3s of an active pose (owner's call at scoping). Rationale: keeps the
+atmosphere quiet and sidesteps WebAudio autoplay-gesture gating for no felt loss; the visual reads clearly
+at the moment it matters. Gated `running && !resting && 0<rem≤3` so it never fires on rests, pause, or the
+final handoff. Tradeoff: no cue when the artist's eyes are off the clock; accepted — a beep can return
+later if the silent version proves too easy to miss. Amber is an interim literal pending the 🎨 token pass.
+
+2026-07-03 — **Remember-last is always on; the toggle is gone.** Context: the setup carried a "Remember
+these settings" checkbox (`rememberLast` flag). Decision: remove the checkbox and always persist; drop the
+`rememberLast` field end-to-end (type, defaults, parse/serialize, reactive persist, tests). Rationale:
+leaning the landing page (owner's call); a returning user almost always wants their last config, and the
+opt-out earned its own line of chrome for a rare case. Spec §5 marks remember-last implicit. Tradeoff: no
+in-app "leave no trace" escape hatch — clearing localStorage is now the only reset; accepted for a
+single-user local tool.
