@@ -34,6 +34,17 @@ the cap is the "impossible to exceed" invariant, so it wins — the count drops 
 overshoot 90 min (10-min interval → 9 poses). Tradeoff: a Quick session can fall under the nominal
 floor for very long intervals; alternative is to have the UI forbid such intervals (revisit at step 10).
 
+2026-07-03 — **Step 16's core (prev/next runtime + arrow buttons) pulled forward into Session D.**
+Context: while building the slideshow (Session D) the owner asked for faint side-arrow buttons to scrub a
+run quickly; the step ledger had scheduled prev/next as step 16 (a Session E "one key at a time" helper).
+Concern: the arrows need runtime jump logic (`next()`/`prev()`), which is step 16's substance — building
+it now reorders the ledger. Decision: implement `next()`/`prev()` (reset the landed pose's clock, work
+while running or paused, next-past-last ends, prev clamps at first — all tested) plus the arrow buttons
+in Session D, leaving only the `←`/`→` key binding for step 16 (to hang off step 15's dispatcher).
+Tradeoff: step 16 is split across two sessions, breaking the strict one-change-per-step granularity;
+accepted because the scrub affordance also made browser-verifying steps 12–14 (rests, countdown, recap)
+fast — I drove the natural end-of-run via the next arrow instead of waiting out real durations.
+
 2026-07-03 — **Pose picking enforces a source-index gap, not just a shuffle.** Context: reference
 libraries are often ordered — the same pose at several angles spans a run of consecutive files — so
 random picks would draw near-duplicates. Concern: how to dedup without hurting small folders or ever

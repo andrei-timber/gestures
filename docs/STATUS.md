@@ -5,11 +5,12 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 ## Now
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI. Sessions A–C (steps 1–10) are **done** — engine logic, reactive
-  settings/session/screen/source stores, and the shell + Setup screen with live total-time FYI.
-- **Next step:** Session D, step 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance
-  (wires session runtime 7 + pose order 5 + spaced pick `pick.ts`). Verify: browser — start a session,
-  watch it advance. Picking: `pickSpaced(pool, N)` → distinct spaced indices → shuffle for display.
+  8+ are browser-verified UI. Sessions A–D (steps 1–14) are **done** — engine logic, reactive stores,
+  the shell + Setup screen, and the full slideshow runtime (image, pose N/M, rests, countdown, recap).
+  Prev/next runtime + faint side arrows also landed early (step 16's core — see below).
+- **Next step:** Session E, step 15 — Keyboard dispatcher + pause/resume: `space` toggles pause/resume
+  and keeps the reference on screen (the base key handler the rest of E/F build on). Verify: browser —
+  start a session, press `space`, confirm it pauses (clock stops, image stays) and resumes.
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -33,14 +34,14 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 - [x] 10 — Setup screen: mode toggle, param inputs, live total-time FYI, Start (wires 6 + 1–4).
 
 **Session D — slideshow runtime** (UI · browser-verify)
-- [ ] 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance (wires 7 + 5).
-- [ ] 12 — Rest slide: optional dim/blank pause between poses.
-- [ ] 13 — Calm countdown: unobtrusive per-pose time display.
-- [ ] 14 — End summary: calm recap (poses, total time), return to setup.
+- [x] 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance (wires 7 + 5 + `pick.ts`). Also caps effective N at pool size (closes the FYI-overstatement follow-up).
+- [x] 12 — Rest slide: dim "Rest" pause between poses, reference faint behind (runtime interleaves rests; no rest after the final pose).
+- [x] 13 — Calm countdown: `formatClock` m:ss, tabular/faint at bottom-centre, dims during rests.
+- [x] 14 — End summary: calm recap (pose count + total time via `session.totalSeconds`), New session → setup.
 
 **Session E — helpers I** (each decoupled · one key · browser-verify)
 - [ ] 15 — Keyboard dispatcher + pause/resume: `space`, keeps reference on screen (base handler).
-- [ ] 16 — Prev / next: `←` / `→`.
+- [ ] 16 — Prev / next: `←` / `→`. **Core done early:** runtime `next()`/`prev()` (tested) + faint side arrow buttons landed in Session D; only the `←`/`→` key binding remains (add on the step-15 dispatcher).
 - [ ] 17 — Extend / add-time: `+` on current pose.
 
 **Session F — helpers II**
@@ -71,4 +72,5 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Align `@types/node` with Node 22 (the Vite template pulled v24) and bump the Vite 8.1.2→8.1.3 patch — spawned in step 2a (2026-07-03); low priority.
 - [ ] Extract shared session limits (`MIN_POSES`, `MAX_ACTIVE_SECONDS`) out of `caps.ts` into `session/limits.ts` — do it when a third consumer appears (`quick.ts` already imports them) — spawned in step 3 (2026-07-03); low priority.
 - [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
-- [ ] Setup FYI: when the loaded folder has fewer images than the requested N, effective N caps at the pool size (spec §5 pose picking) — reflect that cap in the total-time FYI so it isn't overstated — spawned during step-11 planning (2026-07-03); do it with step 11.
+- [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
+- [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
