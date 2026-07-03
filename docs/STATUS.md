@@ -5,12 +5,12 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 ## Now
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI. Sessions A–D (steps 1–14) are **done**, and Session E has started —
-  Session E is **done** — the keyboard dispatcher (step 15, `space` pause/resume), `←`/`→` prev/next
-  (step 16), and `+` add-time (step 17) all land on one `<svelte:window>` keymap.
-- **Next step:** Session F, step 18 — Mirror H / V: `m` / `v` (CSS transform on the reference, keymap
-  entries + a mirror flag in Session state). Verify: browser — press `m`/`v`, confirm the reference
-  flips horizontally / vertically and toggles back.
+  8+ are browser-verified UI. Sessions A–F (steps 1–20) are **done** — Session F added the in-session
+  view aids: mirror `m`/`v` (step 18), grayscale `g` (step 19), grid `r` (step 20). All three live as a
+  per-pose `aids` object in the runtime state machine (reset on every pose change, spec §6) and stack on
+  the `<svelte:window>` keymap; the legend beside the pose counter lists them.
+- **Next step:** Session G, step 21 — Gentle end cue: soft beep for the last ~3s of a pose + a subtle
+  visual. Verify: browser — near a pose's end, confirm the soft cue fires and stays calm (no jarring).
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -44,10 +44,12 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 - [x] 16 — Prev / next: `←` / `→`. Runtime `next()`/`prev()` (tested) + faint side arrow buttons landed in Session D; step 16 added the `←`/`→` key binding on the step-15 keymap.
 - [x] 17 — Extend / add-time: `+` (and unshifted `=`) on current pose. Runtime `addTime()` bumps the live clock (+30s, `ADD_TIME_SECONDS`), works running or paused, inert during rests / idle / ended.
 
-**Session F — helpers II**
-- [ ] 18 — Mirror H / V: `m` / `v` (CSS transform).
-- [ ] 19 — Grayscale: `g` (CSS filter).
-- [ ] 20 — Grid / line-of-action overlay: `r`.
+**Session F — helpers II** — all three are per-pose sanity checks that reset on every pose change
+(never session-wide, spec §6); they compose and share one `aids` object in the runtime.
+- [x] 18 — Mirror H / V: `m` / `v` (CSS transform; H and V compose). Runtime `toggleMirrorH/V` + tests.
+- [x] 19 — Grayscale: `g` (CSS `grayscale(1)` filter). The headline value-check craft feature.
+- [x] 20 — Grid / line-of-action overlay: `r` — rule-of-thirds hairlines. Spans the viewport, not the
+  letterboxed image bounds (follow-up to tighten). Line-of-action variant deferred.
 
 **Session G — cues & polish**
 - [ ] 21 — Gentle end cue: soft beep last ~3s + subtle visual.
@@ -86,6 +88,9 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
 - [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
 - [ ] Window-prefetch pose decodes for instant swaps — decode `index+1…index+N` (N≈2–3) ahead via `img.decode()`, side-effect layer only. Full design: `docs/prefetch-window.md` — spawned while exploring the source-load path (2026-07-03); nice-to-have.
+- [ ] Grid overlay (`r`) spans the full viewport, not the letterboxed image bounds — over a `contain`
+  image with wide margins the thirds lines don't land on the drawing. Tighten to the rendered image rect
+  (measure the contained bounds) if it proves distracting — spawned in step 20 (2026-07-03); low priority.
 - [ ] End / `Esc` navigate to the summary but don't stop the session's 1s interval — it keeps ticking in the background until the next `session.load()` clears it (harmless: summary reads planned totals, and Start always reloads). Have End/`Esc` also halt the clock if we ever read live elapsed time on the summary — spawned in step 16b/Esc-to-end polish (2026-07-03); low priority. Related: the early-end recap follow-up above.
 - [x] Session-G chrome polish pulled forward during Session E (2026-07-03): glass-pill treatment for the clock + nav arrows (legible over bright refs), pause is now a large glass icon with the dim halved, `Esc` ends the run (End cues "(esc)"), and a one-line shortcut legend sits beside End. Glass is an **interim** `.glass` class in `Session.svelte` — the 🎨 creative-direction pass (spec §14) formalises the tokens and may restyle it; the legend partially satisfies step 22 (full shortcuts help still due). See `decisions.md`.
 - [x] Class mode floored the pose count to `MIN_POSES` (10) *after* Setup capped it to the folder size, so a Class run on a <10-image folder played 10 poses against 4 images (blank slides past the pool) — resolved: Class now requires ≥10 images and falls back to Quick with a note; `buildPlan`'s `poolCap` can pull the count below `MIN_POSES` so Quick runs a folder-limited session (spec §5 · `decisions.md`) — spawned in step 15, fixed 2026-07-03.

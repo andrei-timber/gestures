@@ -91,3 +91,18 @@ floor now guards only the user-*requested* count, not a folder-limited one. So a
 exactly 4 Quick poses. Tradeoff: `MIN_POSES` is no longer an absolute lower bound on a session's length
 (a 1-image folder yields a 1-pose run); accepted — the folder is a harder constraint than the input
 minimum, and the alternative (blocking <10-image folders entirely) is worse for the local-folder flow.
+
+2026-07-03 — **In-session view aids (mirror/grayscale/grid) are per-pose, and live in the runtime
+state machine.** Context: Session F adds `m`/`v` mirror, `g` grayscale, `r` grid. Two questions: do
+they persist across poses, and where does their state live. Decision: (a) they **reset on every pose
+change** (auto-advance, prev/next) — they're sanity checks against the pose in front of you, not
+session-wide settings (owner's call; folded into spec §6). (b) State lives as a per-pose `aids` object
+*inside* the runtime reducer (`RuntimeState.aids`), reset wherever `index` changes (`next`/`prev`/`tick`
+advance). Rationale: the reset is intrinsically coupled to the pose transitions the runtime already owns,
+so colocating keeps it guaranteed-correct and fully vitest-testable; the reactive store and Session view
+stay thin pass-throughs (CSS transform/filter + an SVG grid). Tradeoff: the deterministic engine now
+carries presentation-flavoured flags rather than staying purely about lifecycle/timing; accepted because
+"transient state scoped to the current pose" is genuinely the runtime's concern, and the alternative
+(component state + an effect watching `index`) would push the reset wiring out of test coverage.
+The grid is a viewport-spanning rule-of-thirds (not fitted to the `contain` image bounds — parked
+follow-up); the line-of-action variant named in spec §6 is deferred.
