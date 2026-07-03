@@ -3,19 +3,54 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** Dev-setup pass is **complete** — skeleton, tooling, rituals, pre-push gate, and the public
-  GitHub repo are all in. Next up is M0, the first product milestone.
-- **Next step:** Start M0 (Delightful core) — local-folder source, session engine, in-session helpers.
-  Agree the M0 slice + definition-of-done at session-start before editing. Contents: `gestures-spec.md` §13.
-- **Verify:** TBD per M0 slice — logic under vitest, UI browser-verified.
+- **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
+  Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
+  8+ are browser-verified UI.
+- **Next step:** Session A, step 1 — Class-mode distribution `distribute(N)`. Verify: spec examples
+  N=10→26m, N=16→46m, N=20→55m (`pnpm test`).
+- **Verify:** per step below — logic under vitest, UI browser-verified.
 
-### Dev setup — steps
-- [x] 1 — Scaffold Vite + Svelte 5 + TS base
-- [x] 2a — Ondalu code subset + tooling (typecheck/lint/test/build all green; base path + `@/` alias verified)
-- [x] 2b — Process docs + rituals (CLAUDE.md, docs/, `.claude/commands/`)
-- [x] README replaced with a map-style front page
-- [x] 4 — Husky pre-push gate (`test && lint && typecheck`; no pre-commit; failing check blocks push — proven)
-- [x] 5 — Git authorship (`andreitim`) + init + first commit + public repo `andrei-timber/gestures` (default branch `main`)
+### M0 — step ledger (`gestures-spec.md` §5–6, §13)
+Ordering logic: A is the tested foundation; B wraps it in reactive stores; C makes it runnable
+end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is the finishing feel.
+
+**Session A — engine logic** (pure, framework-free · vitest)
+- [ ] 1 — Class-mode distribution: `distribute(N)` → per-pose seconds via geometric halving (§5 `c1/c2/c3`). Verify: N=10→26m, N=16→46m, N=20→55m.
+- [ ] 2 — Health caps + N clamp: ≤90 min active, ≤3 ten-min poses, ceiling helper. Verify: N=30→3×10m/81m, over-ceiling clamps.
+- [ ] 3 — Quick-mode plan: N + uniform interval → per-pose seconds. Verify: uniform arrays, custom-minutes.
+- [ ] 4 — Total-time FYI: active-sum + rests → total. Verify: matches §5 totals incl. rests.
+- [ ] 5 — Pose order: shuffle, no within-session repeats, RNG injected. Verify: permutation, deterministic under seed.
+
+**Session B — reactive state** (`src/state/*.svelte.ts`)
+- [ ] 6 — Settings store: reactive settings + remember-last (localStorage). Verify: vitest load/save; §5 defaults.
+- [ ] 7 — Session runtime store: state machine idle→running→paused→ended, index/remaining/tick. Verify: vitest with fake clock.
+
+**Session C — shell, source, setup** (UI · browser-verify)
+- [ ] 8 — App shell: static shell + screen switch (Setup ↔ Session ↔ Summary).
+- [ ] 9 — Local-folder source: folder/file input, filter `.jpg/.png/.webp`, emit image list. Verify: real folder, count/filtering.
+- [ ] 10 — Setup screen: mode toggle, param inputs, live total-time FYI, Start (wires 6 + 1–4).
+
+**Session D — slideshow runtime** (UI · browser-verify)
+- [ ] 11 — Slideshow view: full-bleed image, "pose N of M", auto-advance (wires 7 + 5).
+- [ ] 12 — Rest slide: optional dim/blank pause between poses.
+- [ ] 13 — Calm countdown: unobtrusive per-pose time display.
+- [ ] 14 — End summary: calm recap (poses, total time), return to setup.
+
+**Session E — helpers I** (each decoupled · one key · browser-verify)
+- [ ] 15 — Keyboard dispatcher + pause/resume: `space`, keeps reference on screen (base handler).
+- [ ] 16 — Prev / next: `←` / `→`.
+- [ ] 17 — Extend / add-time: `+` on current pose.
+
+**Session F — helpers II**
+- [ ] 18 — Mirror H / V: `m` / `v` (CSS transform).
+- [ ] 19 — Grayscale: `g` (CSS filter).
+- [ ] 20 — Grid / line-of-action overlay: `r`.
+
+**Session G — cues & polish**
+- [ ] 21 — Gentle end cue: soft beep last ~3s + subtle visual.
+- [ ] 22 — Shortcuts help: documented, discoverable key legend.
+
+Finished milestones' ledgers live in `docs/history.md` (Dev setup pass ✓).
 
 ## Milestones
 | | Milestone | State |

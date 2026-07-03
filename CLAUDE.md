@@ -28,6 +28,9 @@ Y-statement log). Product decisions stay in `gestures-spec.md`; `docs/decisions.
 - **Session-wrap** — a lightweight reconcile (not a milestone close): tick done steps and reset the
   STATUS "Now" (next step + its verify command), append any decisions, park discovered out-of-scope work
   in the STATUS Follow-ups queue, suggest a semantically-contained commit. **Never auto-commit.**
+- **Milestone boundary (grooming)** — at a milestone's *finish* (session-wrap), archive its step ledger
+  to `docs/history.md` and clear it from STATUS; at a milestone's *start* (session-start), lay out the
+  new milestone's step ledger in STATUS before scoping the first session.
 
 ## Habits
 - One canonical home per fact; derived docs are maps, not copies.
