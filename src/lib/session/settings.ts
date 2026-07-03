@@ -40,6 +40,35 @@ export const DEFAULT_SETTINGS: Settings = {
   randomize: true,
 }
 
+/**
+ * Live-edit clamps for the setup number inputs. A `type="number"` input yields
+ * NaN when cleared; without these a transient empty field writes NaN into
+ * settings and blanks the plan / total-time FYI until refilled. (`parse` heals
+ * it on the next reload, but not during the session.) The setup screen routes
+ * each input's blur through the matching clamp, snapping a cleared field to its
+ * minimum — the same floor as the input's `min` attribute.
+ */
+
+/** Lowest custom Quick interval offered, seconds (0.5 min — the input's floor). */
+export const MIN_INTERVAL_SECONDS = 30
+
+/** Clamp a live-edited pose count: NaN or below the floor snaps to {@link MIN_POSES}. */
+export function clampPoseCount(n: number): number {
+  return Number.isFinite(n) && n >= MIN_POSES ? Math.floor(n) : MIN_POSES
+}
+
+/** Clamp a live-edited rest: NaN or negative snaps to 0 (rests disabled). */
+export function clampRestSeconds(n: number): number {
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0
+}
+
+/** Clamp a live-edited custom interval: NaN or below the floor snaps to {@link MIN_INTERVAL_SECONDS}. */
+export function clampIntervalSeconds(secs: number): number {
+  return Number.isFinite(secs) && secs >= MIN_INTERVAL_SECONDS
+    ? Math.round(secs)
+    : MIN_INTERVAL_SECONDS
+}
+
 /** Serialize settings for persistence. */
 export function serialize(settings: Settings): string {
   return JSON.stringify(settings)

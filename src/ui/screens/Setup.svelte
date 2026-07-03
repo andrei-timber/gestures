@@ -5,6 +5,11 @@
   import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
   import { QUICK_INTERVALS_SECONDS, customIntervalSeconds } from '@/lib/session/quick'
+  import {
+    clampIntervalSeconds,
+    clampPoseCount,
+    clampRestSeconds,
+  } from '@/lib/session/settings'
   import { selectRun } from '@/lib/session/select'
   import { totalSeconds } from '@/lib/session/timing'
   import { screen } from '@/state/screen.svelte'
@@ -83,7 +88,13 @@
 
     <label class="row">
       <span>Poses</span>
-      <input type="number" min="10" step="1" bind:value={settings.poseCount} />
+      <input
+        type="number"
+        min="10"
+        step="1"
+        bind:value={settings.poseCount}
+        onblur={() => (settings.poseCount = clampPoseCount(settings.poseCount))}
+      />
     </label>
 
     {#if settings.mode === 'quick'}
@@ -107,6 +118,7 @@
             value={settings.intervalSeconds / 60}
             oninput={(e) =>
               (settings.intervalSeconds = customIntervalSeconds(Number(e.currentTarget.value)))}
+            onblur={() => (settings.intervalSeconds = clampIntervalSeconds(settings.intervalSeconds))}
           />
         </label>
       {/if}
@@ -114,7 +126,13 @@
 
     <label class="row">
       <span>Rest (s)</span>
-      <input type="number" min="0" step="1" bind:value={settings.restSeconds} />
+      <input
+        type="number"
+        min="0"
+        step="1"
+        bind:value={settings.restSeconds}
+        onblur={() => (settings.restSeconds = clampRestSeconds(settings.restSeconds))}
+      />
     </label>
 
     <label class="check">

@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { MIN_POSES } from './limits'
 import { DEFAULT_INTERVAL_SECONDS } from './quick'
 import { DEFAULT_REST_SECONDS } from './timing'
-import { DEFAULT_SETTINGS, parse, serialize, type Settings } from './settings'
+import {
+  DEFAULT_SETTINGS,
+  MIN_INTERVAL_SECONDS,
+  clampIntervalSeconds,
+  clampPoseCount,
+  clampRestSeconds,
+  parse,
+  serialize,
+  type Settings,
+} from './settings'
 
 describe('DEFAULT_SETTINGS', () => {
   it('matches the spec §5 shared-param defaults', () => {
@@ -69,5 +78,30 @@ describe('parse fallbacks', () => {
 
   it('ignores unknown keys', () => {
     expect(parse(JSON.stringify({ ...DEFAULT_SETTINGS, bogus: 1 }))).toEqual(DEFAULT_SETTINGS)
+  })
+})
+
+describe('live-edit clamps (setup blur handlers)', () => {
+  it('snaps a cleared pose count (NaN) or a below-floor value to MIN_POSES', () => {
+    expect(clampPoseCount(NaN)).toBe(MIN_POSES)
+    expect(clampPoseCount(3)).toBe(MIN_POSES)
+    expect(clampPoseCount(MIN_POSES)).toBe(MIN_POSES)
+    expect(clampPoseCount(24)).toBe(24)
+    expect(clampPoseCount(24.9)).toBe(24) // floors fractional
+  })
+
+  it('snaps a cleared rest (NaN) or negative to 0, keeps a valid rest', () => {
+    expect(clampRestSeconds(NaN)).toBe(0)
+    expect(clampRestSeconds(-1)).toBe(0)
+    expect(clampRestSeconds(0)).toBe(0)
+    expect(clampRestSeconds(12.7)).toBe(12)
+  })
+
+  it('snaps a cleared/zero custom interval to the floor, keeps a valid one', () => {
+    expect(clampIntervalSeconds(NaN)).toBe(MIN_INTERVAL_SECONDS)
+    expect(clampIntervalSeconds(0)).toBe(MIN_INTERVAL_SECONDS) // empty input → 0s
+    expect(clampIntervalSeconds(10)).toBe(MIN_INTERVAL_SECONDS)
+    expect(clampIntervalSeconds(MIN_INTERVAL_SECONDS)).toBe(MIN_INTERVAL_SECONDS)
+    expect(clampIntervalSeconds(180)).toBe(180)
   })
 })
