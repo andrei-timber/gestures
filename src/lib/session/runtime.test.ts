@@ -6,6 +6,7 @@ import {
   end,
   next,
   pause,
+  posesDrawn,
   prev,
   resume,
   start,
@@ -34,6 +35,7 @@ describe('createRuntime', () => {
       index: 0,
       remaining: 60,
       resting: false,
+      elapsed: 0,
       aids: { mirrorH: false, mirrorV: false, grayscale: false, grid: false },
     })
   })
@@ -86,6 +88,46 @@ describe('end (manual End / Esc)', () => {
   it('stops tick from advancing after ending', () => {
     const ended = end(run(start(createRuntime([60, 120])), 5))
     expect(run(ended, 300)).toBe(ended) // tick is a no-op once ended
+  })
+})
+
+describe('elapsed + posesDrawn (truthful recap)', () => {
+  it('accumulates ticked seconds and freezes while paused', () => {
+    const s = run(start(createRuntime([60])), 20)
+    expect(s.elapsed).toBe(20)
+    const paused = pause(s)
+    expect(run(paused, 10).elapsed).toBe(20) // ticks are no-ops while paused
+  })
+
+  it('counts rest seconds too — elapsed is wall-time spent in the run', () => {
+    const s = run(start(createRuntime([3, 60], 5)), 8) // 3s pose + 5s rest
+    expect(s.elapsed).toBe(8)
+    expect(s.index).toBe(1)
+  })
+
+  it('lands exactly on the planned total for a run played to the end', () => {
+    const ended = run(start(createRuntime([3, 4, 5], 2)), 100) // overshoot; ends at 16s
+    expect(ended.phase).toBe('ended')
+    expect(ended.elapsed).toBe(16) // 3 + 2 + 4 + 2 + 5
+  })
+
+  it('extends elapsed truthfully when a pose is add-timed', () => {
+    const extended = run(addTime(run(start(createRuntime([10])), 5), 30), 35)
+    expect(extended.phase).toBe('ended')
+    expect(extended.elapsed).toBe(40) // 10s pose + 30s added, all drawn
+  })
+
+  it('reports posesDrawn 1-based: current pose mid-run, full count when complete', () => {
+    expect(posesDrawn(createRuntime([]))).toBe(0)
+    expect(posesDrawn(start(createRuntime([60, 120, 300])))).toBe(1)
+    expect(posesDrawn(run(start(createRuntime([60, 120, 300])), 65))).toBe(2)
+    expect(posesDrawn(run(start(createRuntime([3, 3])), 6))).toBe(2) // full run
+  })
+
+  it('gives a truthful count and elapsed when ended early', () => {
+    const early = end(run(start(createRuntime([60, 60, 60])), 90)) // 30s into pose 2
+    expect(posesDrawn(early)).toBe(2) // drew 2 of 3
+    expect(early.elapsed).toBe(90) // not the planned 180
   })
 })
 

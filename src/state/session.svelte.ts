@@ -14,6 +14,7 @@ import {
   end as endRuntime,
   next as nextRuntime,
   pause as pauseRuntime,
+  posesDrawn as posesDrawnRuntime,
   prev as prevRuntime,
   resume as resumeRuntime,
   start as startRuntime,
@@ -67,9 +68,20 @@ function createSessionStore() {
     get poseCount(): number {
       return state.plan.length
     },
-    /** The run's total time (active poses + rests) in seconds — for the recap. */
+    /** The run's *planned* total time (active poses + rests) in seconds. */
     get totalSeconds(): number {
       return totalSeconds([...state.plan], state.restSeconds)
+    },
+    /**
+     * Poses actually reached (1-based) — equals {@link poseCount} on a full run,
+     * lower when ended early. The truthful figure for the recap.
+     */
+    get posesDrawn(): number {
+      return posesDrawnRuntime(state)
+    },
+    /** Seconds actually spent in the run (excludes paused time) — the truthful recap duration. */
+    get elapsedSeconds(): number {
+      return state.elapsed
     },
     /** True during the rest slide between two poses. */
     get resting(): boolean {

@@ -4,15 +4,18 @@
   import { session } from '@/state/session.svelte'
 
   // Calm recap of the run just finished (step 14): how many poses, how long.
-  // Reads from the still-loaded session; "New session" returns to setup, where
-  // starting again reloads the runtime fresh.
+  // Reports the *actual* run — poses reached and seconds ticked — so ending
+  // early via End/Esc reads truthfully rather than restating the plan. On a run
+  // played to the end these equal the planned count/total. Reads from the
+  // still-loaded session; "New session" returns to setup, where starting again
+  // reloads the runtime fresh.
 </script>
 
 <section class="screen">
   <p class="lead">Session complete</p>
   <p class="recap">
-    {session.poseCount} pose{session.poseCount === 1 ? '' : 's'} · {formatDuration(
-      session.totalSeconds,
+    {session.posesDrawn} pose{session.posesDrawn === 1 ? '' : 's'} · {formatDuration(
+      session.elapsedSeconds,
     )}
   </p>
   <button onclick={() => screen.show('setup')}>New session</button>

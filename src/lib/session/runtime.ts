@@ -45,6 +45,8 @@ export interface RuntimeState {
   remaining: number
   /** True during the rest slide that falls after `index`'s pose. */
   resting: boolean
+  /** Seconds actually ticked so far (poses + rests, excludes paused time) — for a truthful recap. */
+  elapsed: number
   /** View aids for the current pose; cleared whenever the pose changes. */
   readonly aids: Aids
 }
@@ -58,8 +60,18 @@ export function createRuntime(plan: readonly number[], restSeconds = 0): Runtime
     index: 0,
     remaining: plan[0] ?? 0,
     resting: false,
+    elapsed: 0,
     aids: NO_AIDS,
   }
+}
+
+/**
+ * Poses actually reached so far, as a 1-based count — the figure a truthful
+ * recap reports. On a full run this equals the plan length; ending early leaves
+ * it at the pose in progress. 0 for an empty plan.
+ */
+export function posesDrawn(state: RuntimeState): number {
+  return state.plan.length === 0 ? 0 : state.index + 1
 }
 
 /** Begin a session (idle → running). No-op from any other phase. */
@@ -161,6 +173,7 @@ export function toggleGrid(state: RuntimeState): RuntimeState {
  */
 export function tick(state: RuntimeState, delta = 1): RuntimeState {
   if (state.phase !== 'running') return state
+  const elapsed = state.elapsed + delta
   let { index, remaining, resting } = state
   remaining -= delta
   while (remaining <= 0) {
@@ -170,7 +183,7 @@ export function tick(state: RuntimeState, delta = 1): RuntimeState {
       resting = false
       remaining += state.plan[index]
     } else if (index + 1 >= state.plan.length) {
-      return { ...state, phase: 'ended', index, remaining: 0, resting: false, aids: NO_AIDS }
+      return { ...state, phase: 'ended', index, remaining: 0, resting: false, elapsed, aids: NO_AIDS }
     } else if (state.restSeconds > 0) {
       // Active pose finished → rest before the next one.
       resting = true
@@ -182,5 +195,5 @@ export function tick(state: RuntimeState, delta = 1): RuntimeState {
   }
   // A pose change (index advanced, possibly across a rest) clears the view aids.
   const aids = index === state.index ? state.aids : NO_AIDS
-  return { ...state, index, remaining, resting, aids }
+  return { ...state, index, remaining, resting, elapsed, aids }
 }
