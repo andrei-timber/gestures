@@ -18,6 +18,7 @@ import {
   tick,
   type Phase,
 } from '@/lib/session/runtime'
+import { totalSeconds } from '@/lib/session/timing'
 import type { SourceImage } from '@/state/source.svelte'
 
 function createSessionStore() {
@@ -58,6 +59,10 @@ function createSessionStore() {
     },
     get poseCount(): number {
       return state.plan.length
+    },
+    /** The run's total time (active poses + rests) in seconds — for the recap. */
+    get totalSeconds(): number {
+      return totalSeconds([...state.plan], state.restSeconds)
     },
     /** True during the rest slide between two poses. */
     get resting(): boolean {

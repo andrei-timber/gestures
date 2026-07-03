@@ -1,12 +1,20 @@
 <script lang="ts">
+  import { formatDuration } from '@/lib/format'
   import { screen } from '@/state/screen.svelte'
+  import { session } from '@/state/session.svelte'
 
-  // Placeholder shell (step 8). Step 14 replaces this with the calm recap
-  // (poses drawn, total time) before returning to setup.
+  // Calm recap of the run just finished (step 14): how many poses, how long.
+  // Reads from the still-loaded session; "New session" returns to setup, where
+  // starting again reloads the runtime fresh.
 </script>
 
 <section class="screen">
-  <p>Session complete.</p>
+  <p class="lead">Session complete</p>
+  <p class="recap">
+    {session.poseCount} pose{session.poseCount === 1 ? '' : 's'} · {formatDuration(
+      session.totalSeconds,
+    )}
+  </p>
   <button onclick={() => screen.show('setup')}>New session</button>
 </section>
 
@@ -20,7 +28,13 @@
     text-align: center;
   }
 
-  p {
+  .lead {
+    margin: 0;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+  }
+
+  .recap {
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.95rem;
