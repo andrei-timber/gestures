@@ -28,9 +28,10 @@ export interface Aids {
   mirrorH: boolean
   mirrorV: boolean
   grayscale: boolean
+  grid: boolean
 }
 
-const NO_AIDS: Aids = { mirrorH: false, mirrorV: false, grayscale: false }
+const NO_AIDS: Aids = { mirrorH: false, mirrorV: false, grayscale: false, grid: false }
 
 export interface RuntimeState {
   phase: Phase
@@ -131,6 +132,12 @@ export function toggleMirrorV(state: RuntimeState): RuntimeState {
 export function toggleGrayscale(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   return { ...state, aids: { ...state.aids, grayscale: !state.aids.grayscale } }
+}
+
+/** Toggle the rule-of-thirds construction grid (spec §6 grid). No-op outside a run. */
+export function toggleGrid(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  return { ...state, aids: { ...state.aids, grid: !state.aids.grid } }
 }
 
 /**

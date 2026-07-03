@@ -20,10 +20,11 @@
     // Both the shifted "+" and its unshifted "=" so no modifier is needed.
     '+': () => session.addTime(),
     '=': () => session.addTime(),
-    // Per-pose sanity checks — mirror / grayscale — that reset on advance.
+    // Per-pose sanity checks — mirror / grayscale / grid — that reset on advance.
     m: () => session.toggleMirrorH(),
     v: () => session.toggleMirrorV(),
     g: () => session.toggleGrayscale(),
+    r: () => session.toggleGrid(),
     // Esc ends the run, same as the End button.
     Escape: endSession,
   }
@@ -66,6 +67,18 @@
     />
   {/if}
 
+  <!-- Rule-of-thirds construction grid — a per-pose placement check.
+       Spans the viewport (not the letterboxed image bounds); tightening it to
+       the image is a follow-up. `non-scaling-stroke` keeps hairlines crisp. -->
+  {#if session.aids.grid}
+    <svg class="grid" viewBox="0 0 3 3" preserveAspectRatio="none" aria-hidden="true">
+      <line x1="1" y1="0" x2="1" y2="3" />
+      <line x1="2" y1="0" x2="2" y2="3" />
+      <line x1="0" y1="1" x2="3" y2="1" />
+      <line x1="0" y1="2" x2="3" y2="2" />
+    </svg>
+  {/if}
+
   <!-- Rest slide: a dim pause between poses, the reference faint behind it. -->
   {#if session.resting}
     <div class="veil"><span>Rest</span></div>
@@ -98,7 +111,9 @@
   <div class="hud">
     <div class="left">
       <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-      <span class="legend">space pause · ← → prev/next · + extend · m/v mirror · g gray</span>
+      <span class="legend"
+        >space pause · ← → prev/next · + extend · m/v mirror · g gray · r grid</span
+      >
     </div>
     <button class="end" onclick={endSession}>End (esc)</button>
   </div>
@@ -117,6 +132,21 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  /* Rule-of-thirds overlay: four hairlines, faint, never intercepting clicks. */
+  .grid {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .grid line {
+    stroke: color-mix(in srgb, var(--fg) 40%, transparent);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
   }
 
   .veil {

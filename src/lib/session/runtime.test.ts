@@ -10,6 +10,7 @@ import {
   start,
   tick,
   toggleGrayscale,
+  toggleGrid,
   toggleMirrorH,
   toggleMirrorV,
   type RuntimeState,
@@ -32,7 +33,7 @@ describe('createRuntime', () => {
       index: 0,
       remaining: 60,
       resting: false,
-      aids: { mirrorH: false, mirrorV: false, grayscale: false },
+      aids: { mirrorH: false, mirrorV: false, grayscale: false, grid: false },
     })
   })
 
@@ -265,5 +266,35 @@ describe('grayscale aid', () => {
     expect(gray.aids.grayscale).toBe(true)
     expect(next(gray).aids.grayscale).toBe(false)
     expect(run(gray, 3).aids.grayscale).toBe(false) // auto-advanced into pose 1
+  })
+})
+
+describe('grid aid', () => {
+  it('toggles on and off, independent of the other aids', () => {
+    const s = start(createRuntime([60, 120]))
+    expect(toggleGrid(s).aids).toMatchObject({ grid: true, grayscale: false, mirrorH: false })
+    expect(toggleGrid(toggleGrid(s)).aids.grid).toBe(false)
+    // Composes with grayscale + a mirror without disturbing them.
+    const stacked = toggleGrid(toggleGrayscale(toggleMirrorH(s)))
+    expect(stacked.aids).toMatchObject({ grid: true, grayscale: true, mirrorH: true })
+  })
+
+  it('works while paused', () => {
+    const paused = pause(start(createRuntime([60])))
+    expect(toggleGrid(paused)).toMatchObject({ phase: 'paused', aids: { grid: true } })
+  })
+
+  it('is inert from idle or ended phases', () => {
+    const idle = createRuntime([60])
+    expect(toggleGrid(idle)).toBe(idle)
+    const ended = run(start(createRuntime([1])), 1)
+    expect(toggleGrid(ended)).toBe(ended)
+  })
+
+  it('resets on the next pose (scrub and auto-advance)', () => {
+    const gridded = toggleGrid(run(start(createRuntime([3, 60])), 1))
+    expect(gridded.aids.grid).toBe(true)
+    expect(next(gridded).aids.grid).toBe(false)
+    expect(run(gridded, 3).aids.grid).toBe(false) // auto-advanced into pose 1
   })
 })

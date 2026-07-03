@@ -18,6 +18,7 @@ import {
   start as startRuntime,
   tick,
   toggleGrayscale as toggleGrayscaleRuntime,
+  toggleGrid as toggleGridRuntime,
   toggleMirrorH as toggleMirrorHRuntime,
   toggleMirrorV as toggleMirrorVRuntime,
   type Aids,
@@ -127,6 +128,10 @@ function createSessionStore() {
     /** Desaturate the current pose to value only (per-pose sanity check). */
     toggleGrayscale(): void {
       state = toggleGrayscaleRuntime(state)
+    },
+    /** Toggle the rule-of-thirds construction grid (per-pose sanity check). */
+    toggleGrid(): void {
+      state = toggleGridRuntime(state)
     },
   }
 }
