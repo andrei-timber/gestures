@@ -5,12 +5,12 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 ## Now
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
-  8+ are browser-verified UI. Sessions A–D (steps 1–14) are **done** — engine logic, reactive stores,
-  the shell + Setup screen, and the full slideshow runtime (image, pose N/M, rests, countdown, recap).
-  Prev/next runtime + faint side arrows also landed early (step 16's core — see below).
-- **Next step:** Session E, step 15 — Keyboard dispatcher + pause/resume: `space` toggles pause/resume
-  and keeps the reference on screen (the base key handler the rest of E/F build on). Verify: browser —
-  start a session, press `space`, confirm it pauses (clock stops, image stays) and resumes.
+  8+ are browser-verified UI. Sessions A–D (steps 1–14) are **done**, and Session E has started —
+  step 15 (keyboard dispatcher + `space` pause/resume) landed. Prev/next runtime + faint side arrows
+  also landed early (step 16's core — see below).
+- **Next step:** Session E, step 16 — bind `←` / `→` to prev/next on the step-15 keymap (the runtime
+  `next()`/`prev()` + side arrows already exist; only the key binding remains — one-line keymap
+  additions). Verify: browser — start a session, press `←`/`→`, confirm the pose steps back/forward.
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -40,7 +40,7 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 - [x] 14 — End summary: calm recap (pose count + total time via `session.totalSeconds`), New session → setup.
 
 **Session E — helpers I** (each decoupled · one key · browser-verify)
-- [ ] 15 — Keyboard dispatcher + pause/resume: `space`, keeps reference on screen (base handler).
+- [x] 15 — Keyboard dispatcher + pause/resume: `space`, keeps reference on screen (base handler). `<svelte:window>` keymap; space toggles running↔paused with a faint "Paused" veil over the held reference.
 - [ ] 16 — Prev / next: `←` / `→`. **Core done early:** runtime `next()`/`prev()` (tested) + faint side arrow buttons landed in Session D; only the `←`/`→` key binding remains (add on the step-15 dispatcher).
 - [ ] 17 — Extend / add-time: `+` on current pose.
 
@@ -74,3 +74,4 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
 - [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
 - [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
+- [ ] Class mode floors the pose count to `MIN_POSES` (10) *after* Setup caps it to the folder size, so a Class run on a <10-image folder plays 10 poses against 4 images: poses past the pool render blank (`images[i]` undefined → no `<img>`), and the FYI reads the contradictory "10 poses (limited by folder)". The step-11 "cap effective N to pool size" fix holds for Quick (no floor) but is defeated by Class's floor. Needs a §5 **product decision**: allow <10 poses for small folders, allow within-session repeats, or require ≥10 images / nudge to Quick — spawned in step 15 (2026-07-03); visible on any small-folder Class run.

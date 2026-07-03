@@ -9,7 +9,28 @@
   $effect(() => {
     if (session.phase === 'ended') screen.show('summary')
   })
+
+  // Keyboard dispatcher: a key→action map so later helpers (prev/next, add-time)
+  // drop in as one-line entries. Every mapped key preventDefaults (e.g. space's
+  // page scroll); unmapped keys fall through untouched.
+  const keymap: Record<string, () => void> = {
+    ' ': togglePause,
+  }
+
+  function togglePause(): void {
+    if (session.phase === 'running') session.pause()
+    else if (session.phase === 'paused') session.resume()
+  }
+
+  function onKeydown(event: KeyboardEvent): void {
+    const action = keymap[event.key]
+    if (!action) return
+    event.preventDefault()
+    action()
+  }
 </script>
+
+<svelte:window onkeydown={onKeydown} />
 
 <section class="screen">
   {#if session.currentImage}
@@ -18,7 +39,12 @@
 
   <!-- Rest slide: a dim pause between poses, the reference faint behind it. -->
   {#if session.resting}
-    <div class="rest"><span>Rest</span></div>
+    <div class="veil"><span>Rest</span></div>
+  {/if}
+
+  <!-- Paused: same faint veil, held until space resumes the run. -->
+  {#if session.phase === 'paused'}
+    <div class="veil"><span>Paused</span></div>
   {/if}
 
   <!-- Faint side controls: skip a pose either way to scrub through the run. -->
@@ -51,7 +77,7 @@
     object-fit: contain;
   }
 
-  .rest {
+  .veil {
     position: absolute;
     inset: 0;
     display: grid;
@@ -59,7 +85,7 @@
     background: color-mix(in srgb, var(--bg) 88%, transparent);
   }
 
-  .rest span {
+  .veil span {
     color: var(--fg-muted);
     font-size: 1.1rem;
     letter-spacing: 0.35em;
