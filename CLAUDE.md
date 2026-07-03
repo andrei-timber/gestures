@@ -20,6 +20,12 @@ rather than restating it.
 The Husky **pre-push** gate runs test + lint + typecheck (no pre-commit).
 Browser-verifying the session? Use the owner's real reference library at `~/Art Practice/Refs`
 (subfolders of `.jpg` poses) as the local-folder source — don't generate throwaway images.
+The native folder picker can't be driven by automation, and `file_upload` no longer accepts host
+paths, so **inject files into the hidden `<input type=file>` instead**: `sips -Z 1400` a few refs to
+shrink them, copy into `public/` (Vite serves it at `BASE_URL`), then in-page `fetch` each → build
+`File`s → `input.files = dataTransfer.files` → dispatch `change` (fires `source.load`). Clean the
+`public/` copies before committing. Resizing the OS window often won't shrink `innerWidth` (maximized);
+to test responsive HUD wrapping, set `.screen { width: … }` via the page console and measure instead.
 
 ## Work cadence  (`/session-start` and `/session-wrap` point here)
 State lives in `docs/STATUS.md` (single status surface) and `docs/decisions.md` (append-only dated

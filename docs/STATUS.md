@@ -92,6 +92,11 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Grid overlay (`r`) spans the full viewport, not the letterboxed image bounds — over a `contain`
   image with wide margins the thirds lines don't land on the drawing. Tighten to the rendered image rect
   (measure the contained bounds) if it proves distracting — spawned in step 20 (2026-07-03); low priority.
+- [x] Grid overlay (`r`): rule-of-thirds → 9×9 lattice (3× finer) in bright light blue so it stays
+  legible over white studio references — found in M0 testing, resolved 2026-07-03.
+- [x] Session HUD legend split so it never crosses the reference: per-pose view aids (`m/v/g/r`) sit left
+  by the pose counter, timing/navigation keys (space, arrows, `+`) sit right by End and wrap to multiple
+  lines as the window narrows — found in M0 testing, resolved 2026-07-03.
 - [ ] End / `Esc` navigate to the summary but don't stop the session's 1s interval — it keeps ticking in the background until the next `session.load()` clears it (harmless: summary reads planned totals, and Start always reloads). Have End/`Esc` also halt the clock if we ever read live elapsed time on the summary — spawned in step 16b/Esc-to-end polish (2026-07-03); low priority. Related: the early-end recap follow-up above.
 - [x] Session-G chrome polish pulled forward during Session E (2026-07-03): glass-pill treatment for the clock + nav arrows (legible over bright refs), pause is now a large glass icon with the dim halved, `Esc` ends the run (End cues "(esc)"), and a one-line shortcut legend sits beside End. Glass is an **interim** `.glass` class in `Session.svelte` — the 🎨 creative-direction pass (spec §14) formalises the tokens and may restyle it; the legend partially satisfies step 22 (full shortcuts help still due). See `decisions.md`.
 - [x] Class mode floored the pose count to `MIN_POSES` (10) *after* Setup capped it to the folder size, so a Class run on a <10-image folder played 10 poses against 4 images (blank slides past the pool) — resolved: Class now requires ≥10 images and falls back to Quick with a note; `buildPlan`'s `poolCap` can pull the count below `MIN_POSES` so Quick runs a folder-limited session (spec §5 · `decisions.md`) — spawned in step 15, fixed 2026-07-03.
