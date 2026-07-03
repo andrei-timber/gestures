@@ -51,7 +51,12 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 
 **Session G — cues & polish**
 - [ ] 21 — Gentle end cue: soft beep last ~3s + subtle visual.
-- [ ] 22 — Shortcuts help: documented, discoverable key legend.
+- [ ] 22 — Shortcuts help: documented, discoverable key legend. *Partly pulled forward* — a one-line
+  live legend beside End landed in the Session-E polish (2026-07-03); a fuller discoverable help is still due.
+
+Some Session-G chrome polish was pulled forward during Session E (glass chrome, pause icon, Esc-to-end,
+inline legend) — see the Follow-ups entry + `decisions.md` (2026-07-03); the glass treatment is interim
+pending the 🎨 creative-direction pass.
 
 Finished milestones' ledgers live in `docs/history.md` (Dev setup pass ✓).
 
@@ -80,4 +85,5 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Setup: clearing the Poses (or custom-minutes) number input writes NaN → empty plan / "0 min" FYI until refilled; self-heals on reload (parse rejects NaN). Add a min-clamp on blur/input — spawned in step 10 (2026-07-03); low priority.
 - [x] Setup FYI: effective N caps at pool size when the folder has fewer images than requested — reflected in the FYI ("limited by folder") — done in step 11 (2026-07-03).
 - [ ] End recap reports the *planned* run (pose count + total time); ending early via the End button overstates it. Track actual poses drawn / time elapsed if we want a truthful early-end recap — spawned in step 14 (2026-07-03); low priority.
+- [x] Session-G chrome polish pulled forward during Session E (2026-07-03): glass-pill treatment for the clock + nav arrows (legible over bright refs), pause is now a large glass icon with the dim halved, `Esc` ends the run (End cues "(esc)"), and a one-line shortcut legend sits beside End. Glass is an **interim** `.glass` class in `Session.svelte` — the 🎨 creative-direction pass (spec §14) formalises the tokens and may restyle it; the legend partially satisfies step 22 (full shortcuts help still due). See `decisions.md`.
 - [x] Class mode floored the pose count to `MIN_POSES` (10) *after* Setup capped it to the folder size, so a Class run on a <10-image folder played 10 poses against 4 images (blank slides past the pool) — resolved: Class now requires ≥10 images and falls back to Quick with a note; `buildPlan`'s `poolCap` can pull the count below `MIN_POSES` so Quick runs a folder-limited session (spec §5 · `decisions.md`) — spawned in step 15, fixed 2026-07-03.

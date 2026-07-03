@@ -3,6 +3,19 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-03 — **Session-G chrome polish pulled forward during Session E; glass treatment is interim.**
+Context: while browser-verifying the Session-E helpers, the owner asked for four polishes now rather than
+at their scheduled Session-G slot — the countdown/arrows were invisible over bright references, pause hid
+the pose behind a heavy "Paused" veil, and Esc did nothing. Concern: doing chrome styling before the
+creative-direction pass (spec §14, which originates the design system) risks throwaway work. Decision:
+ship a minimal interim treatment now — an Apple-style frosted-glass pill on the clock + nav arrows + a
+large pause icon (dim halved so the pose stays studyable), `Esc` = end (End button cues "(esc)"), and a
+one-line shortcut legend beside End. The glass recipe lives as a single `.glass` class scoped to
+`Session.svelte`, explicitly flagged interim. Tradeoff: the creative-direction pass will formalise the
+tokens and may restyle or replace the glass, and the legend only *partially* satisfies step 22 (a full
+discoverable shortcuts help is still due) — accepted because legibility-over-bright is a real usability
+blocker today and the interim surface is cheap to supersede. Tracked in STATUS Follow-ups.
+
 2026-07-03 — **Cloudflare setup + deploy moves from before-M0 to after the creative-direction pass.**
 Context: spec §13's original sequencing put the Cloudflare setup guide between dev setup and M0 to "deploy
 the skeleton early." Concern: that step was skipped — M0 is being built and browser-verified locally with
