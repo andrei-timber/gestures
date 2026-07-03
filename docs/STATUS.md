@@ -6,11 +6,11 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 - **Focus:** M0 (Delightful core) is **in progress**, broken into 22 small decoupled steps across
   Sessions A–G (ledger below). Each step is one shippable change; steps 1–7 are pure-logic (vitest),
   8+ are browser-verified UI. Sessions A–D (steps 1–14) are **done**, and Session E has started —
-  step 15 (keyboard dispatcher + `space` pause/resume) landed. Prev/next runtime + faint side arrows
-  also landed early (step 16's core — see below).
-- **Next step:** Session E, step 16 — bind `←` / `→` to prev/next on the step-15 keymap (the runtime
-  `next()`/`prev()` + side arrows already exist; only the key binding remains — one-line keymap
-  additions). Verify: browser — start a session, press `←`/`→`, confirm the pose steps back/forward.
+  steps 15 (keyboard dispatcher + `space` pause/resume) and 16 (`←`/`→` prev/next) landed. Prev/next
+  runtime + faint side arrows landed early in Session D; step 16 added the key binding.
+- **Next step:** Session E, step 17 — Extend / add-time: `+` on the current pose (adds time to the live
+  countdown without leaving the pose). Hangs off the step-15 keymap; needs a runtime `addTime()`.
+  Verify: browser — during a pose, press `+`, confirm the remaining clock jumps up and keeps ticking.
 - **Verify:** per step below — logic under vitest, UI browser-verified.
 
 ### M0 — step ledger (`gestures-spec.md` §5–6, §13)
@@ -41,7 +41,7 @@ end-to-end; D is the drawing loop; E–F layer helpers one key at a time; G is t
 
 **Session E — helpers I** (each decoupled · one key · browser-verify)
 - [x] 15 — Keyboard dispatcher + pause/resume: `space`, keeps reference on screen (base handler). `<svelte:window>` keymap; space toggles running↔paused with a faint "Paused" veil over the held reference.
-- [ ] 16 — Prev / next: `←` / `→`. **Core done early:** runtime `next()`/`prev()` (tested) + faint side arrow buttons landed in Session D; only the `←`/`→` key binding remains (add on the step-15 dispatcher).
+- [x] 16 — Prev / next: `←` / `→`. Runtime `next()`/`prev()` (tested) + faint side arrow buttons landed in Session D; step 16 added the `←`/`→` key binding on the step-15 keymap.
 - [ ] 17 — Extend / add-time: `+` on current pose.
 
 **Session F — helpers II**

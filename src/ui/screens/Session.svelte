@@ -15,6 +15,8 @@
   // page scroll); unmapped keys fall through untouched.
   const keymap: Record<string, () => void> = {
     ' ': togglePause,
+    ArrowLeft: () => session.prev(),
+    ArrowRight: () => session.next(),
   }
 
   function togglePause(): void {
