@@ -52,17 +52,19 @@
     <div class="veil"><span>Paused</span></div>
   {/if}
 
-  <!-- Faint side controls: skip a pose either way to scrub through the run. -->
-  <button class="nav prev" aria-label="Previous pose" onclick={() => session.prev()}>
+  <!-- Glass side controls: skip a pose either way to scrub through the run. -->
+  <button class="nav prev glass" aria-label="Previous pose" onclick={() => session.prev()}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
   </button>
-  <button class="nav next" aria-label="Next pose" onclick={() => session.next()}>
+  <button class="nav next glass" aria-label="Next pose" onclick={() => session.next()}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
   </button>
 
+  <!-- Countdown: glass pill, bottom-centre, legible over bright references. -->
+  <span class="clock glass" class:resting={session.resting}>{formatClock(session.remaining)}</span>
+
   <div class="hud">
     <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-    <span class="clock" class:resting={session.resting}>{formatClock(session.remaining)}</span>
     <button class="end" onclick={() => screen.show('summary')}>End</button>
   </div>
 </section>
@@ -97,44 +99,77 @@
     text-transform: uppercase;
   }
 
+  /*
+   * Frosted-glass "pill" — an Apple-style translucent surface so controls stay
+   * legible over bright references. Applied to the clock and nav arrows now; the
+   * rest of the chrome migrates to the design system in the creative-direction
+   * pass (spec §14).
+   */
+  .glass {
+    background: color-mix(in srgb, var(--bg) 52%, transparent);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    border: 1px solid color-mix(in srgb, white 20%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+      0 6px 20px rgb(0 0 0 / 0.28);
+  }
+
   .nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     display: grid;
     place-items: center;
-    width: 3rem;
-    height: 4.5rem;
+    width: 3.25rem;
+    height: 3.25rem;
     padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--fg-muted);
-    opacity: 0.25;
+    border-radius: 50%;
+    color: var(--fg);
+    opacity: 0.68;
     cursor: pointer;
     transition: opacity 0.15s ease;
   }
 
   .nav:hover,
   .nav:focus-visible {
-    opacity: 0.85;
+    opacity: 1;
   }
 
   .nav.prev {
-    left: 0.5rem;
+    left: 0.9rem;
   }
 
   .nav.next {
-    right: 0.5rem;
+    right: 0.9rem;
   }
 
   .nav svg {
-    width: 2rem;
-    height: 2rem;
+    width: 1.6rem;
+    height: 1.6rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .clock {
+    position: absolute;
+    left: 50%;
+    bottom: 0.7rem;
+    transform: translateX(-50%);
+    padding: 0.32rem 0.85rem;
+    border-radius: 999px;
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s ease;
+  }
+
+  .clock.resting {
+    opacity: 0.55;
   }
 
   .hud {
@@ -151,16 +186,6 @@
 
   .count {
     letter-spacing: 0.03em;
-  }
-
-  .clock {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
-    opacity: 0.9;
-  }
-
-  .clock.resting {
-    opacity: 0.5;
   }
 
   .end {
