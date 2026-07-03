@@ -22,15 +22,16 @@ export function quickCeiling(intervalSeconds: number): number {
 }
 
 /**
- * Clamp a requested Quick-mode count. The 90-min cap is a hard limit, so when
- * the interval is large enough that even {@link MIN_POSES} poses would exceed
- * it, the ceiling wins over the minimum.
+ * Clamp a requested Quick-mode count. The {@link MIN_POSES} floor guards the
+ * *user-requested* count; two hard limits can still pull below it — the 90-min
+ * ceiling (large intervals) and `poolCap`, the folder's image count (a small
+ * folder legitimately runs fewer poses than the input minimum, no repeats).
  */
-export function clampNQuick(n: number, intervalSeconds: number): number {
-  return Math.min(Math.max(Math.floor(n), MIN_POSES), quickCeiling(intervalSeconds))
+export function clampNQuick(n: number, intervalSeconds: number, poolCap = Infinity): number {
+  return Math.min(Math.max(Math.floor(n), MIN_POSES), quickCeiling(intervalSeconds), poolCap)
 }
 
 /** Per-pose seconds for a Quick session: a uniform interval, count clamped. */
-export function quickPlan(n: number, intervalSeconds: number): number[] {
-  return new Array(clampNQuick(n, intervalSeconds)).fill(intervalSeconds)
+export function quickPlan(n: number, intervalSeconds: number, poolCap = Infinity): number[] {
+  return new Array(clampNQuick(n, intervalSeconds, poolCap)).fill(intervalSeconds)
 }

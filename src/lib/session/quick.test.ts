@@ -48,4 +48,14 @@ describe('quickPlan', () => {
     expect(clampNQuick(10, interval)).toBe(9)
     expect(sum(quickPlan(10, interval))).toBeLessThanOrEqual(90 * 60)
   })
+
+  it('lets a small pool cap pull the count below MIN_POSES', () => {
+    // A folder of 4 images runs exactly 4 poses, not the 10-pose floor.
+    expect(clampNQuick(10, 60, 4)).toBe(4)
+    expect(quickPlan(10, 60, 4)).toEqual(new Array(4).fill(60))
+  })
+
+  it('ignores a pool cap larger than the requested count', () => {
+    expect(quickPlan(10, 60, 100)).toEqual(new Array(10).fill(60))
+  })
 })

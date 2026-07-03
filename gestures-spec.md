@@ -123,6 +123,11 @@ pose i:  i≤c1 → 1min | c1<i≤c2 → 2min | c2<i≤c3 → 5min | i>c3 → 10
 Examples: N=10 → 5×1m,3×2m,1×5m,1×10m (26m) · N=16 → 8×1m,4×2m,2×5m,2×10m (46m) · N=20 →
 10×1m,5×2m,3×5m,2×10m (55m). Long poses scale with N ✅ — but bounded by the health caps below.
 
+**Requires ≥10 images.** The min-10 arc can't be filled from a smaller folder without repeats (which
+§5 pose-picking forbids), so Class is only offered when the folder holds ≥10 images. Below that the
+setup UI disables Class and falls back to **Quick** with a short note — Quick is happy to run a shorter,
+folder-limited session (see Quick mode).
+
 ### Health caps (hard limits — enforced, not merely discouraged) ✅
 Sessions beyond ~90 min are unhealthy, so we make them **impossible**:
 - **Max 90 min of active drawing time** (sum of pose durations; rests excluded, shown only in the total
@@ -135,6 +140,8 @@ Sessions beyond ~90 min are unhealthy, so we make them **impossible**:
 ### Quick mode ✅
 Enter **number of poses N** + a **uniform interval**: `30s / 60s / 2min / 5min / custom (minutes)`.
 - More elaborate custom setup (arbitrary segment builders) is **P1, next phase.**
+- The min-10 floor guards the *requested* count only. A folder with fewer images than that (the sole
+  path Class can't take) legitimately runs a **shorter** session — the pool size caps N, no repeats.
 
 ### Shared params
 | Param | Description | Default |

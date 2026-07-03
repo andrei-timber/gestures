@@ -1,5 +1,6 @@
 <script lang="ts">
   import { APP_NAME } from '@/lib/constants'
+  import { MIN_POSES } from '@/lib/session/caps'
   import { formatDuration } from '@/lib/format'
   import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
@@ -12,15 +13,23 @@
   import { source } from '@/state/source.svelte'
   import FolderInput from '../FolderInput.svelte'
 
-  // A folder with fewer images than requested caps the effective pose count
-  // (spec §5 pose picking — no repeats beyond the pool), so build the plan
-  // against the effective count and the FYI won't overstate the run.
-  const effectiveCount = $derived(
-    source.count > 0 ? Math.min(settings.poseCount, source.count) : settings.poseCount,
-  )
+  // The folder's image count is a hard ceiling on the run (spec §5 — no repeats
+  // beyond the pool). It flows into buildPlan as the pool cap so the plan (and
+  // the FYI) never overstate the run. Unknown before a folder is chosen.
+  const poolSize = $derived(source.count > 0 ? source.count : Infinity)
+  // Class mode's geometric arc needs its ≥10-pose minimum, which a folder of
+  // fewer images can't fill without repeats — so Class is only offered at ≥10
+  // images; below that the mode falls back to Quick (spec §5). Unknown folder
+  // (no pick yet) keeps Class available as the default.
+  const classAllowed = $derived(source.count === 0 || source.count >= MIN_POSES)
+  $effect(() => {
+    if (!classAllowed && settings.mode === 'class') settings.mode = 'quick'
+  })
+
   // Live plan + total-time FYI recompute from settings as the user tweaks.
-  const plan = $derived(buildPlan({ ...settings, poseCount: effectiveCount }))
+  const plan = $derived(buildPlan(settings, poolSize))
   const total = $derived(totalSeconds(plan, settings.restSeconds))
+  const effectiveCount = $derived(Math.min(settings.poseCount, poolSize))
   // Two reasons the run may be shorter than asked: health caps clamp the count,
   // or the folder holds fewer images than requested.
   const healthCapped = $derived(plan.length > 0 && plan.length < effectiveCount)
@@ -57,13 +66,20 @@
 
   <div class="panel">
     <div class="modes" role="group" aria-label="Session mode">
-      <button class:active={settings.mode === 'class'} onclick={() => (settings.mode = 'class')}>
+      <button
+        class:active={settings.mode === 'class'}
+        disabled={!classAllowed}
+        onclick={() => (settings.mode = 'class')}
+      >
         Class
       </button>
       <button class:active={settings.mode === 'quick'} onclick={() => (settings.mode = 'quick')}>
         Quick
       </button>
     </div>
+    {#if !classAllowed}
+      <p class="note">Class mode needs {MIN_POSES}+ images — using Quick for this folder.</p>
+    {/if}
 
     <label class="row">
       <span>Poses</span>
@@ -156,6 +172,17 @@
   .modes button.active {
     border-color: var(--fg);
     background: color-mix(in srgb, var(--fg) 8%, transparent);
+  }
+
+  .modes button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .note {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
   }
 
   .row {

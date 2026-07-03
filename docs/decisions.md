@@ -54,3 +54,16 @@ shrinks to `⌊(pool-1)/(n-1)⌋` (even "modulo" spread); if the pool holds fewe
 N = pool size (every image once, never repeated). Randomization then controls only display order.
 Tradeoff: on huge ordered libraries a random min-gap pick doesn't guarantee full front-to-back coverage
 (slack is random), accepted since dedup — not coverage — is the goal; the average spread is still wide.
+
+2026-07-03 — **Class mode requires ≥10 images; small folders fall back to Quick.** Context: browser-
+verifying step 15 surfaced that a Class run on a folder of fewer than 10 images played 10 poses against
+4 images — poses past the pool rendered blank, and the FYI read the contradictory "10 poses (limited by
+folder)". Root cause: Setup capped the count to the pool, but Class's `MIN_POSES=10` floor (`caps.ts`)
+re-raised it, and Quick's identical floor (`quick.ts`) meant a naive "switch to Quick" wouldn't help.
+Concern: how to keep small folders usable without repeats (§5 forbids them) or blank slides. Decision:
+(a) Class is disabled below 10 images and the setup auto-switches to Quick with a note; (b) the folder's
+image count flows into `buildPlan` as a hard `poolCap` that can pull the count *below* `MIN_POSES` — the
+floor now guards only the user-*requested* count, not a folder-limited one. So a 4-image folder runs
+exactly 4 Quick poses. Tradeoff: `MIN_POSES` is no longer an absolute lower bound on a session's length
+(a 1-image folder yields a 1-pose run); accepted — the folder is a harder constraint than the input
+minimum, and the alternative (blocking <10-image folders entirely) is worse for the local-folder flow.
