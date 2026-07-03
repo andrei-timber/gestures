@@ -1,0 +1,27 @@
+/*
+ * Global base styles only. The real design system (dark, atmospheric,
+ * glow/VFX, tokens) is originated in the creative-direction session (spec §14)
+ * and will replace these placeholder tokens.
+ */
+:root {
+  --bg: #0d0d10;
+  --fg: #e8e6ea;
+  --fg-muted: #8a8792;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--fg);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
