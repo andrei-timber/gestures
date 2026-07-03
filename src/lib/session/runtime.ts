@@ -17,6 +17,20 @@
 /** Lifecycle phase of a session. */
 export type Phase = 'idle' | 'running' | 'paused' | 'ended'
 
+/**
+ * Per-pose view aids — mirror/grayscale/grid sanity-check tools the artist flips
+ * while drawing the pose in front of them (spec §6). They are scoped to the
+ * current pose and **reset on every pose change** (next/prev/auto-advance),
+ * never carried across — flipping is a check against the pose you're on, not a
+ * session-wide setting.
+ */
+export interface Aids {
+  mirrorH: boolean
+  mirrorV: boolean
+}
+
+const NO_AIDS: Aids = { mirrorH: false, mirrorV: false }
+
 export interface RuntimeState {
   phase: Phase
   /** Per-pose durations in seconds; also fixes the pose count. */
@@ -29,11 +43,21 @@ export interface RuntimeState {
   remaining: number
   /** True during the rest slide that falls after `index`'s pose. */
   resting: boolean
+  /** View aids for the current pose; cleared whenever the pose changes. */
+  readonly aids: Aids
 }
 
 /** A fresh idle runtime parked on the first pose of `plan`. */
 export function createRuntime(plan: readonly number[], restSeconds = 0): RuntimeState {
-  return { phase: 'idle', plan, restSeconds, index: 0, remaining: plan[0] ?? 0, resting: false }
+  return {
+    phase: 'idle',
+    plan,
+    restSeconds,
+    index: 0,
+    remaining: plan[0] ?? 0,
+    resting: false,
+    aids: NO_AIDS,
+  }
 }
 
 /** Begin a session (idle → running). No-op from any other phase. */
@@ -59,8 +83,9 @@ export function resume(state: RuntimeState): RuntimeState {
 export function next(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   const index = state.index + 1
-  if (index >= state.plan.length) return { ...state, phase: 'ended', remaining: 0, resting: false }
-  return { ...state, index, remaining: state.plan[index], resting: false }
+  if (index >= state.plan.length)
+    return { ...state, phase: 'ended', remaining: 0, resting: false, aids: NO_AIDS }
+  return { ...state, index, remaining: state.plan[index], resting: false, aids: NO_AIDS }
 }
 
 /**
@@ -72,7 +97,7 @@ export function prev(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   if (state.index === 0) return state
   const index = state.index - 1
-  return { ...state, index, remaining: state.plan[index], resting: false }
+  return { ...state, index, remaining: state.plan[index], resting: false, aids: NO_AIDS }
 }
 
 /** Seconds a single add-time (`+`) press grants the current pose. */
@@ -87,6 +112,18 @@ export function addTime(state: RuntimeState, seconds = ADD_TIME_SECONDS): Runtim
   if (state.phase !== 'running' && state.phase !== 'paused') return state
   if (state.resting) return state
   return { ...state, remaining: state.remaining + seconds }
+}
+
+/** Flip the current pose horizontally (spec §6 mirror-H). No-op outside a run. */
+export function toggleMirrorH(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  return { ...state, aids: { ...state.aids, mirrorH: !state.aids.mirrorH } }
+}
+
+/** Flip the current pose vertically (spec §6 mirror-V). No-op outside a run. */
+export function toggleMirrorV(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  return { ...state, aids: { ...state.aids, mirrorV: !state.aids.mirrorV } }
 }
 
 /**
@@ -107,7 +144,7 @@ export function tick(state: RuntimeState, delta = 1): RuntimeState {
       resting = false
       remaining += state.plan[index]
     } else if (index + 1 >= state.plan.length) {
-      return { ...state, phase: 'ended', index, remaining: 0, resting: false }
+      return { ...state, phase: 'ended', index, remaining: 0, resting: false, aids: NO_AIDS }
     } else if (state.restSeconds > 0) {
       // Active pose finished → rest before the next one.
       resting = true
@@ -117,5 +154,7 @@ export function tick(state: RuntimeState, delta = 1): RuntimeState {
       remaining += state.plan[index]
     }
   }
-  return { ...state, index, remaining, resting }
+  // A pose change (index advanced, possibly across a rest) clears the view aids.
+  const aids = index === state.index ? state.aids : NO_AIDS
+  return { ...state, index, remaining, resting, aids }
 }

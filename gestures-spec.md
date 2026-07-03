@@ -179,6 +179,10 @@ Randomization controls only the *display order* of this spaced, deduped selectio
 - ✅ **Keyboard-first, documented shortcuts** — space=pause, ←/→=nav, m=mirror-H, v=mirror-V,
   g=grayscale, r=grid, +=extend.
 
+**Per-pose, not sticky:** mirror, grayscale, and grid are sanity-check tools scoped to the pose in
+front of you — they **reset on every pose change** (auto-advance, prev/next), never carried across as a
+session-wide setting.
+
 **Deferred (P1, next phase):** brightness/dim, favorites/snooze, notan/posterize, draw-on-reference.
 
 ## 7. Posterior review / session capture (Phase 2, research Part C) ✅ direction

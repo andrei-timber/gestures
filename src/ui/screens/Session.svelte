@@ -20,9 +20,19 @@
     // Both the shifted "+" and its unshifted "=" so no modifier is needed.
     '+': () => session.addTime(),
     '=': () => session.addTime(),
+    // Mirror the current pose — per-pose sanity checks that reset on advance.
+    m: () => session.toggleMirrorH(),
+    v: () => session.toggleMirrorV(),
     // Esc ends the run, same as the End button.
     Escape: endSession,
   }
+
+  // Compose the mirror flips into one CSS transform on the reference image.
+  const poseTransform = $derived(
+    [session.aids.mirrorH && 'scaleX(-1)', session.aids.mirrorV && 'scaleY(-1)']
+      .filter(Boolean)
+      .join(' ') || 'none',
+  )
 
   function togglePause(): void {
     if (session.phase === 'running') session.pause()
@@ -45,7 +55,12 @@
 
 <section class="screen">
   {#if session.currentImage}
-    <img class="pose" src={session.currentImage.url} alt="Pose reference" />
+    <img
+      class="pose"
+      src={session.currentImage.url}
+      alt="Pose reference"
+      style:transform={poseTransform}
+    />
   {/if}
 
   <!-- Rest slide: a dim pause between poses, the reference faint behind it. -->
@@ -78,11 +93,11 @@
   <span class="clock glass" class:resting={session.resting}>{formatClock(session.remaining)}</span>
 
   <div class="hud">
-    <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-    <div class="right">
-      <span class="legend">space pause · ← → prev/next · + extend</span>
-      <button class="end" onclick={endSession}>End (esc)</button>
+    <div class="left">
+      <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
+      <span class="legend">space pause · ← → prev/next · + extend · m/v mirror</span>
     </div>
+    <button class="end" onclick={endSession}>End (esc)</button>
   </div>
 </section>
 
@@ -224,12 +239,15 @@
 
   .count {
     letter-spacing: 0.03em;
+    white-space: nowrap;
   }
 
-  .right {
+  /* Info cluster: pose counter with the shortcut legend beside it. */
+  .left {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 0.9rem;
+    min-width: 0;
   }
 
   /* One-line shortcut guide, sat left of End. Placeholder chrome — folded into

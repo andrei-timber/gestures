@@ -17,6 +17,9 @@ import {
   resume as resumeRuntime,
   start as startRuntime,
   tick,
+  toggleMirrorH as toggleMirrorHRuntime,
+  toggleMirrorV as toggleMirrorVRuntime,
+  type Aids,
   type Phase,
 } from '@/lib/session/runtime'
 import { totalSeconds } from '@/lib/session/timing'
@@ -69,6 +72,10 @@ function createSessionStore() {
     get resting(): boolean {
       return state.resting
     },
+    /** Per-pose view aids (mirror/grayscale/grid); reset on every pose change. */
+    get aids(): Aids {
+      return state.aids
+    },
     /** The reference image for the current pose, or `null` before a run loads. */
     get currentImage(): SourceImage | null {
       return images[state.index] ?? null
@@ -107,6 +114,14 @@ function createSessionStore() {
     /** Extend the current pose, adding time to its live countdown. */
     addTime(): void {
       state = addTimeRuntime(state)
+    },
+    /** Flip the current pose horizontally (per-pose sanity check). */
+    toggleMirrorH(): void {
+      state = toggleMirrorHRuntime(state)
+    },
+    /** Flip the current pose vertically (per-pose sanity check). */
+    toggleMirrorV(): void {
+      state = toggleMirrorVRuntime(state)
     },
   }
 }
