@@ -128,6 +128,28 @@ describe('fetchDriveImages', () => {
     expect(fetch).toHaveBeenCalledTimes(2) // root + sub, root never re-fetched
   })
 
+  it('skips an unreadable subfolder but keeps the readable tree', async () => {
+    const fetch = vi.fn((url: string) => {
+      if (url.includes(FOLDER_ID)) {
+        return Promise.resolve(jsonResponse({ files: [folder('locked', 'Locked'), img('r', 'root.jpg')] }))
+      }
+      if (url.includes('locked')) return Promise.resolve(jsonResponse({}, false, 403)) // per-item share override
+      return Promise.resolve(jsonResponse({ files: [] }))
+    })
+    const images = await fetchDriveImages(FOLDER_ID, 'KEY', { fetch })
+    expect(images.map((i) => i.name)).toEqual(['root.jpg'])
+  })
+
+  it('still aborts when a subfolder fails transiently (network)', async () => {
+    const fetch = vi.fn((url: string) => {
+      if (url.includes(FOLDER_ID)) {
+        return Promise.resolve(jsonResponse({ files: [folder('sub', 'Sub'), img('r', 'root.jpg')] }))
+      }
+      return Promise.reject(new Error('offline'))
+    })
+    await expect(fetchDriveImages(FOLDER_ID, 'KEY', { fetch })).rejects.toMatchObject({ kind: 'network' })
+  })
+
   it('follows nextPageToken and concatenates every page', async () => {
     const fetch = vi
       .fn()

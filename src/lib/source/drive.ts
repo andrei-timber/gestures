@@ -158,7 +158,20 @@ export async function fetchDriveImages(
   const visited = new Set<string>(queue)
   while (queue.length > 0) {
     const folderId = queue.shift() as string
-    for (const child of await listChildren(doFetch, folderId, apiKey, headers)) {
+    let children: DriveFile[]
+    try {
+      children = await listChildren(doFetch, folderId, apiKey, headers)
+    } catch (err) {
+      // The root's failure is the load's failure; but one unreadable *subfolder*
+      // (a per-item sharing override or its own missing resource key) must not
+      // discard the images already gathered from the parent and its readable
+      // siblings. Transient failures (network / rate-limit) still abort the whole
+      // walk — they'd bite every folder equally, so a partial result would mislead.
+      const recoverable = err instanceof DriveError && (err.kind === 'access' || err.kind === 'not-found')
+      if (folderId === ref.folderId || !recoverable) throw err
+      continue
+    }
+    for (const child of children) {
       if (child.mimeType === FOLDER_MIME) {
         if (!visited.has(child.id) && visited.size < MAX_FOLDERS) {
           visited.add(child.id)
