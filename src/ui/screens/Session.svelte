@@ -144,18 +144,25 @@
   <!-- Countdown: glass pill, bottom-centre, legible over bright references. -->
   <span class="clock glass" class:resting={session.resting} class:ending>{formatClock(session.remaining)}</span>
 
-  <!-- HUD split so neither legend stretches across the reference: the per-pose
-       view aids sit left by the counter, the timing/navigation keys sit right by
-       End. The right cluster shrinks and wraps to multiple lines as the window
-       narrows, growing upward from the corner rather than invading the image. -->
+  <!-- HUD as two vertical glass-button stacks, one per bottom corner, so neither
+       legend stretches across the reference and each control is mouse-clickable
+       (handy alongside a parallel Photoshop file) as well as keyed. Each button
+       names its shortcut in parens. The stacks grow upward from the corner rather
+       than invading the image, and the vertical layout shrinks cleanly (iPad).
+       The per-pose view aids sit left above the counter; timing sits right above
+       End. Keyboard shortcuts stay wired through `onKeydown` unchanged. -->
   <div class="hud">
-    <div class="left">
+    <div class="col left">
+      <button class="chip glass" class:on={session.aids.mirrorH} onclick={() => session.toggleMirrorH()}>Mirror ⇄ <span class="key">(m)</span></button>
+      <button class="chip glass" class:on={session.aids.mirrorV} onclick={() => session.toggleMirrorV()}>Mirror ⇅ <span class="key">(v)</span></button>
+      <button class="chip glass" class:on={session.aids.grayscale} onclick={() => session.toggleGrayscale()}>Gray <span class="key">(g)</span></button>
+      <button class="chip glass" class:on={session.aids.grid} onclick={() => session.toggleGrid()}>Grid <span class="key">(r)</span></button>
       <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
-      <span class="legend">m/v mirror · g gray · r grid</span>
     </div>
-    <div class="right">
-      <span class="legend">space pause · ← → prev/next · + extend</span>
-      <button class="end" onclick={endSession}>End (esc)</button>
+    <div class="col right">
+      <button class="chip glass" onclick={togglePause}>{session.phase === 'paused' ? 'Resume' : 'Pause'} <span class="key">(space)</span></button>
+      <button class="chip glass" onclick={() => session.addTime()}>Extend <span class="key">(+)</span></button>
+      <button class="chip glass" onclick={endSession}>End <span class="key">(esc)</span></button>
     </div>
   </div>
 </section>
@@ -327,50 +334,71 @@
     color: var(--fg-muted);
   }
 
+  /* Corner stacks: buttons pile upward from the counter (left) / End (right),
+     so the layout stays vertical and shrinks cleanly on narrow / touch screens. */
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .col.left {
+    align-items: flex-start;
+  }
+
+  .col.right {
+    align-items: flex-end;
+  }
+
   .count {
+    margin-top: 0.15rem;
     letter-spacing: 0.03em;
     white-space: nowrap;
   }
 
-  /* Left cluster: pose counter with the per-pose view-aid legend beside it. */
-  .left {
-    display: flex;
-    align-items: baseline;
-    gap: 0.9rem;
-    min-width: 0;
-  }
-
-  /* Right cluster: timing/navigation legend beside End. min-width:0 lets it
-     shrink and wrap to multiple lines as the window narrows; align-items:flex-end
-     keeps End anchored to the corner while the wrapped legend grows upward. */
-  .right {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.9rem;
-    min-width: 0;
-  }
-
-  /* Shortcut guides. Placeholder chrome — folded into the design system /
-     shortcuts legend (steps 21–22, spec §14) later. */
-  .legend {
-    font-size: 0.78rem;
-    letter-spacing: 0.02em;
-    opacity: 0.7;
-    min-width: 0;
-  }
-
-  .right .legend {
-    text-align: right;
-  }
-
-  .end {
+  /* Glass control button — the legend's shortcuts made clickable. Shares the
+     .glass frosted surface with the nav arrows and clock; the shortcut key rides
+     along in a muted parenthetical (`.key`). */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     flex-shrink: 0;
     font: inherit;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--fg);
+    padding: 0.4rem 0.72rem;
+    border-radius: 999px;
+    cursor: pointer;
+    opacity: 0.9;
+    transition:
+      opacity 0.15s ease,
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .chip:hover,
+  .chip:focus-visible {
+    opacity: 1;
+  }
+
+  .chip .key {
+    font-size: 0.72rem;
     color: var(--fg-muted);
-    background: transparent;
-    border: 1px solid var(--fg-muted);
-    border-radius: 0.4rem;
-    padding: 0.25rem 0.7rem;
+  }
+
+  /* Toggled-on view aid: a brighter glass with an accent hairline (the grid's
+     light blue) so active aids read at a glance. */
+  .chip.on {
+    background: color-mix(in srgb, var(--bg) 30%, transparent);
+    border-color: color-mix(in srgb, #3ba6ff 55%, transparent);
+    opacity: 1;
+  }
+
+  .chip.on .key {
+    color: var(--fg);
   }
 </style>
