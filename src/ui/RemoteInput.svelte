@@ -27,9 +27,14 @@
     error = ''
     try {
       const images = await fetchDriveImages(link, apiKey)
+      if (images.length === 0) {
+        // A resolved-but-empty folder isn't a source: don't wipe an already-loaded
+        // local pick, and don't remember a link that yields nothing.
+        error = 'That folder has no .jpg, .png, or .webp images.'
+        return
+      }
       source.loadRemote(images)
       settings.driveLink = link.trim() // remember only a link that actually resolved
-      if (images.length === 0) error = 'That folder has no .jpg, .png, or .webp images.'
     } catch (err) {
       error = err instanceof DriveError ? err.message : 'Something went wrong loading the folder.'
     } finally {
