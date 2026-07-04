@@ -219,7 +219,7 @@
           </svg>
         {/if}
       </button>
-      <button class="tool" title="Extend pose (+)" aria-label="Extend pose (+)" onclick={() => session.addTime()}>
+      <button class="tool" title="Extend time (+)" aria-label="Extend time (+)" onclick={() => session.addTime()}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
       </button>
     </div>

@@ -30,6 +30,10 @@
     { id: 'sanguine', name: 'Sanguine', bg: '#14100c', ink: '#c1553a' },
   ]
 
+  // Class mode's tooltip — a JS string (not a plain attribute) because the `\n`
+  // hard-wraps it to two lines; a literal `title="…\n…"` would render backslash-n.
+  const classHint = 'Pose timers step through 1→2→5→10 min,\nlike a real drawing class.'
+
   // The folder's image count is a hard ceiling on the run (spec §5 — no repeats
   // beyond the pool). It flows into buildPlan as the pool cap so the plan (and
   // the FYI) never overstate the run. Unknown before a folder is chosen.
@@ -105,7 +109,7 @@
       <button
         class:active={settings.mode === 'class'}
         disabled={!classAllowed}
-        title={'Pose timers step through 1→2→5→10 min,\nlike a real drawing class.'}
+        title={classHint}
         onclick={() => (settings.mode = 'class')}
       >
         Class
