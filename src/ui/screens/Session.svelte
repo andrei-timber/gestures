@@ -55,10 +55,11 @@
 
   // Pace cue (step 21): a faint, always-on tint on the countdown pill that warms
   // green → yellow → orange → red as the pose drains (see `cueBand`). A calm
-  // peripheral "where am I" signal, no sound. Suppressed on rest slides and once
-  // the run has ended (no live pose to pace) — the pill stays neutral there.
+  // peripheral "where am I" signal, no sound. Lit only while a pose is actively
+  // running — suppressed on rest slides, while paused (the clock is deliberately
+  // stopped), and once the run has ended — so the pill stays neutral there.
   const band = $derived(
-    session.phase !== 'ended' && !session.resting
+    session.phase === 'running' && !session.resting
       ? cueBand(session.remaining, session.poseDuration)
       : null,
   )
@@ -117,7 +118,7 @@
   <!-- Pace glow: the same green→red cue as the pill, cast as an inset edge glow
        over the canvas backdrop / around the pose so the whole frame — not just
        the clock — warms as the pose drains. Pointer-events-none, centre clear so
-       the reference stays untouched; tracks the same `band` (off on rest/ended). -->
+       the reference stays untouched; tracks the same `band` (off on rest/paused/ended). -->
   <div
     class="cue-glow"
     class:cue-green={band === 'green'}
