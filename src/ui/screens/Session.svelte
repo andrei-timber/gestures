@@ -114,6 +114,19 @@
     </svg>
   {/if}
 
+  <!-- Pace glow: the same green→red cue as the pill, cast as an inset edge glow
+       over the canvas backdrop / around the pose so the whole frame — not just
+       the clock — warms as the pose drains. Pointer-events-none, centre clear so
+       the reference stays untouched; tracks the same `band` (off on rest/ended). -->
+  <div
+    class="cue-glow"
+    class:cue-green={band === 'green'}
+    class:cue-yellow={band === 'yellow'}
+    class:cue-orange={band === 'orange'}
+    class:cue-red={band === 'red'}
+    aria-hidden="true"
+  ></div>
+
   <!-- Rest slide: a dim pause between poses, the reference faint behind it. -->
   {#if session.resting}
     <div class="veil"><span>Rest</span></div>
@@ -244,6 +257,40 @@
     stroke-width: 1;
     opacity: 0.55;
     vector-effect: non-scaling-stroke;
+  }
+
+  /* Pace glow: an inset edge vignette in the band hue, intensifying as the pose
+     drains (widening blur + rising alpha, red strongest). Centre stays fully
+     transparent so the reference is never washed; only the borders / backdrop
+     glow. Shares the pill's `--pace-*` tokens, so it re-tints per theme. */
+  .cue-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      box-shadow 0.6s ease,
+      opacity 0.6s ease;
+  }
+
+  .cue-glow.cue-green {
+    opacity: 1;
+    box-shadow: inset 0 0 90px 2px color-mix(in srgb, var(--pace-1) 16%, transparent);
+  }
+
+  .cue-glow.cue-yellow {
+    opacity: 1;
+    box-shadow: inset 0 0 110px 4px color-mix(in srgb, var(--pace-2) 22%, transparent);
+  }
+
+  .cue-glow.cue-orange {
+    opacity: 1;
+    box-shadow: inset 0 0 140px 8px color-mix(in srgb, var(--pace-3) 30%, transparent);
+  }
+
+  .cue-glow.cue-red {
+    opacity: 1;
+    box-shadow: inset 0 0 190px 14px color-mix(in srgb, var(--pace-4) 42%, transparent);
   }
 
   .veil {
