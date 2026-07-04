@@ -13,9 +13,11 @@
   // `multiple` also lets a plain multi-file selection through; non-images are
   // dropped by source.load.
   let dragging = $state(false)
+  let error = $state('')
 
   function onChange(event: Event): void {
     const input = event.currentTarget as HTMLInputElement
+    error = ''
     source.load(input.files ? Array.from(input.files) : [])
   }
 
@@ -37,7 +39,15 @@
     event.preventDefault()
     dragging = false
     if (!event.dataTransfer) return
-    source.load(await filesFromDataTransfer(event.dataTransfer))
+    error = ''
+    // A rejected entry read (permission/IO, a network-mounted folder, a file
+    // removed mid-drop) would otherwise be a silent no-op — surface it and point
+    // the user at the Pick button, which walks the tree without the Entry API.
+    try {
+      source.load(await filesFromDataTransfer(event.dataTransfer))
+    } catch {
+      error = 'Couldn’t read that folder — try the Pick button instead.'
+    }
   }
 </script>
 
@@ -59,6 +69,7 @@
     <span>Pick</span>
   </label>
   <p class="hint">…or drag-and-drop a folder here.</p>
+  {#if error}<p class="hint error">{error}</p>{/if}
 </div>
 
 <style>
@@ -111,6 +122,10 @@
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.85rem;
+  }
+
+  .hint.error {
+    color: color-mix(in srgb, var(--accent) 70%, var(--fg));
   }
 
 </style>
