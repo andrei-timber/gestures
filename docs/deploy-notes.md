@@ -5,17 +5,19 @@ Vite `outDir`, `package.json` scripts); this doc is the map to it plus the owner
 steps. Decisions live here; the "why" for the product line is `gestures-spec.md` §14.
 
 ## What's wired up (in the repo)
-- **`wrangler.jsonc`** — the Cloudflare project: static assets from `./dist`, route
-  `andreitim.com/apps/gestures/*`, no `main` Worker (static-only). This is the source of truth for
-  the deploy target; the bullets below just explain its choices.
+- **`wrangler.jsonc`** — the Cloudflare project: static assets from `./dist`, routes
+  `andreitim.com/apps/gestures` + `…/apps/gestures/*`, no `main` Worker (static-only). This is the
+  source of truth for the deploy target; the bullets below just explain its choices.
 - **`vite.config.ts`** — one `SUBPATH = 'apps/gestures'` const drives both `base` (asset URLs) and
   `build.outDir` (`dist/apps/gestures`), so the built tree matches the served route 1:1.
 - **`package.json`** — `pnpm cf:preview` (local edge emulator) · `pnpm deploy` (build + ship).
 
 ## Target: Workers Static Assets (not Pages)
 - Cloudflare's recommended path for new static / SPA projects; Pages is in migrate-to-Workers mode.
-- **Route:** `andreitim.com/apps/gestures/*` — route-based, so other `/apps/*` tools coexist under
-  one domain. (Pages custom domains bind a whole domain/subdomain and can't serve a subpath.)
+- **Route:** `andreitim.com/apps/gestures` **+** `…/apps/gestures/*` — route-based, so other `/apps/*`
+  tools coexist under one domain. (Pages custom domains bind a whole domain/subdomain and can't serve a
+  subpath.) Both patterns are bound because a lone `/*` requires the literal trailing slash, so the
+  bare canonical URL (`/apps/gestures`, no slash) wouldn't route here without the exact-path pattern.
 - **Subpath mapping (the crux):** Static Assets serves a file by matching the request path against
   the asset folder. So the disk layout must contain the route prefix. Vite's `outDir` writes into
   `dist/apps/gestures/…`; wrangler serves `./dist`; request `/apps/gestures/x` → `dist/apps/gestures/x`.
