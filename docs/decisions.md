@@ -3,6 +3,25 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-04 — **Cloudflare deploy config landed; subpath by build layout, SPA fallback dropped.**
+Context: the ☁️ companion track (`deploy-notes.md`) — get Gestures shippable to
+`andreitim.com/apps/gestures/` on Workers Static Assets. Two build-level calls came out of it. (1)
+**Subpath mapping via layout, not code.** Static Assets serves a file by matching the request path
+against the asset folder, so the `/apps/gestures/` prefix has to exist on disk; a single
+`SUBPATH = 'apps/gestures'` const in `vite.config.ts` drives both `base` and `build.outDir`
+(`dist/apps/gestures`), and wrangler serves `./dist`, giving a 1:1 request→file match. Rejected the
+alternative — a prefix-stripping Worker — because it adds server code the deploy-notes "static now"
+decision rules out, for no gain. (2) **`not_found_handling: "none"`, reversing the earlier
+`single-page-application` intent.** Local `wrangler dev` proved SPA fallback is inert at a subpath: it
+serves the assets-*root* `index.html`, which doesn't exist (ours is nested), so unknown paths 404
+either way. And the app has no client-side routing (no History API / `location` use), so refreshes
+always hit `/apps/gestures/` → real index; there are no deep links to fall back for. Concern: config
+that claims a behavior it doesn't deliver. Decision: turn fallback off (honest 404s), and add a
+dist-root `index.html` copy only if in-app routing ever lands. Tradeoff: the day routing appears
+(plausibly M3 timeline/review views) we must remember to restore the fallback + root-index copy —
+noted in both `wrangler.jsonc` and `deploy-notes.md`. The first production deploy itself
+(`wrangler login` → `pnpm deploy`) is the owner hand-off; not run this session.
+
 2026-07-03 — **Session-G chrome polish pulled forward during Session E; glass treatment is interim.**
 Context: while browser-verifying the Session-E helpers, the owner asked for four polishes now rather than
 at their scheduled Session-G slot — the countdown/arrows were invisible over bright references, pause hid

@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gestures",
+  "compatibility_date": "2026-07-01",
+  // Static-only deploy: no `main` Worker script (deploy-notes.md — "Static now; a Worker
+  // only if a real need appears"). Cloudflare serves the asset folder verbatim from the edge.
+  "assets": {
+    // `dist/` holds the whole subpath tree (`dist/apps/gestures/…`, set by Vite `outDir`),
+    // so request paths map 1:1 onto files: /apps/gestures/x → dist/apps/gestures/x.
+    "directory": "./dist",
+    // No client-side routing today: `/apps/gestures/` resolves to the real nested index.html
+    // via html_handling, so unknown paths correctly 404. SPA fallback would need a duplicate
+    // index.html at the assets root (it serves the *root* index, not the nested one) — add
+    // that only when in-app routing lands. See deploy-notes.md.
+    "not_found_handling": "none"
+  },
+  // One domain hosts a family of /apps/* tools, so bind a route (not a whole custom domain).
+  "routes": [
+    { "pattern": "andreitim.com/apps/gestures/*", "zone_name": "andreitim.com" }
+  ]
+}
