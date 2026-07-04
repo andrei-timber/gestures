@@ -128,13 +128,15 @@
     {#if settings.mode === 'quick'}
       <label class="row">
         <span>Interval</span>
-        <select value={intervalSelectValue} onchange={(e) => selectInterval(e.currentTarget.value)}>
-          <option value="30">30s</option>
-          <option value="60">60s</option>
-          <option value="120">2 min</option>
-          <option value="300">5 min</option>
-          <option value="custom">Custom…</option>
-        </select>
+        <span class="select-wrap">
+          <select value={intervalSelectValue} onchange={(e) => selectInterval(e.currentTarget.value)}>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
+            <option value="120">2 min</option>
+            <option value="300">5 min</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </span>
       </label>
       {#if isCustomInterval}
         <label class="row">
@@ -285,12 +287,69 @@
   .row select {
     font: inherit;
     color: var(--fg);
-    background: transparent;
-    border: 1px solid var(--fg-muted);
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--fg-muted) 55%, transparent);
     border-radius: 0.4rem;
-    padding: 0.35rem 0.5rem;
+    padding: 0.4rem 0.6rem;
     width: 7rem;
     text-align: right;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .row input:hover,
+  .row select:hover {
+    border-color: color-mix(in srgb, var(--fg-muted) 85%, transparent);
+  }
+
+  /* Themed focus — replace the browser's blue ring with the palette accent, on
+     any focus (mouse or keyboard) so a clicked select never flashes native blue. */
+  .row input:focus,
+  .row select:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+
+  /* Drop the native number spinners: cramped and unstyleable. Values are typed
+     (Quick also has interval presets), keeping the field clean and right-aligned. */
+  .row input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .row input[type='number']::-webkit-outer-spin-button,
+  .row input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Custom select: strip native chrome and draw a themed chevron in the wrapper,
+     with room reserved so the value never collides with it. */
+  .select-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .select-wrap select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 1.7rem;
+    cursor: pointer;
+  }
+
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 0.65rem;
+    top: 50%;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-right: 1.5px solid var(--fg-muted);
+    border-bottom: 1.5px solid var(--fg-muted);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
   }
 
   .check {
@@ -299,6 +358,11 @@
     gap: 0.5rem;
     color: var(--fg-muted);
     font-size: 0.9rem;
+  }
+
+  /* Tint the native checkbox with the palette accent (browser-default is blue). */
+  .check input {
+    accent-color: var(--accent);
   }
 
   .fyi {
