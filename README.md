@@ -24,8 +24,12 @@ Requires Node 22 and [pnpm](https://pnpm.io/).
 
 ```sh
 pnpm install
-pnpm dev        # http://localhost:5173/apps/gestures/
+cp .env.example .env.local   # then add a Google Drive API key (see docs/deploy-notes.md)
+pnpm dev                     # http://localhost:5173/apps/gestures/
 ```
+
+The Drive key is optional — local-folder and drag-and-drop sources work without it; it only powers the
+Drive share-link source.
 
 | Script | Does |
 |---|---|

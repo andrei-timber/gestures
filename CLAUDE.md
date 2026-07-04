@@ -9,8 +9,9 @@ rather than restating it.
 
 ## Stack & layout
 - Svelte 5 + Vite 8 + TS (strict) + plain CSS with custom-property tokens. Static SPA, no backend (spec §9).
-- `src/ui` components · `src/lib` framework-free helpers (`unreachable`, `constants`) · `src/state`
-  shared reactive state as `*.svelte.ts` rune modules (session engine, settings store) — added in M0.
+- `src/ui` components · `src/lib` framework-free helpers (`session/` engine math, `source/` local +
+  Drive readers, plus `unreachable`/`constants`) · `src/state` shared reactive state as `*.svelte.ts`
+  rune modules (session engine, settings store) — added in M0.
 - `@/*` → `src/*`. App is served under `/apps/gestures/`: build runtime asset URLs from
   `import.meta.env.BASE_URL`, never a hardcoded leading `/`.
 - Deploy: Cloudflare Workers Static Assets — see `docs/deploy-notes.md`.
