@@ -1,12 +1,28 @@
 /*
- * Global base styles only. The real design system (dark, atmospheric,
- * glow/VFX, tokens) is originated in the creative-direction session (spec §14)
- * and will replace these placeholder tokens.
+ * Design system — originated in the creative-direction pass (spec §14; intent +
+ * rationale in `gestures-creative-direction.md`). This file is the *canonical
+ * home for the numbers*: every colour lives here as a semantic token, and all
+ * chrome reads tokens only (no literals in components).
+ *
+ * Three dark, atmospheric themes ship as named token sets. Candlelit is the
+ * first-run default and lives on `:root`; the other two override under a
+ * `[data-theme]` stamped on the root by the settings store. The picker is on the
+ * Setup screen (spec §14 / owner's call: Setup-only, icon-only pills).
  */
 :root {
-  --bg: #0d0d10;
-  --fg: #e8e6ea;
-  --fg-muted: #8a8792;
+  /* ── Candlelit (default) — incandescent warm-white over warm charcoal ── */
+  --bg: #12100c; /* app canvas / letterbox */
+  --surface: #211d16; /* elevated panel */
+  --fg: #f0e9df; /* primary text + icon */
+  --fg-muted: #93897a; /* secondary text */
+  --accent: #f0a850; /* identity accent — primary action, active state */
+  --on-accent: #1a1409; /* text/icon on an accent fill */
+  --grid: #e0a45c; /* construction-grid stroke */
+  /* Pace ramp (calm → urgent), tinted to the theme; see `cue.ts`. */
+  --pace-1: #8ac26a;
+  --pace-2: #e6c24a;
+  --pace-3: #e0913c;
+  --pace-4: #dc5a3c;
 
   color-scheme: dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -14,6 +30,36 @@
   color: var(--fg);
   background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Moonlit — nocturnal, blue-cyan glow over blue-biased black. */
+:root[data-theme='moonlit'] {
+  --bg: #0b0d13;
+  --surface: #151925;
+  --fg: #e5e9f2;
+  --fg-muted: #767e92;
+  --accent: #5aa9ff;
+  --on-accent: #08111d;
+  --grid: #5aa9ff;
+  --pace-1: #4fd6a0;
+  --pace-2: #e6d15a;
+  --pace-3: #e79a4c;
+  --pace-4: #e8654a;
+}
+
+/* Sanguine — old-master red-chalk on warm cream over umber-black. */
+:root[data-theme='sanguine'] {
+  --bg: #14100c;
+  --surface: #241b13;
+  --fg: #efe2d0;
+  --fg-muted: #9a8770;
+  --accent: #c1553a;
+  --on-accent: #f4e8d8;
+  --grid: #c1553a;
+  --pace-1: #8a9a5a;
+  --pace-2: #cda94a;
+  --pace-3: #c8823c;
+  --pace-4: #c14a34;
 }
 
 *,
@@ -24,9 +70,15 @@
 
 body {
   margin: 0;
+  background-color: var(--bg);
+  /* Re-tint the whole canvas smoothly when the theme switches on Setup. */
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
 }
 
-/* Placeholder control styling; the design system (spec §14) will supersede it. */
+/* Placeholder control styling — the ghost/secondary button. Primary actions use
+   an accent fill (`.start`, Summary's action), styled per-screen. */
 button {
   font: inherit;
   color: var(--fg);
@@ -35,9 +87,28 @@ button {
   border-radius: 0.4rem;
   padding: 0.5rem 1.1rem;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 button:hover {
   border-color: var(--fg);
+}
+
+/*
+ * Frosted-glass "pill" — a translucent surface so in-session controls stay
+ * legible over bright references. Reads the theme `--bg` for its fill, so it
+ * re-tints with the palette; the white border/highlight works on every dark
+ * ground. Shared across the clock, nav arrows, pause badge, HUD chips, and the
+ * theme picker. (Reusable, product-name-free — part of the tool-family kit.)
+ */
+.glass {
+  background: color-mix(in srgb, var(--bg) 52%, transparent);
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid color-mix(in srgb, white 20%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+    0 6px 20px rgb(0 0 0 / 0.28);
 }

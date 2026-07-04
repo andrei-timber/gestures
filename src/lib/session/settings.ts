@@ -17,6 +17,15 @@ import { DEFAULT_REST_SECONDS } from './timing'
 /** The two session modes (spec §5). Class is the default idea. */
 export type SessionMode = 'class' | 'quick'
 
+/**
+ * Visual themes originated in the creative-direction pass
+ * (`gestures-creative-direction.md`, spec §14). Each is a named token set in
+ * `src/app.css` (canonical hex); this list is the pick order and the persisted
+ * values. Candlelit is the first-run default.
+ */
+export const THEMES = ['candlelit', 'moonlit', 'sanguine'] as const
+export type Theme = (typeof THEMES)[number]
+
 /** User-facing session configuration. Total-time is derived (see `timing.ts`), not stored. */
 export interface Settings {
   /** Class (auto-tapering durations) or Quick (uniform interval). */
@@ -29,15 +38,18 @@ export interface Settings {
   restSeconds: number
   /** Shuffle poses, no within-session repeats. */
   randomize: boolean
+  /** Visual theme (creative-direction pass). Applied as `data-theme` on the root. */
+  theme: Theme
 }
 
-/** Spec §5 defaults: Class mode, 10 poses, 60s interval, 10s rest, shuffle on. */
+/** Spec §5 defaults: Class mode, 10 poses, 60s interval, 10s rest, shuffle on, Candlelit theme. */
 export const DEFAULT_SETTINGS: Settings = {
   mode: 'class',
   poseCount: MIN_POSES,
   intervalSeconds: DEFAULT_INTERVAL_SECONDS,
   restSeconds: DEFAULT_REST_SECONDS,
   randomize: true,
+  theme: 'candlelit',
 }
 
 /**
@@ -86,6 +98,7 @@ export function parse(raw: string | null): Settings {
     intervalSeconds: positiveInt(rec.intervalSeconds) ?? DEFAULT_SETTINGS.intervalSeconds,
     restSeconds: nonNegativeInt(rec.restSeconds) ?? DEFAULT_SETTINGS.restSeconds,
     randomize: typeof rec.randomize === 'boolean' ? rec.randomize : DEFAULT_SETTINGS.randomize,
+    theme: isTheme(rec.theme) ? rec.theme : DEFAULT_SETTINGS.theme,
   }
 }
 
@@ -104,6 +117,10 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function isMode(value: unknown): value is SessionMode {
   return value === 'class' || value === 'quick'
+}
+
+function isTheme(value: unknown): value is Theme {
+  return THEMES.includes(value as Theme)
 }
 
 function positiveInt(value: unknown): number | null {

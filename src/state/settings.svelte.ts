@@ -14,6 +14,7 @@ import { DEFAULT_SETTINGS, parse, serialize, type Settings } from '@/lib/session
 const STORAGE_KEY = 'gestures:settings'
 
 const hasStorage = typeof localStorage !== 'undefined'
+const hasDocument = typeof document !== 'undefined'
 
 function load(): Settings {
   return hasStorage ? parse(localStorage.getItem(STORAGE_KEY)) : { ...DEFAULT_SETTINGS }
@@ -27,10 +28,22 @@ function persist(): void {
   localStorage.setItem(STORAGE_KEY, serialize(settings))
 }
 
-// Mirror every field change to storage. A root effect scope (no owning
-// component) keeps this alive for the app's lifetime.
+/**
+ * Reflect the chosen theme onto the root as `data-theme`, which selects the
+ * matching token set in `app.css`. Applied imperatively at module load (before
+ * mount) so the persisted theme paints on first frame with no default-theme
+ * flash, then kept in sync reactively so the Setup picker live-previews.
+ */
+function applyTheme(): void {
+  if (hasDocument) document.documentElement.dataset.theme = settings.theme
+}
+applyTheme()
+
+// Mirror every field change to storage, and the theme to the DOM. A root effect
+// scope (no owning component) keeps these alive for the app's lifetime.
 $effect.root(() => {
   $effect(persist)
+  $effect(applyTheme)
 })
 
 /** Restore every field to the spec §5 defaults (persistence follows). */

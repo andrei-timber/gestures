@@ -18,7 +18,7 @@
       session.elapsedSeconds,
     )}
   </p>
-  <button onclick={() => screen.show('setup')}>New session</button>
+  <button class="again" onclick={() => screen.show('setup')}>New session</button>
 </section>
 
 <style>
@@ -41,5 +41,17 @@
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.95rem;
+  }
+
+  .again {
+    background: var(--accent);
+    border-color: transparent;
+    color: var(--on-accent);
+    font-weight: 500;
+  }
+
+  .again:hover {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--accent) 88%, white);
   }
 </style>

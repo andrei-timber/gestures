@@ -13,11 +13,22 @@
   import { selectRun } from '@/lib/session/select'
   import { warm } from '@/lib/source/preload'
   import { totalSeconds } from '@/lib/session/timing'
+  import type { Theme } from '@/lib/session/settings'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
   import { settings } from '@/state/settings.svelte'
   import { source } from '@/state/source.svelte'
   import FolderInput from '../FolderInput.svelte'
+
+  // Icon-only theme picker (spec §14). Each swatch previews its own theme, so it
+  // carries that theme's canvas + accent literally (the root only holds the
+  // active theme's tokens); the canonical hex live in `app.css`, mirrored here
+  // just for the un-selected previews. Glyph disambiguates beyond colour (a11y).
+  const themeOptions: { id: Theme; name: string; bg: string; ink: string }[] = [
+    { id: 'moonlit', name: 'Moonlit', bg: '#0b0d13', ink: '#5aa9ff' },
+    { id: 'candlelit', name: 'Candlelit', bg: '#12100c', ink: '#f0a850' },
+    { id: 'sanguine', name: 'Sanguine', bg: '#14100c', ink: '#c1553a' },
+  ]
 
   // The folder's image count is a hard ceiling on the run (spec §5 — no repeats
   // beyond the pool). It flows into buildPlan as the pool cap so the plan (and
@@ -173,6 +184,39 @@
   {#if source.count === 0}
     <p class="hint">Choose a reference folder to begin.</p>
   {/if}
+
+  <!-- Theme picker: icon-only swatches, one per palette (spec §14). Picking
+       re-tints the whole app live and persists via the settings store. -->
+  <div class="themes" role="radiogroup" aria-label="Theme">
+    {#each themeOptions as opt (opt.id)}
+      <button
+        class="swatch glass"
+        class:active={settings.theme === opt.id}
+        role="radio"
+        aria-checked={settings.theme === opt.id}
+        aria-label={opt.name}
+        title={opt.name}
+        style:background={opt.bg}
+        style:color={opt.ink}
+        onclick={() => (settings.theme = opt.id)}
+      >
+        <!-- Glyph disambiguates each theme beyond colour (a11y): moon / flame / chalk stroke. -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          {#if opt.id === 'moonlit'}
+            <path d="M20 14.6A8 8 0 1 1 10.8 4a6.6 6.6 0 0 0 9.2 10.6z" fill="currentColor" />
+          {:else if opt.id === 'candlelit'}
+            <path
+              d="M12 2.5c.7 2.6 3 3.7 3 6.4a3 3 0 0 1-6 0c0-1 .5-1.7 1-2.4.3 1 1 1.6 1.6 1.7-.5-1.9-.4-3.9.4-5.7z"
+              fill="currentColor"
+            />
+            <path d="M9.2 14.5h5.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          {:else}
+            <path d="M6.5 17.5 17.5 6.5" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          {/if}
+        </svg>
+      </button>
+    {/each}
+  </div>
 </section>
 
 <style>
@@ -197,6 +241,10 @@
     display: grid;
     gap: 0.75rem;
     min-width: 16rem;
+    padding: 1.25rem 1.4rem;
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--fg) 8%, transparent);
+    border-radius: 0.75rem;
   }
 
   .modes {
@@ -206,8 +254,9 @@
   }
 
   .modes button.active {
-    border-color: var(--fg);
-    background: color-mix(in srgb, var(--fg) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--fg);
   }
 
   .modes button:disabled {
@@ -262,6 +311,19 @@
     font-size: 0.85rem;
   }
 
+  /* Primary action — the one accent-filled control on the screen. */
+  .start {
+    background: var(--accent);
+    border-color: transparent;
+    color: var(--on-accent);
+    font-weight: 500;
+  }
+
+  .start:hover:not(:disabled) {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--accent) 88%, white);
+  }
+
   .start:disabled {
     opacity: 0.4;
     cursor: default;
@@ -271,5 +333,46 @@
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.85rem;
+  }
+
+  /* Theme picker — three icon-only swatches. Each previews its own palette
+     (inline bg + glyph ink); the frosted `.glass` gives the pill body. */
+  .themes {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    margin-top: 0.25rem;
+  }
+
+  .swatch {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 0.6rem;
+    opacity: 0.55;
+    transition:
+      opacity 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .swatch:hover {
+    opacity: 0.85;
+    border-color: color-mix(in srgb, white 20%, transparent);
+  }
+
+  /* Active swatch === current theme, so the accent ring reads in-palette. */
+  .swatch.active {
+    opacity: 1;
+    border-color: transparent;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .swatch svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    fill: none;
   }
 </style>

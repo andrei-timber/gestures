@@ -21,6 +21,7 @@ describe('DEFAULT_SETTINGS', () => {
       intervalSeconds: DEFAULT_INTERVAL_SECONDS,
       restSeconds: DEFAULT_REST_SECONDS,
       randomize: true,
+      theme: 'candlelit',
     })
   })
 })
@@ -37,6 +38,7 @@ describe('serialize / parse round-trip', () => {
       intervalSeconds: 120,
       restSeconds: 0,
       randomize: false,
+      theme: 'sanguine',
     }
     expect(parse(serialize(custom))).toEqual(custom)
   })
@@ -67,6 +69,13 @@ describe('parse fallbacks', () => {
   it('rejects an unknown mode and floors fractional counts', () => {
     expect(parse(JSON.stringify({ mode: 'freeform' })).mode).toBe('class')
     expect(parse(JSON.stringify({ poseCount: 15.9 })).poseCount).toBe(15)
+  })
+
+  it('keeps a known theme and defaults an unknown or non-string one', () => {
+    expect(parse(JSON.stringify({ theme: 'moonlit' })).theme).toBe('moonlit')
+    expect(parse(JSON.stringify({ theme: 'sanguine' })).theme).toBe('sanguine')
+    expect(parse(JSON.stringify({ theme: 'neon' })).theme).toBe('candlelit')
+    expect(parse(JSON.stringify({ theme: 42 })).theme).toBe('candlelit')
   })
 
   it('rejects non-positive counts but accepts a zero rest (rests disabled)', () => {

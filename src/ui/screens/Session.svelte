@@ -197,9 +197,9 @@
     pointer-events: none;
   }
 
-  /* Bright light blue so the grid stays legible over white references. */
+  /* Construction stroke in the theme's grid hue, legible over white references. */
   .grid line {
-    stroke: #3ba6ff;
+    stroke: var(--grid);
     stroke-width: 1;
     opacity: 0.55;
     vector-effect: non-scaling-stroke;
@@ -226,21 +226,8 @@
     text-transform: uppercase;
   }
 
-  /*
-   * Frosted-glass "pill" — an Apple-style translucent surface so controls stay
-   * legible over bright references. Applied to the clock, nav arrows, and pause
-   * badge now; the rest of the chrome migrates to the design system in the
-   * creative-direction pass (spec §14).
-   */
-  .glass {
-    background: color-mix(in srgb, var(--bg) 52%, transparent);
-    backdrop-filter: blur(14px) saturate(1.6);
-    -webkit-backdrop-filter: blur(14px) saturate(1.6);
-    border: 1px solid color-mix(in srgb, white 20%, transparent);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
-      0 6px 20px rgb(0 0 0 / 0.28);
-  }
+  /* The frosted `.glass` surface (clock, nav, pause badge, HUD chips) is a shared
+     design-system class in `app.css`; per-element sizing/layout lives below. */
 
   .pause-badge {
     display: grid;
@@ -320,31 +307,31 @@
   }
 
   /* Pace-cue tints: a faint wash of the band hue over the glass fill, warming as
-     the pose drains. Interim colour literals — the 🎨 pass formalises these as
-     accent tokens (spec §14), like the .glass treatment. The red band also lifts
-     a soft glow, echoing the old final-seconds cue. */
+     the pose drains. The band hues are theme tokens (`--pace-1..4`), so the cue
+     re-tints with the palette. The red band also lifts a soft glow, echoing the
+     old final-seconds cue. */
   .clock.cue-green {
-    background: color-mix(in srgb, #46c46a 18%, color-mix(in srgb, var(--bg) 52%, transparent));
-    border-color: color-mix(in srgb, #46c46a 40%, transparent);
+    background: color-mix(in srgb, var(--pace-1) 18%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, var(--pace-1) 40%, transparent);
   }
 
   .clock.cue-yellow {
-    background: color-mix(in srgb, #d9c24a 20%, color-mix(in srgb, var(--bg) 52%, transparent));
-    border-color: color-mix(in srgb, #d9c24a 45%, transparent);
+    background: color-mix(in srgb, var(--pace-2) 20%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, var(--pace-2) 45%, transparent);
   }
 
   .clock.cue-orange {
-    background: color-mix(in srgb, #e08a3c 22%, color-mix(in srgb, var(--bg) 52%, transparent));
-    border-color: color-mix(in srgb, #e08a3c 50%, transparent);
+    background: color-mix(in srgb, var(--pace-3) 22%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, var(--pace-3) 50%, transparent);
   }
 
   .clock.cue-red {
-    background: color-mix(in srgb, #e0563c 26%, color-mix(in srgb, var(--bg) 52%, transparent));
-    border-color: color-mix(in srgb, #e0563c 58%, transparent);
+    background: color-mix(in srgb, var(--pace-4) 26%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, var(--pace-4) 58%, transparent);
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
       0 6px 20px rgb(0 0 0 / 0.28),
-      0 0 16px color-mix(in srgb, #e0563c 48%, transparent);
+      0 0 16px color-mix(in srgb, var(--pace-4) 48%, transparent);
   }
 
   .hud {
@@ -415,11 +402,11 @@
     color: var(--fg-muted);
   }
 
-  /* Toggled-on view aid: a brighter glass with an accent hairline (the grid's
-     light blue) so active aids read at a glance. */
+  /* Toggled-on view aid: a brighter glass with an accent hairline so active aids
+     read at a glance. */
   .chip.on {
     background: color-mix(in srgb, var(--bg) 30%, transparent);
-    border-color: color-mix(in srgb, #3ba6ff 55%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
     opacity: 1;
   }
 
