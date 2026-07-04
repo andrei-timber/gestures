@@ -37,6 +37,32 @@ secret → a backend). All deliberately avoided so far.
 - Drive read (Tier 1): public API key, **referrer-restricted to andreitim.com**.
 - Drive write (Tier 2): client-side GIS token, `drive.file` scope. No refresh token, no client secret.
 
+## Google Drive API key (Tier-1 read) — owner steps
+The app lists a public "anyone with the link" folder with **one app-owned API key** (spec §3). It's not
+a secret in the OAuth sense — Vite inlines `VITE_*` into the public bundle, so the key ships in the JS.
+The protection is the **referrer + API restriction**, not obscurity. Each visitor's browser uses this
+one key; no user ever creates their own.
+
+**Create the key** (console.cloud.google.com, the Google account that owns the folder):
+1. New project (e.g. `gestures`) → select it.
+2. **APIs & Services → Library → "Google Drive API" → Enable.**
+3. **APIs & Services → Credentials → + Create Credentials → API key** → copy it.
+4. Edit the key → lock it down:
+   - **Application restrictions → Websites (HTTP referrers):** `andreitim.com/*`, `*.andreitim.com/*`,
+     `localhost:5173/*` (dev). *(Referrer changes take a couple minutes to propagate.)*
+   - **API restrictions → Restrict key → Google Drive API** only.
+5. The reference folder itself: Drive → **Share → General access → "Anyone with the link" → Viewer.**
+
+**Wire it into the build** (the key is read at build time, so it must be present wherever `pnpm deploy`
+runs — currently your local machine):
+```sh
+cp .env.example .env.local          # .env.local is gitignored
+# edit .env.local → VITE_GOOGLE_DRIVE_API_KEY=<the key>
+```
+`pnpm dev` and `pnpm deploy` both pick it up automatically. If the key is absent, the Drive input
+renders disabled with a "not configured" note (the local-folder source still works). Display images use
+the keyless `drive.google.com/thumbnail?id=…` CDN endpoint — no key, no expiry.
+
 ## First deploy — owner steps
 These need your Cloudflare account and are interactive, so they're not automated. Run them from the
 repo root. Prefix with `! ` in a Claude Code prompt to run in-session (output lands in the chat).

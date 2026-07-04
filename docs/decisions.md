@@ -192,6 +192,30 @@ a reference library; the API's only win was a cosmetic prompt, and the reassuran
 webkitdirectory warning for this single-user tool. Tradeoff: the scary "upload all files" prompt returns;
 accepted — completeness and honesty beat a nicer dialog. Supersedes the earlier same-day picker decision.
 
+2026-07-04 — **M1 Drive read (Tier 1): recursive subfolder walk, keyless thumbnail display, key inlined
+via gitignored `.env`.** Context: M1 — public-folder Drive read so the iPad path works (local folder-picking
+is desktop-only). The S1 spike against the owner's real "Refs" folder settled three things. (1) **Recursive
+listing, not flat.** Spec §3 originally scoped v1 to "one flat folder," but "Refs" holds only *category
+subfolders* (Martial arts, Comics, Turnaround M/F → 2686 images across 5 folders), and the **local**
+drop-folder source already recurses — a flat Drive lister would be inconsistent and list 0 images at the
+top. Decision: BFS-walk the folder + subfolders (`'PARENT' in parents`, folders enqueued, files
+accumulated), cycle-safe via a visited-id set + a defensive `MAX_FOLDERS` cap; sharing "anyone with the
+link" cascades read access to the whole subtree, so one link lights up the library. Owner confirmed.
+Tradeoff: a handful more `files.list` calls and a scope nudge past "flat v1"; accepted (spec §3 revised).
+(2) **Display via `drive.google.com/thumbnail?id=…&sz=w1600`** — keyless, public, no expiry (the list
+response's `thumbnailLink` is short-lived), verified rendering at 1600×2400. (3) **One app-owned API key**,
+referrer-restricted (`andreitim.com/*` + `localhost:5173/*`) and Drive-API-restricted, supplied via a
+gitignored `.env.local` and **inlined into the public bundle** by Vite — not a secret in the OAuth sense;
+the referrer lock is the protection. No user ever creates a key; visitors only share a public folder.
+Architecture: `SourceImage` moved to framework-free `images.ts` (was in the `.svelte` store — a backwards
+lib→state dep); the store gained `loadRemote` (adopts a remote list, revokes only `blob:` URLs); a
+persisted `driveLink` remembers the last folder; `RemoteInput.svelte` is the paste UI (a working Drive
+row plus **Box/Dropbox placeholder rows** for future providers, spec §3 ImageSource abstraction), laid
+side-by-side with the local picker in Setup with aligned headers + equal-height areas; the shared bold
+"Folder picked up successfully…" count lives once in Setup. Pure parsing/URL/mapping + the injected-fetch walk are
+node-tested (`drive.test.ts`); full flow browser-verified locally (2686 loaded, session renders Drive
+refs, prefetch + cross-category mixing clean, no console errors). Gate green — 164 tests, typecheck, lint.
+
 2026-07-04 — **Creative direction: ship three themes as a user switch, not a single locked pick.**
 Context: the 🎨 creative-direction track (spec §14) — originate the design system, then restyle M0. Round-1
 compared five directions (real chrome per palette, in an Artifact); owner liked ①Moonlit ②Candlelit

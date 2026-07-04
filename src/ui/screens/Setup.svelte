@@ -19,6 +19,7 @@
   import { settings } from '@/state/settings.svelte'
   import { source } from '@/state/source.svelte'
   import FolderInput from '../FolderInput.svelte'
+  import RemoteInput from '../RemoteInput.svelte'
 
   // Icon-only theme picker (spec §14). Each swatch previews its own theme, so it
   // carries that theme's canvas + accent literally (the root only holds the
@@ -101,8 +102,22 @@
   <p class="tagline">
     Use this simple tool to practice timed figure drawing with your own reference folders.
   </p>
+  <p class="reassure">Files stay in your browser — nothing is uploaded.</p>
 
-  <FolderInput />
+  <div class="pickers">
+    <p class="sources-label">
+      Choose a local references folder, or paste a public Google Drive, Box, or Dropbox folder link.
+    </p>
+    <div class="sources">
+      <FolderInput />
+      <RemoteInput />
+    </div>
+  </div>
+  {#if source.count > 0}
+    <p class="loaded">
+      Folder picked up successfully. {source.count} image{source.count === 1 ? '' : 's'} loaded
+    </p>
+  {/if}
 
   <div class="panel">
     <div class="modes" role="group" aria-label="Session mode">
@@ -251,14 +266,56 @@
     letter-spacing: 0.02em;
   }
 
-  /* One-line explainer under the title — what this is and why. */
+  /* One-line explainer under the title — what this is and why. Wide enough to
+     stay on a single line on desktop/iPad. */
   .tagline {
-    margin: -0.4rem 0 0.25rem;
-    max-width: 30rem;
+    margin: -0.4rem 0 0;
+    max-width: 52rem;
     color: var(--fg-muted);
     font-size: 0.95rem;
     line-height: 1.5;
-    text-wrap: balance;
+  }
+
+  /* Privacy reassurance, second intro line — the webkitdirectory picker warns
+     "upload all files…", but nothing leaves the browser. Sits above the pickers. */
+  .reassure {
+    margin: 0 0 0.25rem;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
+  /* Prompt + the two pickers, kept tight together as one block. */
+  .pickers {
+    display: grid;
+    justify-items: center;
+    gap: 0.6rem;
+  }
+
+  /* One centered prompt covering both sources — single line on desktop/iPad. */
+  .sources-label {
+    margin: 0;
+    max-width: 52rem;
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Local picker + remote-link section side by side; wrap to stacked on narrow
+     iPad-portrait widths so neither column gets crushed. */
+  .sources {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch; /* equal-height columns so the two areas look symmetrical */
+    gap: 1.25rem;
+  }
+
+  /* Shared success line — one home for both source cards. */
+  .loaded {
+    margin: -0.4rem 0 0;
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 600;
   }
 
   .panel {

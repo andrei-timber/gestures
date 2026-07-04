@@ -41,8 +41,10 @@
   }
 </script>
 
-<!-- The whole card is a drop target; dropping a folder skips the browser's
-     upload prompt entirely (docs/folder-picker-permission-2026-07-04.md). -->
+<!-- The dashed card is the drop target (dropping a folder skips the browser's
+     upload prompt — docs/folder-picker-permission-2026-07-04.md). The section
+     prompt, privacy reassurance, and shared "N images loaded" count all live once
+     in Setup, since the remote card feeds the same `source`. -->
 <div
   class="folder"
   class:dragging
@@ -54,23 +56,18 @@
 >
   <label>
     <input type="file" accept="image/*" multiple webkitdirectory onchange={onChange} />
-    <span>Choose a reference folder to begin</span>
+    <span>Pick</span>
   </label>
-  <p class="hint">…or drop a folder from the local disk here.</p>
-  <!-- Reassurance: the webkitdirectory prompt reads as "upload all files…", but
-       nothing leaves the browser — source.load only reads File objects locally. -->
-  <p class="reassure">Files stay in your browser — nothing is uploaded.</p>
-  {#if source.count > 0}
-    <p class="count">{source.count} image{source.count === 1 ? '' : 's'} loaded</p>
-  {/if}
+  <p class="hint">…or drag-and-drop a folder here.</p>
 </div>
 
 <style>
   .folder {
+    /* Stretches to match the remote links block's height (Setup stretches the row). */
     display: grid;
     justify-items: center;
+    align-content: center;
     gap: 0.5rem;
-    /* Match the params panel width (shared column set by the Setup screen). */
     width: var(--setup-col, 21rem);
     padding: 1.25rem 1.5rem;
     /* Faint resting outline so the card reads as a drop target; it strengthens
@@ -116,16 +113,4 @@
     font-size: 0.85rem;
   }
 
-  .reassure {
-    margin: 0;
-    color: var(--fg-muted);
-    font-size: 0.78rem;
-    opacity: 0.8;
-  }
-
-  .count {
-    margin: 0;
-    color: var(--fg-muted);
-    font-size: 0.85rem;
-  }
 </style>

@@ -72,11 +72,18 @@ private folder → enumerate images" is impossible without restricted `drive.rea
 - App lists images with an **API key only** (`files.list?q='FOLDER_ID' in parents`, paginate 1000/page).
   **No OAuth, no consent screen, no CASA.**
 - **Only `.jpg` / `.png` / `.webp` are admitted** — filter out every other type at listing time. ✅
-- One **flat folder** is enough; no subfolder categories in v1. It's the user's job to pick which folder to
-  share; we don't care what's in it. ✅
+- **Subfolders are walked recursively** — a link to a categorised library (`Refs/…/poses`) gathers every
+  image beneath it, mirroring the local drop-folder source which already recurses. (Revises the original
+  "one flat folder, no subfolders in v1": the owner's real library is nested, and sharing a folder
+  "anyone with the link" cascades read access to the whole subtree. Decided 2026-07-04; `docs/decisions.md`.)
+  Cycle-safe (visited-id set); it's the user's job to pick which folder to share. ✅
+- **Display URL:** `drive.google.com/thumbnail?id=<id>&sz=w1600` — keyless, public, no expiry (unlike the
+  `thumbnailLink` in the list response), ~1600px crisp. Settled in the M1/S1 spike (2026-07-04). ✅
 - Display via `thumbnailLink` (refresh on expiry) + a larger render for the active slide; lazy-load; cache.
-- ⚠ **Empirical spike (M1, done by me):** confirm unlisted "anyone-with-link" folders list via API-key;
-  handle Shared-Drive params & `resourceKey` edge cases. See §Q4 answer / research risk #2.
+- ✅ **Empirical spike S1 (M1, done 2026-07-04):** confirmed an unlisted "anyone-with-link" folder lists
+  via API-key only (private → 404; shared → 200 + children). Key is app-owned, referrer-restricted,
+  inlined into the bundle. Shared-Drive flags (`supportsAllDrives`/`includeItemsFromAllDrives`) and the
+  `resourceKey` header are wired defensively. See research risk #2 / `docs/decisions.md`.
 
 ### Tier 2 — Private read + write-back (✅ Phase-2, `drive.file` only, still zero-audit)
 - **Private folder reading via Picker file multi-select is P1 (next phase), not P0.** ✅

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local env / API keys — Vite inlines VITE_* at build; never commit real keys (.env.example is the template)
+.env
+.env.*
+!.env.example
+
 # Wrangler (Cloudflare) local state / cache
 .wrangler
 

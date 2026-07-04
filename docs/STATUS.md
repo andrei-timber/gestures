@@ -3,21 +3,37 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** ☁️ **Cloudflare deploy track landed — Gestures is live** at
-  `https://andreitim.com/apps/gestures/` (Workers Static Assets, spec §14). What shipped: `wrangler.jsonc`
-  (static-only — no `main` Worker; assets from `./dist`; route `andreitim.com/apps/gestures/*`;
-  `not_found_handling: "none"` — no client routing so unknown paths honestly 404); Vite `outDir` nests the
-  build under `dist/apps/gestures/` so the disk tree matches the served subpath 1:1 (one `SUBPATH` const
-  drives both `base` and `outDir`); `pnpm deploy` / `pnpm cf:preview` scripts; `wrangler` devDep (+ pnpm
-  `allowBuilds` for workerd/esbuild). `deploy-notes.md` rewritten from intent → step-by-step setup guide.
-  Owner ran the first production deploy; DNS needed a **proxied apex placeholder** (`AAAA @ → 100::`) to
-  pull traffic onto the edge — the missing piece behind the initial NXDOMAIN. Config + subpath choices
-  logged in `docs/decisions.md` (2026-07-04).
-- **Next step:** **M1 — Drive read** (Tier 1, public folder link; spec §13). Milestone start — lay out the
-  M1 step ledger in STATUS at session-start, then agree Scope + Definition-of-done before editing.
-- **Verify:** live — `curl https://andreitim.com/apps/gestures/` → **200** (app HTML); bare root `/` → 522
-  is expected (no route/origin there). Gate green — **144 tests, typecheck, lint** (2026-07-04).
-  `wrangler deploy --dry-run` validates the config; `pnpm cf:preview` (local workerd) serves the subpath.
+- **Focus:** **M1 — Drive read (Tier 1) — code done, browser-verified locally; one step left: deploy +
+  iPad check.** Recursive public-folder read is built and working: pasting the owner's "Refs" link loads
+  **2686 images** across 5 folders, a session renders the Drive references full-bleed, prefetch + next are
+  clean, no console errors. Prod build inlines the referrer-restricted key (gitignored `.env.local`). S1
+  spike settled the display URL (`drive.google.com/thumbnail?id=…&sz=w1600`, keyless, 1600×2400). Decision
+  + spec §3 revision logged (2026-07-04).
+- **Next step:** **M1-6 — deploy + iPad verify.** `pnpm deploy` (owner action; ships the inlined key) →
+  on iPad open `https://andreitim.com/apps/gestures/`, paste the Refs link → "2686 images loaded" → run a
+  full session. *Owner-facing — not auto-run.* Then session-wrap: tick step 6, groom M1 → history, suggest
+  the commit.
+- **Verify:** local flow green (2686 loaded, session renders Drive refs). Gate green — **164 tests,
+  typecheck, lint**; `pnpm build` clean, key inlined. Remaining: the live iPad run.
+
+### M1 step ledger — Drive read (Tier 1)
+Public folder link → API-key `files.list` (recursive) → slideshow (spec §3/§13). Decisions locked
+(2026-07-04): paste input with a **remembered** link; key via gitignored local `.env`; **recursive**
+subfolder walk (owner's library is nested, matches the local source).
+- [x] 1 — API-key walkthrough (owner) + **S1 spike**: confirmed anyone-with-link folder lists via API key
+      only (private→404, shared→200); display URL settled (`drive.google.com/thumbnail?id=…&sz=w1600`);
+      Shared-Drive / `resourceKey` handling wired defensively.
+- [x] 2 — Drive source module (`src/lib/source/drive.ts`, node-tested): parse link → `folderId`
+      (+`resourceKey`); **recursive BFS walk** (cycle-safe visited set); filter jpg/png/webp; map to
+      `{name, url}` via the keyless thumbnail URL.
+- [x] 3 — Store: `SourceImage` moved to `images.ts`; `source.loadRemote` adopts a remote list, revokes
+      only `blob:` URLs.
+- [x] 4 — UI: `RemoteInput.svelte` paste input (working Drive row + Box/Dropbox **SOON** placeholders for
+      future providers), side-by-side with the local picker under one centered prompt; loading / error
+      states, remembered link; shared bold "Folder picked up successfully…" count in Setup.
+- [x] 5 — Config: `VITE_GOOGLE_DRIVE_API_KEY` via gitignored `.env.local` (+ `.env.example`), inlined at
+      build; documented in `deploy-notes.md`.
+- [ ] 6 — Verify on iPad against the live deploy: paste link → "2686 images loaded" → run a full session.
 
 ## Milestones
 Sequenced order (spec §13). Companion tracks 🎨/☁️ are interleaved deliverables, not milestones — content

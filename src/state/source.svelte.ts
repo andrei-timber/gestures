@@ -1,23 +1,23 @@
 /**
- * Reactive image source (`gestures-spec.md` §9, M0 local-folder tier). Holds the
- * currently loaded reference images and maps a raw folder/file pick to a
- * displayable list via the pure filter (`@/lib/source/images`). Object URLs are
- * revoked when the set is replaced or cleared to avoid leaking blob handles.
+ * Reactive image source (`gestures-spec.md` §3/§9). Holds the currently loaded
+ * reference images regardless of tier: a local folder/file pick ({@link
+ * createSourceStore.load}, object URLs) or a public Drive folder ({@link
+ * createSourceStore.loadRemote}, remote URLs, spec §3). Only local `blob:` URLs
+ * are store-owned, so replace/clear revokes those and leaves remote URLs alone.
  */
 
-import { filterImages } from '@/lib/source/images'
+import { filterImages, type SourceImage } from '@/lib/source/images'
 
-export interface SourceImage {
-  readonly name: string
-  /** Object URL for display; owned by this store and revoked on replace/clear. */
-  readonly url: string
-}
+export type { SourceImage }
 
 function createSourceStore() {
   let images = $state<SourceImage[]>([])
 
+  // Only blob: URLs are ours to free; Drive https: URLs have no handle to revoke.
   function revoke(): void {
-    for (const img of images) URL.revokeObjectURL(img.url)
+    for (const img of images) {
+      if (img.url.startsWith('blob:')) URL.revokeObjectURL(img.url)
+    }
   }
 
   return {
@@ -27,13 +27,19 @@ function createSourceStore() {
     get count(): number {
       return images.length
     },
-    /** Filter a raw pick to accepted images and adopt them. Returns the count. */
+    /** Filter a raw local pick to accepted images and adopt them. Returns the count. */
     load(files: readonly File[]): number {
       revoke()
       images = filterImages(files).map((file) => ({
         name: file.name,
         url: URL.createObjectURL(file),
       }))
+      return images.length
+    },
+    /** Adopt an already-filtered remote list (e.g. Drive). Returns the count. */
+    loadRemote(remote: readonly SourceImage[]): number {
+      revoke()
+      images = [...remote]
       return images.length
     },
     clear(): void {

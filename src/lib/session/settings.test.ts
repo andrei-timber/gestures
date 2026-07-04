@@ -22,6 +22,7 @@ describe('DEFAULT_SETTINGS', () => {
       restSeconds: DEFAULT_REST_SECONDS,
       randomize: true,
       theme: 'candlelit',
+      driveLink: '',
     })
   })
 })
@@ -39,6 +40,7 @@ describe('serialize / parse round-trip', () => {
       restSeconds: 0,
       randomize: false,
       theme: 'sanguine',
+      driveLink: 'https://drive.google.com/drive/folders/abc',
     }
     expect(parse(serialize(custom))).toEqual(custom)
   })
@@ -76,6 +78,11 @@ describe('parse fallbacks', () => {
     expect(parse(JSON.stringify({ theme: 'sanguine' })).theme).toBe('sanguine')
     expect(parse(JSON.stringify({ theme: 'neon' })).theme).toBe('candlelit')
     expect(parse(JSON.stringify({ theme: 42 })).theme).toBe('candlelit')
+  })
+
+  it('keeps a string driveLink and defaults a non-string one', () => {
+    expect(parse(JSON.stringify({ driveLink: 'https://x/folders/a' })).driveLink).toBe('https://x/folders/a')
+    expect(parse(JSON.stringify({ driveLink: 42 })).driveLink).toBe('')
   })
 
   it('rejects non-positive counts but accepts a zero rest (rests disabled)', () => {

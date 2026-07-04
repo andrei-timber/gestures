@@ -6,6 +6,17 @@
  * testable; the browser store maps the survivors to object URLs.
  */
 
+/**
+ * A displayable reference image, source-agnostic: local object URL or a remote
+ * Drive URL. The framework-free shape lives here (the store owns the reactive set
+ * and, for local files, the object-URL lifecycle).
+ */
+export interface SourceImage {
+  readonly name: string
+  /** Displayable URL — `blob:` for local files (store-owned), `https:` for Drive. */
+  readonly url: string
+}
+
 /** Accepted image extensions (spec §9). `.jpeg` is admitted as a `.jpg` alias. */
 export const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const
 

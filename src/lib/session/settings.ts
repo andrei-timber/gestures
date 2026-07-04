@@ -40,6 +40,8 @@ export interface Settings {
   randomize: boolean
   /** Visual theme (creative-direction pass). Applied as `data-theme` on the root. */
   theme: Theme
+  /** Last public Drive folder link (spec §3), remembered so the iPad path reloads it. */
+  driveLink: string
 }
 
 /** Spec §5 defaults: Class mode, 10 poses, 60s interval, 10s rest, shuffle on, Candlelit theme. */
@@ -50,6 +52,7 @@ export const DEFAULT_SETTINGS: Settings = {
   restSeconds: DEFAULT_REST_SECONDS,
   randomize: true,
   theme: 'candlelit',
+  driveLink: '',
 }
 
 /**
@@ -99,6 +102,7 @@ export function parse(raw: string | null): Settings {
     restSeconds: nonNegativeInt(rec.restSeconds) ?? DEFAULT_SETTINGS.restSeconds,
     randomize: typeof rec.randomize === 'boolean' ? rec.randomize : DEFAULT_SETTINGS.randomize,
     theme: isTheme(rec.theme) ? rec.theme : DEFAULT_SETTINGS.theme,
+    driveLink: typeof rec.driveLink === 'string' ? rec.driveLink : DEFAULT_SETTINGS.driveLink,
   }
 }
 
