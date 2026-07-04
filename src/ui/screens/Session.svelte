@@ -223,8 +223,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
       </button>
     </div>
-    <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
   </div>
+
+  <!-- Pose counter kept in the bottom-left corner, away from the top-left menu. -->
+  <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
 </section>
 
 <style>
@@ -430,8 +432,10 @@
     left: 0.9rem;
     display: grid;
     place-items: center;
-    width: 2.6rem;
-    height: 2.6rem;
+    /* Same diameter as the nav arrows, and — with the menu 3.25rem wide too —
+       the same width as the menu column it sits above. */
+    width: 3.25rem;
+    height: 3.25rem;
     padding: 0;
     border-radius: 50%;
     color: var(--fg);
@@ -447,28 +451,32 @@
   }
 
   .exit svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.4rem;
+    height: 1.4rem;
   }
 
-  /* All in-session controls in one vertical stack at the bottom-left; the pose
-     counter sits beneath it. Nothing lives on the right but the nav arrow. */
+  /* Tool menu on the left edge, vertically centred in the gap between the Exit
+     disc above and the mid-screen nav arrow below, so it's equally spaced from
+     both. Nothing lives on the right but the nav arrow. */
   .controls-cluster {
     position: absolute;
     left: 0.9rem;
-    bottom: 0.9rem;
+    /* Midpoint between the Exit centre (2.525rem) and the arrow centre (50%). */
+    top: calc(25% + 1.26rem);
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
   }
 
-  /* The menu is a single frosted glass column holding icon-only tool buttons. */
+  /* A single frosted glass column of icon tools. 0.3125rem padding around the
+     2.5rem buttons (plus the 1px glass border) makes the column exactly 3.25rem
+     wide — matching the Exit disc and the nav arrows. */
   .menu {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    padding: 0.3rem;
+    padding: 0.3125rem;
     border-radius: 0.85rem;
   }
 
@@ -516,8 +524,11 @@
     background: color-mix(in srgb, white 14%, transparent);
   }
 
+  /* Pose counter kept in the bottom-left corner, apart from the top-left menu. */
   .count {
-    padding-left: 0.2rem;
+    position: absolute;
+    left: 0.9rem;
+    bottom: 0.9rem;
     font-size: 0.8rem;
     letter-spacing: 0.03em;
     white-space: nowrap;
