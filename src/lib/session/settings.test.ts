@@ -4,6 +4,7 @@ import { DEFAULT_INTERVAL_SECONDS } from './quick'
 import { DEFAULT_REST_SECONDS } from './timing'
 import {
   DEFAULT_SETTINGS,
+  MAX_INTERVAL_SECONDS,
   MIN_INTERVAL_SECONDS,
   clampIntervalSeconds,
   clampPoseCount,
@@ -119,5 +120,11 @@ describe('live-edit clamps (setup blur handlers)', () => {
     expect(clampIntervalSeconds(10)).toBe(MIN_INTERVAL_SECONDS)
     expect(clampIntervalSeconds(MIN_INTERVAL_SECONDS)).toBe(MIN_INTERVAL_SECONDS)
     expect(clampIntervalSeconds(180)).toBe(180)
+  })
+
+  it('snaps an over-90-min custom interval down to the ceiling', () => {
+    expect(clampIntervalSeconds(MAX_INTERVAL_SECONDS)).toBe(MAX_INTERVAL_SECONDS)
+    expect(clampIntervalSeconds(MAX_INTERVAL_SECONDS + 600)).toBe(MAX_INTERVAL_SECONDS) // 100 min → 90
+    expect(clampIntervalSeconds(7200)).toBe(MAX_INTERVAL_SECONDS) // 120 min → 90
   })
 })

@@ -10,7 +10,7 @@
  * rather than rejecting the whole blob.
  */
 
-import { MIN_POSES } from './limits'
+import { MAX_ACTIVE_SECONDS, MIN_POSES } from './limits'
 import { DEFAULT_INTERVAL_SECONDS } from './quick'
 import { DEFAULT_REST_SECONDS } from './timing'
 
@@ -67,6 +67,13 @@ export const DEFAULT_SETTINGS: Settings = {
 /** Lowest custom Quick interval offered, seconds (0.5 min — the input's floor). */
 export const MIN_INTERVAL_SECONDS = 30
 
+/**
+ * Highest custom Quick interval offered, seconds (90 min — the input's `max`). A
+ * single pose can't outlast the whole-session active cap, so the ceiling is that
+ * same cap; an over-cap entry fits zero poses and would otherwise wedge Start.
+ */
+export const MAX_INTERVAL_SECONDS = MAX_ACTIVE_SECONDS
+
 /** Clamp a live-edited pose count: NaN or below the floor snaps to {@link MIN_POSES}. */
 export function clampPoseCount(n: number): number {
   return Number.isFinite(n) && n >= MIN_POSES ? Math.floor(n) : MIN_POSES
@@ -77,11 +84,15 @@ export function clampRestSeconds(n: number): number {
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0
 }
 
-/** Clamp a live-edited custom interval: NaN or below the floor snaps to {@link MIN_INTERVAL_SECONDS}. */
+/**
+ * Clamp a live-edited custom interval into the offered range: NaN or below the
+ * floor snaps to {@link MIN_INTERVAL_SECONDS}; above the ceiling snaps down to
+ * {@link MAX_INTERVAL_SECONDS} (so an over-90-min entry heals on blur instead of
+ * leaving Start wedged with an out-of-range interval).
+ */
 export function clampIntervalSeconds(secs: number): number {
-  return Number.isFinite(secs) && secs >= MIN_INTERVAL_SECONDS
-    ? Math.round(secs)
-    : MIN_INTERVAL_SECONDS
+  if (!Number.isFinite(secs) || secs < MIN_INTERVAL_SECONDS) return MIN_INTERVAL_SECONDS
+  return Math.min(Math.round(secs), MAX_INTERVAL_SECONDS)
 }
 
 /** Serialize settings for persistence. */
