@@ -42,10 +42,6 @@ Full roadmap, sequencing rationale, and each item's contents: `gestures-spec.md`
 ## Follow-ups
 Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in <step> (yyyy-mm-dd)`.
 
-- [ ] Nav arrows still sit on both edges (prev left / next right) — the HUD "buttons on one side" pass
-  left them directional; decide whether to fold next-arrow leftward too or keep it — spawned in HUD
-  redesign (2026-07-04)
-
-M0's resolved follow-ups are archived in `docs/history.md`. The grid-overlay image-bounds
+_Empty._ M0's resolved follow-ups are archived in `docs/history.md`. The grid-overlay image-bounds
 tightening (step 20) was **dropped** (owner's call, 2026-07-03) — the viewport-spanning 9×9 lattice is
 good enough; we won't fit it to the letterboxed image rect.
