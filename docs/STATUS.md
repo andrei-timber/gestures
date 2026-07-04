@@ -40,8 +40,10 @@ Full roadmap, sequencing rationale, and each item's contents: `gestures-spec.md`
 Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in <step> (yyyy-mm-dd)`.
 
 - [ ] Bare root `andreitim.com/` returns 522 — add a redirect rule (→ `/apps/gestures/`) or a landing page — spawned in deploy track (2026-07-04)
-- [ ] `www.andreitim.com` alias — proxied `www` record + redirect rule to apex (params drafted in chat, not yet confirmed applied) — spawned in deploy track (2026-07-04)
 - [ ] Promote the proxied-apex-record to an explicit numbered prerequisite step in `deploy-notes.md` (it bit the first deploy even with the zone already on Cloudflare) — spawned in deploy track (2026-07-04)
+
+Resolved: `www.andreitim.com` alias — proxied `www` record + redirect rule → apex, verified 301 to
+`/apps/gestures/` (2026-07-04).
 
 M0's resolved follow-ups are archived in `docs/history.md`. The grid-overlay image-bounds
 tightening (step 20) was **dropped** (owner's call, 2026-07-03) — the viewport-spanning 9×9 lattice is
