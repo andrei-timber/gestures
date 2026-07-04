@@ -3,37 +3,16 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** **M1 — Drive read (Tier 1) — code done, browser-verified locally; one step left: deploy +
-  iPad check.** Recursive public-folder read is built and working: pasting the owner's "Refs" link loads
-  **2686 images** across 5 folders, a session renders the Drive references full-bleed, prefetch + next are
-  clean, no console errors. Prod build inlines the referrer-restricted key (gitignored `.env.local`). S1
-  spike settled the display URL (`drive.google.com/thumbnail?id=…&sz=w1600`, keyless, 1600×2400). Decision
-  + spec §3 revision logged (2026-07-04).
-- **Next step:** **M1-6 — deploy + iPad verify.** `pnpm deploy` (owner action; ships the inlined key) →
-  on iPad open `https://andreitim.com/apps/gestures/`, paste the Refs link → "2686 images loaded" → run a
-  full session. *Owner-facing — not auto-run.* Then session-wrap: tick step 6, groom M1 → history, suggest
-  the commit.
-- **Verify:** local flow green (2686 loaded, session renders Drive refs). Gate green — **164 tests,
-  typecheck, lint**; `pnpm build` clean, key inlined. Remaining: the live iPad run.
-
-### M1 step ledger — Drive read (Tier 1)
-Public folder link → API-key `files.list` (recursive) → slideshow (spec §3/§13). Decisions locked
-(2026-07-04): paste input with a **remembered** link; key via gitignored local `.env`; **recursive**
-subfolder walk (owner's library is nested, matches the local source).
-- [x] 1 — API-key walkthrough (owner) + **S1 spike**: confirmed anyone-with-link folder lists via API key
-      only (private→404, shared→200); display URL settled (`drive.google.com/thumbnail?id=…&sz=w1600`);
-      Shared-Drive / `resourceKey` handling wired defensively.
-- [x] 2 — Drive source module (`src/lib/source/drive.ts`, node-tested): parse link → `folderId`
-      (+`resourceKey`); **recursive BFS walk** (cycle-safe visited set); filter jpg/png/webp; map to
-      `{name, url}` via the keyless thumbnail URL.
-- [x] 3 — Store: `SourceImage` moved to `images.ts`; `source.loadRemote` adopts a remote list, revokes
-      only `blob:` URLs.
-- [x] 4 — UI: `RemoteInput.svelte` paste input (working Drive row + Box/Dropbox **SOON** placeholders for
-      future providers), side-by-side with the local picker under one centered prompt; loading / error
-      states, remembered link; shared bold "Folder picked up successfully…" count in Setup.
-- [x] 5 — Config: `VITE_GOOGLE_DRIVE_API_KEY` via gitignored `.env.local` (+ `.env.example`), inlined at
-      build; documented in `deploy-notes.md`.
-- [ ] 6 — Verify on iPad against the live deploy: paste link → "2686 images loaded" → run a full session.
+- **Focus:** **M1 — Drive read (Tier 1) — done & live (2026-07-04), owner-verified on iPad.** Recursive
+  public-folder read: paste a share link → API-key `files.list` walks the folder + subfolders → session
+  renders the Drive references. Shipped in commit `10e0f32`, deployed Version `8710473c`. Ledger archived
+  to `docs/history.md`; decisions + spec §3 revision logged. **M1 milestone closed.**
+- **Next step:** **M2 — Drive write / capture (Tier 2, `drive.file`; spec §7/§13).** Milestone start — at
+  the next session-start, lay out the M2 step ledger in STATUS, then agree Scope + Definition-of-done.
+  Kicks off with **spike S2** (spec §13): confirm the download-bytes → `files.create` re-upload path works
+  under `drive.file`. No code yet — plan-gate.
+- **Verify:** M1 live — `curl https://andreitim.com/apps/gestures/` → **200**; iPad run confirmed by owner.
+  Gate green — **164 tests, typecheck, lint** (2026-07-04).
 
 ## Milestones
 Sequenced order (spec §13). Companion tracks 🎨/☁️ are interleaved deliverables, not milestones — content
@@ -45,7 +24,7 @@ in `gestures-spec.md` §14.
 | M0 | Delightful core — local-folder source, session engine, in-session helpers | ✓ |
 | 🎨 | Creative-direction session — originate design system, then restyle M0 (§14) | ✓ (taste-queue open) |
 | ☁️ | Cloudflare setup guide + first deploy (§14; Workers Static Assets — `docs/deploy-notes.md`) | ✓ (live) |
-| M1 | Drive read (Tier 1, public folder link) | ☐ |
+| M1 | Drive read (Tier 1, public folder link) | ✓ (live) |
 | M2 | Drive write / capture (Tier 2, `drive.file`) | ☐ |
 | M3 | Review composites + dated timeline | ☐ |
 
@@ -57,6 +36,9 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 
 - [ ] Bare root `andreitim.com/` returns 522 — add a redirect rule (→ `/apps/gestures/`) or a landing page — spawned in deploy track (2026-07-04)
 - [ ] Promote the proxied-apex-record to an explicit numbered prerequisite step in `deploy-notes.md` (it bit the first deploy even with the zone already on Cloudflare) — spawned in deploy track (2026-07-04)
+- [ ] Wire the **Box** + **Dropbox** provider flows behind the `RemoteInput` SOON placeholders (own share models — Box app token, Dropbox shared-link→direct rules; a milestone-sized piece, not a fill-in) — spawned M1-4 (2026-07-04)
+- [ ] Drive-key **quota is shared across all users** — fine for a hobby tool; if `files.list` ever strains it, add caching or a tiny Worker proxy (spec §3) — spawned M1-1 (2026-07-04)
+- [ ] Big mixed library: a session can jump across categories (martial-arts / comics / turnaround) since recursion flattens all subfolders — shuffle + index-spacing handle it; revisit if per-category sessions are wanted — spawned M1-2 (2026-07-04)
 
 Resolved: `www.andreitim.com` alias — proxied `www` record + redirect rule → apex, verified 301 to
 `/apps/gestures/` (2026-07-04).

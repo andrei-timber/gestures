@@ -56,6 +56,31 @@ drawing loop; E–F layer helpers one key at a time; G is the finishing feel.
 Some Session-G chrome polish was pulled forward during Session E (glass chrome, pause icon, Esc-to-end,
 inline legend); the glass treatment is interim pending the 🎨 creative-direction pass. See `decisions.md`.
 
+## M1 — Drive read (Tier 1) — done (2026-07-04)
+Public folder link → API-key `files.list` (recursive) → slideshow (`gestures-spec.md` §3/§13). Enables
+the iPad path (local folder-picking is desktop-only). One app-owned, referrer-restricted key authenticates
+the app to Google; visitors only share a folder "anyone with the link." Decisions & S1-spike findings in
+`docs/decisions.md` (2026-07-04); spec §3 revised (recursion supersedes the original "flat v1").
+- [x] 1 — API-key walkthrough (owner) + **S1 spike**: confirmed an anyone-with-link folder lists via API
+      key only (private→404, shared→200); display URL settled (`drive.google.com/thumbnail?id=…&sz=w1600`,
+      keyless, 1600×2400); Shared-Drive / `resourceKey` handling wired defensively.
+- [x] 2 — Drive source module (`src/lib/source/drive.ts`, node-tested): parse link → `folderId`
+      (+`resourceKey`); **recursive BFS walk** (cycle-safe visited set + `MAX_FOLDERS` guard); filter
+      jpg/png/webp; map to `{name, url}` via the keyless thumbnail URL.
+- [x] 3 — Store: `SourceImage` moved to framework-free `images.ts`; `source.loadRemote` adopts a remote
+      list, revokes only `blob:` URLs.
+- [x] 4 — UI: `RemoteInput.svelte` paste input (working Drive row + Box/Dropbox **SOON** placeholders),
+      side-by-side with the local picker under one centered prompt; loading / error states, remembered
+      link; shared bold "Folder picked up successfully…" count in Setup.
+- [x] 5 — Config: `VITE_GOOGLE_DRIVE_API_KEY` via gitignored `.env.local` (+ `.env.example`), inlined at
+      build; documented in `docs/deploy-notes.md`.
+- [x] 6 — Verified on iPad against the live deploy (Version `8710473c`): pasted the Refs link → "2686
+      images loaded" → full session ran. Owner-confirmed 2026-07-04.
+
+Real-library shape drove the recursion call: the owner's "Refs" holds only category subfolders
+(2686 images across 5 folders), and the local drop-folder source already recurses. Gate at close:
+164 tests, typecheck, lint; commit `10e0f32`.
+
 ### M0 resolved follow-ups (2026-07-03)
 Discovered-and-closed during M0 and its follow-up sweep. Design/decision detail lives in `decisions.md`
 and the linked design notes; kept here as a one-line ledger.
