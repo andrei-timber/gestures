@@ -150,26 +150,67 @@
     class:cue-orange={band === 'orange'}
     class:cue-red={band === 'red'}>{formatClock(session.remaining)}</span>
 
-  <!-- HUD as two vertical glass-button stacks, one per bottom corner, so neither
-       legend stretches across the reference and each control is mouse-clickable
-       (handy alongside a parallel Photoshop file) as well as keyed. Each button
-       names its shortcut in parens. The stacks grow upward from the corner rather
-       than invading the image, and the vertical layout shrinks cleanly (iPad).
-       The per-pose view aids sit left above the counter; timing sits right above
-       End. Keyboard shortcuts stay wired through `onKeydown` unchanged. -->
-  <div class="hud">
-    <div class="col left">
-      <button class="chip glass" class:on={session.aids.mirrorH} onclick={() => session.toggleMirrorH()}>Mirror ⇄ <span class="key">(m)</span></button>
-      <button class="chip glass" class:on={session.aids.mirrorV} onclick={() => session.toggleMirrorV()}>Mirror ⇅ <span class="key">(v)</span></button>
-      <button class="chip glass" class:on={session.aids.grayscale} onclick={() => session.toggleGrayscale()}>Gray <span class="key">(g)</span></button>
-      <button class="chip glass" class:on={session.aids.grid} onclick={() => session.toggleGrid()}>Grid <span class="key">(r)</span></button>
-      <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
+  <!-- Exit, decoupled from the tool menu and pinned top-left: ending the run is a
+       deliberate, separate gesture, kept away from the per-pose tools so it's
+       never fat-fingered. Keyed by Esc. -->
+  <button class="exit glass" title="Exit session (esc)" aria-label="Exit session (esc)" onclick={endSession}>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+    </svg>
+  </button>
+
+  <!-- Every in-session control lives in one vertical glass menu at the bottom-left
+       (nothing on the right but the directional nav arrow). Icon-only; the label +
+       hotkey ride in the tooltip. View aids sit above a divider, timing below; the
+       pose counter sits under the menu. Keyboard shortcuts stay wired through
+       `onKeydown` unchanged — the icons just make them mouse-clickable too. -->
+  <div class="controls-cluster">
+    <div class="menu glass">
+      <button class="tool" class:on={session.aids.mirrorH} aria-pressed={session.aids.mirrorH} title="Mirror horizontal (m)" aria-label="Mirror horizontal (m)" onclick={() => session.toggleMirrorH()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
+          <path d="M9.5 7.5 5 12l4.5 4.5z" fill="currentColor" />
+          <path d="M14.5 7.5 19 12l-4.5 4.5z" fill="currentColor" />
+        </svg>
+      </button>
+      <button class="tool" class:on={session.aids.mirrorV} aria-pressed={session.aids.mirrorV} title="Mirror vertical (v)" aria-label="Mirror vertical (v)" onclick={() => session.toggleMirrorV()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
+          <path d="M7.5 9.5 12 5l4.5 4.5z" fill="currentColor" />
+          <path d="M7.5 14.5 12 19l4.5-4.5z" fill="currentColor" />
+        </svg>
+      </button>
+      <button class="tool" class:on={session.aids.grayscale} aria-pressed={session.aids.grayscale} title="Grayscale (g)" aria-label="Grayscale (g)" onclick={() => session.toggleGrayscale()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" />
+        </svg>
+      </button>
+      <button class="tool" class:on={session.aids.grid} aria-pressed={session.aids.grid} title="Grid (r)" aria-label="Grid (r)" onclick={() => session.toggleGrid()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">
+          <rect x="4.5" y="4.5" width="15" height="15" rx="1" />
+          <line x1="9.5" y1="4.5" x2="9.5" y2="19.5" />
+          <line x1="14.5" y1="4.5" x2="14.5" y2="19.5" />
+          <line x1="4.5" y1="9.5" x2="19.5" y2="9.5" />
+          <line x1="4.5" y1="14.5" x2="19.5" y2="14.5" />
+        </svg>
+      </button>
+      <span class="menu-sep" aria-hidden="true"></span>
+      <button class="tool" title={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} aria-label={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} onclick={togglePause}>
+        {#if session.phase === 'paused'}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 19 12 8 18.5z" fill="currentColor" /></svg>
+        {:else}
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
+            <rect x="13.6" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
+          </svg>
+        {/if}
+      </button>
+      <button class="tool" title="Extend pose (+)" aria-label="Extend pose (+)" onclick={() => session.addTime()}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+      </button>
     </div>
-    <div class="col right">
-      <button class="chip glass" onclick={togglePause}>{session.phase === 'paused' ? 'Resume' : 'Pause'} <span class="key">(space)</span></button>
-      <button class="chip glass" onclick={() => session.addTime()}>Extend <span class="key">(+)</span></button>
-      <button class="chip glass" onclick={endSession}>End <span class="key">(esc)</span></button>
-    </div>
+    <span class="count">Pose {session.poseNumber} of {session.poseCount}</span>
   </div>
 </section>
 
@@ -334,83 +375,105 @@
       0 0 16px color-mix(in srgb, var(--pace-4) 48%, transparent);
   }
 
-  .hud {
+  /* Exit — a standalone glass disc pinned top-left, deliberately apart from the
+     tool menu so ending the run reads as its own gesture. */
+  .exit {
     position: absolute;
-    inset: auto 0 0 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-    color: var(--fg-muted);
+    top: 0.9rem;
+    left: 0.9rem;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--fg);
+    opacity: 0.68;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
   }
 
-  /* Corner stacks: buttons pile upward from the counter (left) / End (right),
-     so the layout stays vertical and shrinks cleanly on narrow / touch screens. */
-  .col {
+  .exit:hover,
+  .exit:focus-visible {
+    opacity: 1;
+    border-color: color-mix(in srgb, white 20%, transparent);
+  }
+
+  .exit svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* All in-session controls in one vertical stack at the bottom-left; the pose
+     counter sits beneath it. Nothing lives on the right but the nav arrow. */
+  .controls-cluster {
+    position: absolute;
+    left: 0.9rem;
+    bottom: 0.9rem;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    min-width: 0;
-  }
-
-  .col.left {
     align-items: flex-start;
+    gap: 0.5rem;
   }
 
-  .col.right {
-    align-items: flex-end;
+  /* The menu is a single frosted glass column holding icon-only tool buttons. */
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.3rem;
+    border-radius: 0.85rem;
   }
 
-  .count {
-    margin-top: 0.15rem;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-  }
-
-  /* Glass control button — the legend's shortcuts made clickable. Shares the
-     .glass frosted surface with the nav arrows and clock; the shortcut key rides
-     along in a muted parenthetical (`.key`). */
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    flex-shrink: 0;
-    font: inherit;
-    font-size: 0.8rem;
-    line-height: 1;
-    white-space: nowrap;
+  .tool {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    background: transparent;
     color: var(--fg);
-    padding: 0.4rem 0.72rem;
-    border-radius: 999px;
+    opacity: 0.78;
     cursor: pointer;
-    opacity: 0.9;
     transition:
       opacity 0.15s ease,
       background 0.15s ease,
       border-color 0.15s ease;
   }
 
-  .chip:hover,
-  .chip:focus-visible {
+  .tool:hover,
+  .tool:focus-visible {
     opacity: 1;
+    background: color-mix(in srgb, white 8%, transparent);
+    border-color: transparent;
   }
 
-  .chip .key {
-    font-size: 0.72rem;
-    color: var(--fg-muted);
+  .tool svg {
+    width: 1.3rem;
+    height: 1.3rem;
   }
 
-  /* Toggled-on view aid: a brighter glass with an accent hairline so active aids
-     read at a glance. */
-  .chip.on {
-    background: color-mix(in srgb, var(--bg) 30%, transparent);
+  /* Toggled-on view aid: accent tint + hairline, matching the design system. */
+  .tool.on {
+    opacity: 1;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
     border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-    opacity: 1;
   }
 
-  .chip.on .key {
-    color: var(--fg);
+  /* Hairline between the per-pose view aids and the timing controls. */
+  .menu-sep {
+    height: 1px;
+    margin: 0.2rem 0.35rem;
+    background: color-mix(in srgb, white 14%, transparent);
+  }
+
+  .count {
+    padding-left: 0.2rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    color: var(--fg-muted);
   }
 </style>
