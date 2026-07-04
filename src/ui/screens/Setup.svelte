@@ -4,7 +4,7 @@
   import { formatDuration } from '@/lib/format'
   import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
-  import { QUICK_INTERVALS_SECONDS, customIntervalSeconds } from '@/lib/session/quick'
+  import { QUICK_INTERVALS_SECONDS, customIntervalSeconds, quickCeiling } from '@/lib/session/quick'
   import {
     clampIntervalSeconds,
     clampPoseCount,
@@ -40,6 +40,12 @@
   // or the folder holds fewer images than requested.
   const healthCapped = $derived(plan.length > 0 && plan.length < effectiveCount)
   const folderCapped = $derived(source.count > 0 && source.count < settings.poseCount)
+  // A Quick interval out of range (≤0 or past the 90-min cap) fits zero poses,
+  // so the plan is empty and Start disables. Unlike healthCapped — a shorter but
+  // runnable plan — this is a dead end, so the FYI says why instead of "0 poses".
+  const intervalOutOfRange = $derived(
+    settings.mode === 'quick' && quickCeiling(settings.intervalSeconds) < 1,
+  )
 
   const presets = QUICK_INTERVALS_SECONDS as readonly number[]
   const isCustomInterval = $derived(!presets.includes(settings.intervalSeconds))
@@ -118,6 +124,7 @@
           <input
             type="number"
             min="0.5"
+            max="90"
             step="0.5"
             value={settings.intervalSeconds / 60}
             oninput={(e) =>
@@ -146,9 +153,13 @@
   </div>
 
   <p class="fyi">
-    ≈ {formatDuration(total)} · {plan.length} pose{plan.length === 1 ? '' : 's'}
-    {#if healthCapped}<span class="capped">(capped for health)</span>
-    {:else if folderCapped}<span class="capped">(limited by folder)</span>{/if}
+    {#if intervalOutOfRange}
+      <span class="capped">Interval out of range — pick 0.5–90 min to start.</span>
+    {:else}
+      ≈ {formatDuration(total)} · {plan.length} pose{plan.length === 1 ? '' : 's'}
+      {#if healthCapped}<span class="capped">(capped for health)</span>
+      {:else if folderCapped}<span class="capped">(limited by folder)</span>{/if}
+    {/if}
   </p>
 
   <button class="start" disabled={!ready} onclick={start}>Start session</button>
