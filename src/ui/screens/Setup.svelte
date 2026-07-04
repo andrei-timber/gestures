@@ -94,6 +94,10 @@
 
 <section class="screen">
   <h1>{APP_NAME}</h1>
+  <p class="tagline">
+    Point it at a folder of pose references and it plays a quiet, timed slideshow to draw along
+    with — the unhurried way to keep your eye and hand sharp.
+  </p>
 
   <FolderInput />
 
@@ -183,9 +187,6 @@
   </p>
 
   <button class="start" disabled={!ready} onclick={start}>Start session</button>
-  {#if source.count === 0}
-    <p class="hint">Choose a reference folder to begin.</p>
-  {/if}
 
   <!-- Theme picker: icon-only swatches, one per palette (spec §14). Picking
        re-tints the whole app live and persists via the settings store. -->
@@ -223,6 +224,9 @@
 
 <style>
   .screen {
+    /* Shared column width for the two stacked cards (picker + params). Inherits
+       into FolderInput via the custom-property cascade so both match exactly. */
+    --setup-col: 21rem;
     min-height: 100dvh;
     display: grid;
     place-content: center;
@@ -239,10 +243,20 @@
     letter-spacing: 0.02em;
   }
 
+  /* One-line explainer under the title — what this is and why. */
+  .tagline {
+    margin: -0.4rem 0 0.25rem;
+    max-width: 30rem;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
   .panel {
     display: grid;
     gap: 0.75rem;
-    min-width: 16rem;
+    width: var(--setup-col);
     padding: 1.25rem 1.4rem;
     background: var(--surface);
     border: 1px solid color-mix(in srgb, var(--fg) 8%, transparent);
@@ -391,12 +405,6 @@
   .start:disabled {
     opacity: 0.4;
     cursor: default;
-  }
-
-  .hint {
-    margin: 0;
-    color: var(--fg-muted);
-    font-size: 0.85rem;
   }
 
   /* Theme picker — three icon-only swatches. Each previews its own palette

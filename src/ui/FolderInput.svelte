@@ -54,7 +54,7 @@
 >
   <label>
     <input type="file" accept="image/*" multiple webkitdirectory onchange={onChange} />
-    <span>Choose a reference folder</span>
+    <span>Choose a reference folder to begin</span>
   </label>
   <p class="hint">…or drop a folder from the local disk here.</p>
   <!-- Reassurance: the webkitdirectory prompt reads as "upload all files…", but
@@ -70,6 +70,8 @@
     display: grid;
     justify-items: center;
     gap: 0.5rem;
+    /* Match the params panel width (shared column set by the Setup screen). */
+    width: var(--setup-col, 21rem);
     padding: 1.25rem 1.5rem;
     /* Faint resting outline so the card reads as a drop target; it strengthens
        (+ tint) while a folder is dragged over. */
@@ -88,6 +90,7 @@
 
   label span {
     display: inline-block;
+    white-space: nowrap;
     border: 1px solid var(--fg-muted);
     border-radius: 0.4rem;
     padding: 0.5rem 1.1rem;
