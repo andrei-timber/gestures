@@ -1,31 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { PREFETCH_AHEAD, prefetchWindow } from './preload'
+import { PREFETCH_AHEAD, prefetchIndices } from './preload'
 
-const urls = ['a', 'b', 'c', 'd', 'e']
+const LEN = 5 // a 5-pose run
 
-describe('prefetchWindow', () => {
+describe('prefetchIndices', () => {
   it('warms the next `ahead` poses plus the one behind, nearest-ahead first', () => {
-    expect(prefetchWindow(urls, 2, 2)).toEqual(['d', 'e', 'b'])
+    expect(prefetchIndices(LEN, 2, 2)).toEqual([3, 4, 1])
   })
 
   it('has no behind entry at the start', () => {
-    expect(prefetchWindow(urls, 0, 2)).toEqual(['b', 'c'])
+    expect(prefetchIndices(LEN, 0, 2)).toEqual([1, 2])
   })
 
   it('clamps at the end — only the behind pose remains on the last index', () => {
-    expect(prefetchWindow(urls, 4, 2)).toEqual(['d'])
+    expect(prefetchIndices(LEN, 4, 2)).toEqual([3])
   })
 
   it('excludes the current pose (already painted)', () => {
-    expect(prefetchWindow(urls, 2, 2)).not.toContain('c')
+    expect(prefetchIndices(LEN, 2, 2)).not.toContain(2)
   })
 
-  it('de-duplicates overlap on very short runs', () => {
-    expect(prefetchWindow(['a', 'b'], 0, 2)).toEqual(['b']) // ahead=2 but only b exists, no behind
-    expect(prefetchWindow(['a'], 0, 2)).toEqual([]) // nothing to warm
+  it('drops out-of-bounds neighbours on very short runs', () => {
+    expect(prefetchIndices(2, 0, 2)).toEqual([1]) // ahead=2 but only index 1 exists, no behind
+    expect(prefetchIndices(1, 0, 2)).toEqual([]) // nothing to warm
   })
 
   it('defaults to PREFETCH_AHEAD look-ahead', () => {
-    expect(prefetchWindow(urls, 0)).toEqual(prefetchWindow(urls, 0, PREFETCH_AHEAD))
+    expect(prefetchIndices(LEN, 0)).toEqual(prefetchIndices(LEN, 0, PREFETCH_AHEAD))
   })
 })

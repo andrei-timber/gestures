@@ -27,6 +27,7 @@ import {
   type Phase,
 } from '@/lib/session/runtime'
 import { totalSeconds } from '@/lib/session/timing'
+import { prefetchIndices } from '@/lib/source/preload'
 import type { SourceImage } from '@/state/source.svelte'
 
 function createSessionStore() {
@@ -95,9 +96,13 @@ function createSessionStore() {
     get currentImage(): SourceImage | null {
       return images[state.index] ?? null
     },
-    /** Ordered run image URLs (parallel to the plan) — the prefetch window reads this. */
-    get imageUrls(): readonly string[] {
-      return images.map((img) => img.url)
+    /**
+     * The image URLs to warm around `index` — the prefetch window, read straight
+     * off the run images. Indexes only the handful of window positions, so a pose
+     * swap never allocates a URL for every image in a large run.
+     */
+    prefetchUrls(index: number): string[] {
+      return prefetchIndices(images.length, index).map((i) => images[i].url)
     },
 
     /**

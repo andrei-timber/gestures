@@ -7,7 +7,7 @@
  * size (a whole-set decode would OOM — see the design note).
  *
  * Split by the repo's "test the logic, browser-verify UI" line: {@link
- * prefetchWindow} is pure and unit-tested; {@link warm} performs the DOM-only
+ * prefetchIndices} is pure and unit-tested; {@link warm} performs the DOM-only
  * `HTMLImageElement.decode()` side-effect and is browser-verified.
  */
 
@@ -15,22 +15,19 @@
 export const PREFETCH_AHEAD = 2
 
 /**
- * The URLs to keep decoded around `index`: the next `ahead` poses plus the one
- * behind (instant back-scrub via `←`). The current pose is excluded — it's
- * already painted. Nearest-ahead first; out-of-bounds neighbours are dropped and
- * the result is de-duplicated (very short runs can overlap).
+ * The indices to keep decoded around `index`: the next `ahead` poses plus the
+ * one behind (instant back-scrub via `←`). The current pose is excluded — it's
+ * already painted. Nearest-ahead first; out-of-bounds neighbours are dropped.
+ * The indices are distinct by construction. The store maps these straight onto
+ * the run images, so a swap never materialises every URL to read three of them.
  */
-export function prefetchWindow(
-  urls: readonly string[],
-  index: number,
-  ahead = PREFETCH_AHEAD,
-): string[] {
-  const out: string[] = []
+export function prefetchIndices(length: number, index: number, ahead = PREFETCH_AHEAD): number[] {
+  const out: number[] = []
   for (let d = 1; d <= ahead; d++) {
-    if (index + d < urls.length) out.push(urls[index + d])
+    if (index + d < length) out.push(index + d)
   }
-  if (index - 1 >= 0) out.push(urls[index - 1])
-  return [...new Set(out)]
+  if (index - 1 >= 0) out.push(index - 1)
+  return out
 }
 
 /**

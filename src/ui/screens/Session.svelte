@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatClock } from '@/lib/format'
-  import { prefetchWindow, warm } from '@/lib/source/preload'
+  import { warm } from '@/lib/source/preload'
   import { screen } from '@/state/screen.svelte'
   import { session } from '@/state/session.svelte'
 
@@ -22,7 +22,7 @@
   // only on an actual pose advance.
   const prefetchIndex = $derived(session.index)
   $effect(() => {
-    void warm(prefetchWindow(session.imageUrls, prefetchIndex))
+    void warm(session.prefetchUrls(prefetchIndex))
   })
 
   // Keyboard dispatcher: a key→action map so later helpers (prev/next, add-time)
