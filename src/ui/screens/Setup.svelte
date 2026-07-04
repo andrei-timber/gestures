@@ -53,8 +53,15 @@
     isCustomInterval ? 'custom' : String(settings.intervalSeconds),
   )
 
+  // Remember the last custom interval so returning to "Custom…" restores it,
+  // rather than discarding the user's entry and snapping back to a 3-min default.
+  let lastCustomSeconds = $state(customIntervalSeconds(3))
+  $effect(() => {
+    if (isCustomInterval) lastCustomSeconds = settings.intervalSeconds
+  })
+
   function selectInterval(value: string): void {
-    settings.intervalSeconds = value === 'custom' ? customIntervalSeconds(3) : Number(value)
+    settings.intervalSeconds = value === 'custom' ? lastCustomSeconds : Number(value)
   }
 
   const ready = $derived(source.count > 0 && plan.length > 0)
