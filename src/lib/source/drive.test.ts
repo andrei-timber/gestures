@@ -7,6 +7,7 @@ import {
   parseFolderRef,
   toSourceImages,
   type DriveFile,
+  type FetchLike,
 } from './drive'
 
 const FOLDER_ID = '12BH-GbwIUaXIWxUFH_16cljQuLt9U9Sm'
@@ -176,7 +177,7 @@ describe('fetchDriveImages', () => {
   })
 
   it('carries a subfolder’s own resource key into its listing', async () => {
-    const fetch = vi.fn((url: string, _init?: { headers?: Record<string, string> }) => {
+    const fetch = vi.fn<FetchLike>((url) => {
       if (url.includes(FOLDER_ID)) {
         // The root's listing reveals a subfolder that needs its own key.
         return Promise.resolve(

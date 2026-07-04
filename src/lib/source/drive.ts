@@ -164,34 +164,48 @@ export async function fetchDriveImages(
       : { 'X-Goog-Drive-Resource-Keys': Array.from(resourceKeys, ([id, key]) => `${id}/${key}`).join(',') }
 
   const files: DriveFile[] = []
-  const queue: string[] = [ref.folderId]
-  const visited = new Set<string>(queue)
-  while (queue.length > 0) {
-    const folderId = queue.shift() as string
-    let children: DriveFile[]
-    try {
-      children = await listChildren(doFetch, folderId, apiKey, headersFor())
-    } catch (err) {
-      // The root's failure is the load's failure; but one unreadable *subfolder*
-      // (a per-item sharing override or its own missing resource key) must not
-      // discard the images already gathered from the parent and its readable
-      // siblings. Transient failures (network / rate-limit) still abort the whole
-      // walk — they'd bite every folder equally, so a partial result would mislead.
-      const recoverable = err instanceof DriveError && (err.kind === 'access' || err.kind === 'not-found')
-      if (folderId === ref.folderId || !recoverable) throw err
-      continue
-    }
-    for (const child of children) {
-      if (child.mimeType === FOLDER_MIME) {
-        if (!visited.has(child.id) && visited.size < MAX_FOLDERS) {
-          visited.add(child.id)
-          if (child.resourceKey) resourceKeys.set(child.id, child.resourceKey)
-          queue.push(child.id)
+  const visited = new Set<string>([ref.folderId])
+  let level: string[] = [ref.folderId]
+  while (level.length > 0) {
+    // Fetch every folder in this BFS level concurrently — siblings are independent,
+    // so a categorised library (Refs/…/poses) isn't serialised into one round-trip
+    // per folder, which stalls Setup on cellular. The header snapshot is taken once
+    // per level; a child's key was learned from its parent's listing one level up,
+    // so it's already in the map by the time we list the child.
+    const headers = headersFor()
+    const settled = await Promise.all(
+      level.map((folderId) =>
+        listChildren(doFetch, folderId, apiKey, headers).then(
+          (children) => ({ folderId, children, error: undefined }),
+          (error: unknown) => ({ folderId, children: undefined, error }),
+        ),
+      ),
+    )
+    const next: string[] = []
+    for (const { folderId, children, error } of settled) {
+      if (children === undefined) {
+        // The root's failure is the load's failure; but one unreadable *subfolder*
+        // (a per-item sharing override or its own missing resource key) must not
+        // discard the images already gathered from readable folders. Transient
+        // failures (network / rate-limit) still abort — they'd bite every folder
+        // equally, so a partial result would mislead.
+        const recoverable = error instanceof DriveError && (error.kind === 'access' || error.kind === 'not-found')
+        if (folderId === ref.folderId || !recoverable) throw error
+        continue
+      }
+      for (const child of children) {
+        if (child.mimeType === FOLDER_MIME) {
+          if (!visited.has(child.id) && visited.size < MAX_FOLDERS) {
+            visited.add(child.id)
+            if (child.resourceKey) resourceKeys.set(child.id, child.resourceKey)
+            next.push(child.id)
+          }
+        } else {
+          files.push(child)
         }
-      } else {
-        files.push(child)
       }
     }
+    level = next
   }
 
   return toSourceImages(files, options.width)
