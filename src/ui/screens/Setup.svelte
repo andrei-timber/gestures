@@ -105,7 +105,7 @@
       <button
         class:active={settings.mode === 'class'}
         disabled={!classAllowed}
-        title={'Poses start short and grow longer,\nlike a real drawing class.'}
+        title={'Pose timers start short and grow longer,\nlike a real drawing class.'}
         onclick={() => (settings.mode = 'class')}
       >
         Class
