@@ -95,8 +95,7 @@
 <section class="screen">
   <h1>{APP_NAME}</h1>
   <p class="tagline">
-    Point it at a folder of pose references and it plays a quiet, timed slideshow to draw along
-    with — the unhurried way to keep your eye and hand sharp.
+    Use this simple tool to practice timed figure drawing with your own reference folders.
   </p>
 
   <FolderInput />
@@ -106,11 +105,16 @@
       <button
         class:active={settings.mode === 'class'}
         disabled={!classAllowed}
+        title="Pose lengths taper like a life-drawing class — many short warm-ups building to a few long holds."
         onclick={() => (settings.mode = 'class')}
       >
         Class
       </button>
-      <button class:active={settings.mode === 'quick'} onclick={() => (settings.mode = 'quick')}>
+      <button
+        class:active={settings.mode === 'quick'}
+        title="Every pose runs for the same fixed interval you choose."
+        onclick={() => (settings.mode = 'quick')}
+      >
         Quick
       </button>
     </div>
