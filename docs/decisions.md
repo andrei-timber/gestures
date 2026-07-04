@@ -145,7 +145,7 @@ one-line "nothing is uploaded" reassurance that also defuses the scary prompt on
 Rationale: the owner's own browser gets the clean prompt now; recursion preserves the subfolder-organized
 library. Tradeoff: two code paths + a hand-narrowed `showDirectoryPicker` type (not yet in TS DOM lib);
 accepted. The native dialog can't be automated, so the API path is browser-verified via a faked handle.
-Full design: `docs/folder-picker-permission.md`. Worth a line in spec §9 at the next spec pass.
+Full design: `docs/folder-picker-permission-2026-07-04.md`. Worth a line in spec §9 at the next spec pass.
 
 2026-07-03 — **NaN-clamp lives at the input blur, and the poses field never actually NaN'd.** Context:
 follow-up flagged clearing a setup number input writing NaN → "0 min" FYI. Finding on reproduction: Svelte

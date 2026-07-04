@@ -65,7 +65,7 @@ and the linked design notes; kept here as a one-line ledger.
 - [x] Setup FYI: effective N caps at pool size when the folder holds fewer images ("limited by folder") — closed in step 11.
 - [x] End recap reported the *planned* run — runtime now accumulates actual `elapsed` (in `tick`) + a `posesDrawn` selector; summary reads both (equal the plan on a full run).
 - [x] Window-prefetch pose decodes for instant swaps — `src/lib/source/preload.ts` (pure `prefetchWindow` + browser-only `warm`/`decode`; `$effect` on `session.index`; Setup pre-warms the opening frame). Design: `docs/prefetch-window.md`.
-- [x] Folder-pick "upload thousands of files" dialog — tried `showDirectoryPicker()`, **reverted** to `<input webkitdirectory>` + reassurance line (the API silently drops odd-named files). Design + finding: `docs/folder-picker-permission.md`.
+- [x] Folder-pick "upload thousands of files" dialog — tried `showDirectoryPicker()`, **reverted** to `<input webkitdirectory>` + reassurance line (the API silently drops odd-named files). Design + finding: `docs/folder-picker-permission-2026-07-04.md`.
 - [x] Grid overlay (`r`): rule-of-thirds → 9×9 lattice in bright light blue, legible over white refs.
 - [x] Session HUD legend split so neither cluster crosses the reference (view aids left, timing/nav right, wraps as the window narrows).
 - [x] End / `Esc` left the 1s interval ticking — pure `end()` transition + store command that stops the timer; `endSession()` routes through it.
