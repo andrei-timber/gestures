@@ -172,57 +172,59 @@
     </svg>
   </button>
 
-  <!-- Every in-session control lives in one vertical glass menu at the bottom-left
-       (nothing on the right but the directional nav arrow). Icon-only; the label +
-       hotkey ride in the tooltip. View aids sit above a divider, timing below; the
-       pose counter sits under the menu. Keyboard shortcuts stay wired through
-       `onKeydown` unchanged — the icons just make them mouse-clickable too. -->
-  <div class="controls-cluster">
-    <div class="menu glass">
-      <button class="tool" class:on={session.aids.mirrorH} aria-pressed={session.aids.mirrorH} title="Mirror horizontal (m)" aria-label="Mirror horizontal (m)" onclick={() => session.toggleMirrorH()}>
+  <!-- The in-session controls split into two glass columns on the left edge, with
+       the nav arrow between them: the four per-pose view aids sit above the arrow
+       (equally spaced between the Exit disc and the arrow), the two timing controls
+       below it (equally spaced between the arrow and the pose counter). Splitting
+       4-above / 2-below keeps the left rail from crowding the mid-screen arrow on
+       short viewports (e.g. phone landscape). Icon-only; label + hotkey ride in the
+       tooltip; keyboard shortcuts stay wired through `onKeydown` unchanged. -->
+  <div class="menu aids glass">
+    <button class="tool" class:on={session.aids.mirrorH} aria-pressed={session.aids.mirrorH} title="Mirror horizontal (m)" aria-label="Mirror horizontal (m)" onclick={() => session.toggleMirrorH()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
+        <path d="M9.5 7.5 5 12l4.5 4.5z" fill="currentColor" />
+        <path d="M14.5 7.5 19 12l-4.5 4.5z" fill="currentColor" />
+      </svg>
+    </button>
+    <button class="tool" class:on={session.aids.mirrorV} aria-pressed={session.aids.mirrorV} title="Mirror vertical (v)" aria-label="Mirror vertical (v)" onclick={() => session.toggleMirrorV()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
+        <path d="M7.5 9.5 12 5l4.5 4.5z" fill="currentColor" />
+        <path d="M7.5 14.5 12 19l4.5-4.5z" fill="currentColor" />
+      </svg>
+    </button>
+    <button class="tool" class:on={session.aids.grayscale} aria-pressed={session.aids.grayscale} title="Grayscale (g)" aria-label="Grayscale (g)" onclick={() => session.toggleGrayscale()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" />
+      </svg>
+    </button>
+    <button class="tool" class:on={session.aids.grid} aria-pressed={session.aids.grid} title="Grid (r)" aria-label="Grid (r)" onclick={() => session.toggleGrid()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="4.5" y="4.5" width="15" height="15" rx="1" />
+        <line x1="9.5" y1="4.5" x2="9.5" y2="19.5" />
+        <line x1="14.5" y1="4.5" x2="14.5" y2="19.5" />
+        <line x1="4.5" y1="9.5" x2="19.5" y2="9.5" />
+        <line x1="4.5" y1="14.5" x2="19.5" y2="14.5" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="menu timing glass">
+    <button class="tool" title={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} aria-label={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} onclick={togglePause}>
+      {#if session.phase === 'paused'}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 19 12 8 18.5z" fill="currentColor" /></svg>
+      {:else}
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
-          <path d="M9.5 7.5 5 12l4.5 4.5z" fill="currentColor" />
-          <path d="M14.5 7.5 19 12l-4.5 4.5z" fill="currentColor" />
+          <rect x="7" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
+          <rect x="13.6" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
         </svg>
-      </button>
-      <button class="tool" class:on={session.aids.mirrorV} aria-pressed={session.aids.mirrorV} title="Mirror vertical (v)" aria-label="Mirror vertical (v)" onclick={() => session.toggleMirrorV()}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2" stroke-linecap="round" />
-          <path d="M7.5 9.5 12 5l4.5 4.5z" fill="currentColor" />
-          <path d="M7.5 14.5 12 19l4.5-4.5z" fill="currentColor" />
-        </svg>
-      </button>
-      <button class="tool" class:on={session.aids.grayscale} aria-pressed={session.aids.grayscale} title="Grayscale (g)" aria-label="Grayscale (g)" onclick={() => session.toggleGrayscale()}>
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6" />
-          <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" />
-        </svg>
-      </button>
-      <button class="tool" class:on={session.aids.grid} aria-pressed={session.aids.grid} title="Grid (r)" aria-label="Grid (r)" onclick={() => session.toggleGrid()}>
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4">
-          <rect x="4.5" y="4.5" width="15" height="15" rx="1" />
-          <line x1="9.5" y1="4.5" x2="9.5" y2="19.5" />
-          <line x1="14.5" y1="4.5" x2="14.5" y2="19.5" />
-          <line x1="4.5" y1="9.5" x2="19.5" y2="9.5" />
-          <line x1="4.5" y1="14.5" x2="19.5" y2="14.5" />
-        </svg>
-      </button>
-      <span class="menu-sep" aria-hidden="true"></span>
-      <button class="tool" title={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} aria-label={session.phase === 'paused' ? 'Resume (space)' : 'Pause (space)'} onclick={togglePause}>
-        {#if session.phase === 'paused'}
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 19 12 8 18.5z" fill="currentColor" /></svg>
-        {:else}
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="7" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
-            <rect x="13.6" y="5" width="3.4" height="14" rx="1.2" fill="currentColor" />
-          </svg>
-        {/if}
-      </button>
-      <button class="tool" title="Extend time (+)" aria-label="Extend time (+)" onclick={() => session.addTime()}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-      </button>
-    </div>
+      {/if}
+    </button>
+    <button class="tool" title="Extend time (+)" aria-label="Extend time (+)" onclick={() => session.addTime()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+    </button>
   </div>
 
   <!-- Pose counter kept in the bottom-left corner, away from the top-left menu. -->
@@ -455,29 +457,32 @@
     height: 1.4rem;
   }
 
-  /* Tool menu on the left edge, vertically centred in the gap between the Exit
-     disc above and the mid-screen nav arrow below, so it's equally spaced from
-     both. Nothing lives on the right but the nav arrow. */
-  .controls-cluster {
+  /* Two frosted glass columns of icon tools on the left edge, with the nav arrow
+     between them. 0.3125rem padding around the 2.5rem buttons (plus the 1px glass
+     border) makes each column exactly 3.25rem wide — matching the Exit disc and
+     the nav arrows. Each is vertically centred in its gap, so it's equally spaced
+     from its neighbours. Splitting the tools 4-above / 2-below the arrow stops the
+     rail from crowding the arrow on short (phone-landscape) viewports. */
+  .menu {
     position: absolute;
     left: 0.9rem;
-    /* Midpoint between the Exit centre (2.525rem) and the arrow centre (50%). */
-    top: calc(25% + 1.26rem);
     transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  /* A single frosted glass column of icon tools. 0.3125rem padding around the
-     2.5rem buttons (plus the 1px glass border) makes the column exactly 3.25rem
-     wide — matching the Exit disc and the nav arrows. */
-  .menu {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
     padding: 0.3125rem;
     border-radius: 0.85rem;
+  }
+
+  /* View aids: centred between the Exit disc (centre 2.525rem) and the arrow (50%). */
+  .menu.aids {
+    top: calc(25% + 1.26rem);
+  }
+
+  /* Timing controls: centred between the arrow (50%) and the pose counter
+     (centre ≈ 100% − 1.4rem) → midpoint 75% − 0.7rem. */
+  .menu.timing {
+    top: calc(75% - 0.7rem);
   }
 
   .tool {
@@ -517,14 +522,7 @@
     border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
-  /* Hairline between the per-pose view aids and the timing controls. */
-  .menu-sep {
-    height: 1px;
-    margin: 0.2rem 0.35rem;
-    background: color-mix(in srgb, white 14%, transparent);
-  }
-
-  /* Pose counter kept in the bottom-left corner, apart from the top-left menu. */
+  /* Pose counter kept in the bottom-left corner, below the timing controls. */
   .count {
     position: absolute;
     left: 0.9rem;
