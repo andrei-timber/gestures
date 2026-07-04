@@ -16,8 +16,14 @@ export function customIntervalSeconds(minutes: number): number {
   return Math.round(minutes * 60)
 }
 
-/** Max poses at `intervalSeconds` before the 90-min active cap is exceeded. */
+/**
+ * Max poses at `intervalSeconds` before the 90-min active cap is exceeded. A
+ * non-positive or non-finite interval (a transiently-typed `-5` or cleared
+ * field, before the blur clamp heals it) has no valid pose count, so it yields
+ * 0 — an empty plan the setup screen flags — never a negative `new Array` length.
+ */
 export function quickCeiling(intervalSeconds: number): number {
+  if (!(intervalSeconds > 0)) return 0
   return Math.floor(MAX_ACTIVE_SECONDS / intervalSeconds)
 }
 

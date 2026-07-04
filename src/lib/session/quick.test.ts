@@ -58,4 +58,20 @@ describe('quickPlan', () => {
   it('ignores a pool cap larger than the requested count', () => {
     expect(quickPlan(10, 60, 100)).toEqual(new Array(10).fill(60))
   })
+
+  it('yields an empty plan (never a crash) for a non-positive or non-finite interval', () => {
+    // A transiently-typed negative/zero interval (before the blur clamp) must
+    // not reach `new Array(-n)` — quickCeiling floors it to 0, plan is empty.
+    for (const bad of [-300, 0, NaN, -Infinity]) {
+      expect(quickCeiling(bad)).toBe(0)
+      expect(clampNQuick(10, bad)).toBe(0)
+      expect(quickPlan(10, bad)).toEqual([])
+    }
+  })
+
+  it('drops to 1 pose at the largest interval that still fits the cap', () => {
+    // 90 min flat is the boundary: exactly one pose fits, above it none do.
+    expect(quickCeiling(90 * 60)).toBe(1)
+    expect(quickCeiling(90 * 60 + 1)).toBe(0)
+  })
 })
