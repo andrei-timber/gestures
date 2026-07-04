@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { cueBand } from '@/lib/session/cue'
   import { formatClock } from '@/lib/format'
   import { warm } from '@/lib/source/preload'
   import { screen } from '@/state/screen.svelte'
@@ -52,16 +53,14 @@
   )
   const poseFilter = $derived(session.aids.grayscale ? 'grayscale(1)' : 'none')
 
-  // Gentle end cue (step 21): the countdown warms + brightens over the last few
-  // seconds of an active pose — a calm "wrap up" nudge, no sound. Only while the
-  // clock is actually draining a pose (not resting, paused, or handing to the
-  // summary), so it never fires on a rest slide or the final handoff.
-  const END_CUE_SECONDS = 3
-  const ending = $derived(
-    session.phase === 'running' &&
-      !session.resting &&
-      session.remaining > 0 &&
-      session.remaining <= END_CUE_SECONDS,
+  // Pace cue (step 21): a faint, always-on tint on the countdown pill that warms
+  // green → yellow → orange → red as the pose drains (see `cueBand`). A calm
+  // peripheral "where am I" signal, no sound. Suppressed on rest slides and once
+  // the run has ended (no live pose to pace) — the pill stays neutral there.
+  const band = $derived(
+    session.phase !== 'ended' && !session.resting
+      ? cueBand(session.remaining, session.poseDuration)
+      : null,
   )
 
   function togglePause(): void {
@@ -141,8 +140,15 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
   </button>
 
-  <!-- Countdown: glass pill, bottom-centre, legible over bright references. -->
-  <span class="clock glass" class:resting={session.resting} class:ending>{formatClock(session.remaining)}</span>
+  <!-- Countdown: glass pill, bottom-centre, legible over bright references. Its
+       faint fill tint tracks the pace band (green → red) as the pose drains. -->
+  <span
+    class="clock glass"
+    class:resting={session.resting}
+    class:cue-green={band === 'green'}
+    class:cue-yellow={band === 'yellow'}
+    class:cue-orange={band === 'orange'}
+    class:cue-red={band === 'red'}>{formatClock(session.remaining)}</span>
 
   <!-- HUD as two vertical glass-button stacks, one per bottom corner, so neither
        legend stretches across the reference and each control is mouse-clickable
@@ -304,6 +310,8 @@
     transition:
       opacity 0.15s ease,
       color 0.6s ease,
+      background 0.6s ease,
+      border-color 0.6s ease,
       box-shadow 0.6s ease;
   }
 
@@ -311,15 +319,32 @@
     opacity: 0.55;
   }
 
-  /* Gentle end cue: the countdown warms toward a calm amber and lifts a soft
-     glow over the final few seconds. Interim colour literal — the 🎨 pass
-     formalises the warm accent token (spec §14), like the .glass treatment. */
-  .clock.ending {
-    color: #f0b878;
+  /* Pace-cue tints: a faint wash of the band hue over the glass fill, warming as
+     the pose drains. Interim colour literals — the 🎨 pass formalises these as
+     accent tokens (spec §14), like the .glass treatment. The red band also lifts
+     a soft glow, echoing the old final-seconds cue. */
+  .clock.cue-green {
+    background: color-mix(in srgb, #46c46a 18%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, #46c46a 40%, transparent);
+  }
+
+  .clock.cue-yellow {
+    background: color-mix(in srgb, #d9c24a 20%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, #d9c24a 45%, transparent);
+  }
+
+  .clock.cue-orange {
+    background: color-mix(in srgb, #e08a3c 22%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, #e08a3c 50%, transparent);
+  }
+
+  .clock.cue-red {
+    background: color-mix(in srgb, #e0563c 26%, color-mix(in srgb, var(--bg) 52%, transparent));
+    border-color: color-mix(in srgb, #e0563c 58%, transparent);
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
       0 6px 20px rgb(0 0 0 / 0.28),
-      0 0 16px color-mix(in srgb, #f0b878 45%, transparent);
+      0 0 16px color-mix(in srgb, #e0563c 48%, transparent);
   }
 
   .hud {

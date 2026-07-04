@@ -62,6 +62,10 @@ function createSessionStore() {
     get remaining(): number {
       return state.remaining
     },
+    /** Planned duration (seconds) of the current pose — the pace-cue denominator. */
+    get poseDuration(): number {
+      return state.plan[state.index] ?? 0
+    },
     /** 1-based pose number for display ("pose N of M"). */
     get poseNumber(): number {
       return state.index + 1
