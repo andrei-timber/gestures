@@ -20,11 +20,21 @@ const activeSeconds = (secs: number[]): number => secs.reduce((a, b) => a + b, 0
  * Largest pose count whose active time stays within {@link MAX_ACTIVE_SECONDS}.
  * The distribution's total is monotonic in N, so we walk up from the minimum
  * and return the last count still in budget. Currently 31 (83 min).
+ *
+ * The inputs are all compile-time constants, so the ceiling is fixed — computed
+ * once at module load rather than re-walked (allocating a distribution per step)
+ * on every keystroke through the setup screen's live `plan` derivation.
  */
-export function classCeiling(): number {
+const CLASS_CEILING = computeClassCeiling()
+
+function computeClassCeiling(): number {
   let n = MIN_POSES
   while (activeSeconds(distribute(n + 1)) <= MAX_ACTIVE_SECONDS) n++
   return n
+}
+
+export function classCeiling(): number {
+  return CLASS_CEILING
 }
 
 /** Clamp a requested Class-mode count into `[MIN_POSES, classCeiling()]`. */
