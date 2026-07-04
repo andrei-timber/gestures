@@ -78,6 +78,9 @@
   }
 
   function onKeydown(event: KeyboardEvent): void {
+    // Let browser/OS chords through (Cmd/Ctrl+R reload, Cmd+V, etc.) — the aids
+    // are bare single keys, so a held modifier means the keypress isn't for us.
+    if (event.metaKey || event.ctrlKey || event.altKey) return
     const action = keymap[event.key]
     if (!action) return
     event.preventDefault()
