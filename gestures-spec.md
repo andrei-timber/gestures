@@ -98,6 +98,19 @@ private folder → enumerate images" is impossible without restricted `drive.rea
   public sharing is on the user; we ship no reference content ourselves. ✅ (So §11/§12 licensing concerns
   are moot: users use their own folders; we host/share nothing.)
 
+### Additional read sources — Box & Dropbox (✅ planned M2)
+Same **`ImageSource` abstraction** as Drive Tier 1 — the user pastes a public folder link, the app lists
+images and displays them (the `RemoteInput` UI already ships disabled Box/Dropbox rows as placeholders).
+- ⚠ **Auth wrinkle (unlike Drive):** neither Box nor Dropbox offers an *anonymous API-key* listing of a
+  shared folder's contents — both require an **app access token** (OAuth app credentials). Two options:
+  a public client-side app token, or a **tiny Cloudflare Worker** holding the secret (the first real use
+  of §9's "a Worker only if a need appears" escape hatch). This is a genuine tension with the no-backend
+  constraint — settle it per provider at the M2 spike.
+- **Display URLs:** Dropbox shared links → direct content (`dl.dropboxusercontent.com` / `raw=1`); Box →
+  shared-item download URLs. Confirm each renders (like Drive's keyless thumbnail endpoint) at the spike.
+- ⚠ **De-risk with read-spikes S3 (Box) / S4 (Dropbox)** at M2 start — confirm a public shared folder
+  lists + images display, and whether an app token can stay client-side or needs a Worker — before build.
+
 ### The honest trade (decided)
 Tier 1 (public folder link) is the **primary** path — the only one that gracefully handles thousands of
 images in one folder. Tier 2 `drive.file` powers the **Phase-2 review loop** and later private-library
@@ -307,9 +320,11 @@ plain CSS + tokens · sequencing (dev setup → M0 → creative direction → Cl
 > conventions (§14). Output: an empty-but-correct, committed, test/lint-green Svelte app ready for M0.
 
 > **Verification spikes (throwaway tests, run at the start of the relevant milestone — no product code):**
-> **S1** (before M1) — confirm an *unlisted* "anyone-with-link" folder lists via **API key only**; note
-> Shared-Drive / `resourceKey` handling. **S2** (before M2) — confirm the **download-bytes → `files.create`
-> re-upload** write path works under `drive.file` (the robust alternative to `files.copy`). Both are ~15-min
+> **S1** (before M1, ✅ done 2026-07-04) — confirm an *unlisted* "anyone-with-link" folder lists via **API
+> key only**; note Shared-Drive / `resourceKey` handling. **S2** (before M2) — confirm the **download-bytes
+> → `files.create`** re-upload write path works under `drive.file` (the robust alternative to `files.copy`).
+> **S3 / S4** (before M2) — confirm a **public Box / Dropbox folder** lists + images display, and whether
+> the required **app token** can stay client-side or needs a Worker (§3 auth wrinkle). All are ~15-min
 > checks that de-risk the architecture before real build.
 
 - **M0 — Delightful core (local folder source).** Static shell; **local-folder image source** (real
@@ -317,8 +332,11 @@ plain CSS + tokens · sequencing (dev setup → M0 → creative direction → Cl
   extend, keyboard, calm countdown, end cue.
 - **M1 — Drive read (Tier 1).** Spike **S1** → public folder link → API-key listing (jpg/png/webp) →
   slideshow. Auto total-time FYI.
-- **M2 — Drive write / capture (Tier 2).** Spike **S2** → GIS sign-in (`drive.file`); write
-  `sessions/<date>/Ref_N.ext`; in-app drawing upload at session end; configurable session folder.
+- **M2 — Capture (Tier 2 Drive write) + more read sources (Box, Dropbox).** Two slices. **(a) Drive
+  write:** spike **S2** → GIS sign-in (`drive.file`); write `sessions/<date>/Ref_N.ext`; in-app drawing
+  upload at session end; configurable session folder. **(b) Box + Dropbox read:** spikes **S3/S4** →
+  public-folder listing behind the existing `RemoteInput` rows (app-token auth; the §3 auth wrinkle —
+  possibly a tiny Worker).
 - **M3 — Review composites.** Canvas paired images → session folder; dated timeline.
 - **Later (P1+).** Private-folder Picker read, custom segment builder, brightness/notan/favorites/
   draw-on-reference, contact sheet, PSD compositing.
