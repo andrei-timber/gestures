@@ -105,7 +105,7 @@
       <button
         class:active={settings.mode === 'class'}
         disabled={!classAllowed}
-        title="Pose lengths taper like a life-drawing class — many short warm-ups building to a few long holds."
+        title={'Poses start short and grow longer,\nlike a real drawing class.'}
         onclick={() => (settings.mode = 'class')}
       >
         Class
