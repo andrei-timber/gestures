@@ -123,7 +123,7 @@
     {/if}
 
     <label class="row">
-      <span>Poses</span>
+      <span>Number of poses</span>
       <input
         type="number"
         min="10"
@@ -164,7 +164,7 @@
     {/if}
 
     <label class="row">
-      <span>Rest (s)</span>
+      <span>Rest interval (seconds)</span>
       <input
         type="number"
         min="0"
@@ -299,6 +299,7 @@
 
   .row span {
     color: var(--fg-muted);
+    white-space: nowrap;
   }
 
   .row input,
