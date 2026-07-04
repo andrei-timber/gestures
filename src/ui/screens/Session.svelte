@@ -13,10 +13,16 @@
 
   // Window prefetch (docs/prefetch-window.md): as the cursor moves, decode the
   // next couple of poses (and keep the one behind warm) into the browser cache
-  // so each swap paints without the JPEG-decode hitch. Pure side-effect layer —
-  // re-runs on every `index` change; memory stays bounded to the window.
+  // so each swap paints without the JPEG-decode hitch. Pure side-effect layer;
+  // memory stays bounded to the window.
+  //
+  // The store reassigns its whole runtime object on every 1s tick, so reading
+  // `session.index` directly would re-fire this effect (and re-issue decodes)
+  // each second. A $derived memoises the index by value, so the effect wakes
+  // only on an actual pose advance.
+  const prefetchIndex = $derived(session.index)
   $effect(() => {
-    void warm(prefetchWindow(session.imageUrls, session.index))
+    void warm(prefetchWindow(session.imageUrls, prefetchIndex))
   })
 
   // Keyboard dispatcher: a key→action map so later helpers (prev/next, add-time)
