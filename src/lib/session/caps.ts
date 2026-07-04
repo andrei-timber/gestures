@@ -19,7 +19,7 @@ const activeSeconds = (secs: number[]): number => secs.reduce((a, b) => a + b, 0
 /**
  * Largest pose count whose active time stays within {@link MAX_ACTIVE_SECONDS}.
  * The distribution's total is monotonic in N, so we walk up from the minimum
- * and return the last count still in budget. Currently 31 (83 min).
+ * and return the last count still in budget. Currently 30 (90 min).
  *
  * The inputs are all compile-time constants, so the ceiling is fixed — computed
  * once at module load rather than re-walked (allocating a distribution per step)

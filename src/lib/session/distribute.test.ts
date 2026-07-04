@@ -11,38 +11,38 @@ function breakdown(seconds: number[]): [number, number][] {
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 
 describe('distribute (Class mode, spec §5)', () => {
-  it('N=10 → 5×1m, 3×2m, 1×5m, 1×10m (26m)', () => {
+  it('N=10 → 4×1m, 3×2m, 2×5m, 1×10m (30m)', () => {
     const d = distribute(10)
     expect(d).toHaveLength(10)
     expect(breakdown(d)).toEqual([
-      [60, 5],
+      [60, 4],
       [120, 3],
-      [300, 1],
+      [300, 2],
       [600, 1],
     ])
-    expect(sum(d)).toBe(26 * 60)
+    expect(sum(d)).toBe(30 * 60)
   })
 
-  it('N=16 → 8×1m, 4×2m, 2×5m, 2×10m (46m)', () => {
+  it('N=16 → 6×1m, 5×2m, 3×5m, 2×10m (51m)', () => {
     const d = distribute(16)
     expect(breakdown(d)).toEqual([
-      [60, 8],
-      [120, 4],
-      [300, 2],
-      [600, 2],
-    ])
-    expect(sum(d)).toBe(46 * 60)
-  })
-
-  it('N=20 → 10×1m, 5×2m, 3×5m, 2×10m (55m)', () => {
-    const d = distribute(20)
-    expect(breakdown(d)).toEqual([
-      [60, 10],
+      [60, 6],
       [120, 5],
       [300, 3],
       [600, 2],
     ])
-    expect(sum(d)).toBe(55 * 60)
+    expect(sum(d)).toBe(51 * 60)
+  })
+
+  it('N=20 → 8×1m, 6×2m, 4×5m, 2×10m (60m)', () => {
+    const d = distribute(20)
+    expect(breakdown(d)).toEqual([
+      [60, 8],
+      [120, 6],
+      [300, 4],
+      [600, 2],
+    ])
+    expect(sum(d)).toBe(60 * 60)
   })
 
   it('returns durations in ascending order', () => {

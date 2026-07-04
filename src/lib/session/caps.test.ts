@@ -7,9 +7,9 @@ const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
 const tens = (xs: number[]) => xs.filter((s) => s === 600).length
 
 describe('classCeiling', () => {
-  it('is the last count within the 90-min active cap (31 → 83m)', () => {
+  it('is the last count within the 90-min active cap (30 → 90m)', () => {
     const ceiling = classCeiling()
-    expect(ceiling).toBe(31)
+    expect(ceiling).toBe(30)
     expect(sum(distribute(ceiling))).toBeLessThanOrEqual(MAX_ACTIVE_SECONDS)
     expect(sum(distribute(ceiling + 1))).toBeGreaterThan(MAX_ACTIVE_SECONDS)
   })
@@ -19,7 +19,7 @@ describe('clampN', () => {
   it('holds counts within [min, ceiling] unchanged', () => {
     expect(clampN(10)).toBe(10)
     expect(clampN(20)).toBe(20)
-    expect(clampN(31)).toBe(31)
+    expect(clampN(30)).toBe(30)
   })
 
   it('clamps below the minimum up to MIN_POSES', () => {
@@ -28,8 +28,8 @@ describe('clampN', () => {
   })
 
   it('clamps over the ceiling down to it', () => {
-    expect(clampN(32)).toBe(31)
-    expect(clampN(1000)).toBe(31)
+    expect(clampN(31)).toBe(30)
+    expect(clampN(1000)).toBe(30)
   })
 
   it('floors non-integer counts', () => {
@@ -38,15 +38,15 @@ describe('clampN', () => {
 })
 
 describe('capTenMinPoses', () => {
-  it('leaves compliant distributions untouched (N=30 → 3×10m, 81m)', () => {
+  it('leaves compliant distributions untouched (N=30 → 3×10m, 90m)', () => {
     const capped = capTenMinPoses(distribute(30))
     expect(capped).toEqual(distribute(30))
     expect(tens(capped)).toBe(3)
-    expect(sum(capped)).toBe(81 * 60)
+    expect(sum(capped)).toBe(90 * 60)
   })
 
-  it('demotes excess 10-min poses to 5 min (unclamped N=32 → 4 tens)', () => {
-    const raw = distribute(32)
+  it('demotes excess 10-min poses to 5 min (unclamped N=36 → 4 tens)', () => {
+    const raw = distribute(36)
     expect(tens(raw)).toBe(4)
     const capped = capTenMinPoses(raw)
     expect(tens(capped)).toBe(3)
@@ -57,7 +57,7 @@ describe('capTenMinPoses', () => {
 
 describe('classPlan', () => {
   it('clamps over-ceiling requests before distributing', () => {
-    expect(classPlan(100)).toHaveLength(31)
+    expect(classPlan(100)).toHaveLength(30)
     expect(sum(classPlan(100))).toBeLessThanOrEqual(MAX_ACTIVE_SECONDS)
   })
 

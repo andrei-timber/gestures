@@ -1,10 +1,10 @@
 /**
  * Class-mode pose distribution (`gestures-spec.md` §5).
  *
- * Durations auto-distribute by geometric halving of the pose count: the bulk
- * are quick 1-min warm-ups, tapering to a few long poses that scale with N.
- * This module is the raw distribution only — health caps (≤90 min, ≤3 ten-min
- * poses) and the N clamp are enforced separately in step 2.
+ * Durations auto-distribute by a fixed *share* of the pose count — 40% quick
+ * 1-min warm-ups, then 30% at 2m, 20% at 5m, 10% at 10m — so the long poses
+ * scale with N. This module is the raw distribution only — health caps
+ * (≤90 min, ≤3 ten-min poses) and the N clamp are enforced separately in step 2.
  */
 
 const MINUTE = 60
@@ -12,16 +12,17 @@ const MINUTE = 60
 /**
  * Per-pose durations (seconds) for a Class-mode session of `n` poses.
  *
- * Boundaries (1-indexed pose `i`):
- *   c1 = floor(n/2)   c2 = ceil(3n/4)   c3 = ceil(7n/8)
+ * Tier shares 40 / 30 / 20 / 10 % → cumulative boundaries (1-indexed pose `i`),
+ * each rounded to the nearest pose:
+ *   c1 = round(0.4n)   c2 = round(0.7n)   c3 = round(0.9n)
  *   i ≤ c1 → 1m | c1 < i ≤ c2 → 2m | c2 < i ≤ c3 → 5m | i > c3 → 10m
  *
  * @returns array of length `n`, ascending in duration.
  */
 export function distribute(n: number): number[] {
-  const c1 = Math.floor(n / 2)
-  const c2 = Math.ceil((3 * n) / 4)
-  const c3 = Math.ceil((7 * n) / 8)
+  const c1 = Math.round(0.4 * n)
+  const c2 = Math.round(0.7 * n)
+  const c3 = Math.round(0.9 * n)
 
   const seconds: number[] = []
   for (let i = 1; i <= n; i++) {

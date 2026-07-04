@@ -5,11 +5,11 @@ import { DEFAULT_REST_SECONDS, sessionTiming, totalSeconds } from './timing'
 
 describe('sessionTiming', () => {
   it('active time matches the §5 Class totals; rests add on top', () => {
-    // §5 examples: N=10 → 26m, N=16 → 46m, N=20 → 55m (active only).
+    // §5 examples: N=10 → 30m, N=16 → 51m, N=20 → 60m (active only).
     for (const [n, activeMin] of [
-      [10, 26],
-      [16, 46],
-      [20, 55],
+      [10, 30],
+      [16, 51],
+      [20, 60],
     ] as const) {
       const t = sessionTiming(distribute(n))
       expect(t.active).toBe(activeMin * 60)

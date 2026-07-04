@@ -116,13 +116,14 @@ Two modes. Pick mode first, then the minimal params. **Session length is by numb
 time is a *function of the settings and is auto-computed and surfaced as an FYI during setup.* ✅
 
 ### Class mode (the default idea) ✅
-Enter **number of poses N** (min 10). Durations auto-distribute by geometric halving of the count:
+Enter **number of poses N** (min 10). Durations auto-distribute by a fixed *share* of the count —
+**40% at 1min, 30% at 2min, 20% at 5min, 10% at 10min** — via cumulative, nearest-rounded boundaries:
 ```
-c1 = floor(N/2)   c2 = ceil(3N/4)   c3 = ceil(7N/8)
+c1 = round(0.4N)   c2 = round(0.7N)   c3 = round(0.9N)
 pose i:  i≤c1 → 1min | c1<i≤c2 → 2min | c2<i≤c3 → 5min | i>c3 → 10min
 ```
-Examples: N=10 → 5×1m,3×2m,1×5m,1×10m (26m) · N=16 → 8×1m,4×2m,2×5m,2×10m (46m) · N=20 →
-10×1m,5×2m,3×5m,2×10m (55m). Long poses scale with N ✅ — but bounded by the health caps below.
+Examples: N=10 → 4×1m,3×2m,2×5m,1×10m (30m) · N=16 → 6×1m,5×2m,3×5m,2×10m (51m) · N=20 →
+8×1m,6×2m,4×5m,2×10m (60m). Long poses scale with N ✅ — but bounded by the health caps below.
 
 **Requires ≥10 images.** The min-10 arc can't be filled from a smaller folder without repeats (which
 §5 pose-picking forbids), so Class is only offered when the folder holds ≥10 images. Below that the
@@ -134,8 +135,8 @@ Sessions beyond ~90 min are unhealthy, so we make them **impossible**:
 - **Max 90 min of active drawing time** (sum of pose durations; rests excluded, shown only in the total
   FYI). The setup UI clamps N (Class) / N×interval (Quick) so this can't be exceeded.
 - **Max three 10-min poses** in Class mode — an invariant that naturally holds under the 90-min cap
-  (the distribution reaches 3 long poses right around 90 min, ~N≈30; e.g. N=30 → 3×10m, 81 min). If the
-  math ever yields more, cap the count at 3.
+  (the 10% share reaches 3 long poses right at the ceiling, N=30 → 3×10m, 90 min). If the math ever
+  yields more, cap the count at 3.
 - These caps bind before any absurd N; the UI shows the ceiling and won't accept more.
 
 ### Quick mode ✅
