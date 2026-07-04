@@ -172,3 +172,38 @@ worked via either path). Decision: revert to `<input webkitdirectory>` as the so
 a reference library; the API's only win was a cosmetic prompt, and the reassurance line already softens the
 webkitdirectory warning for this single-user tool. Tradeoff: the scary "upload all files" prompt returns;
 accepted — completeness and honesty beat a nicer dialog. Supersedes the earlier same-day picker decision.
+
+2026-07-04 — **Creative direction: ship three themes as a user switch, not a single locked pick.**
+Context: the 🎨 creative-direction track (spec §14) — originate the design system, then restyle M0. Round-1
+compared five directions (real chrome per palette, in an Artifact); owner liked ①Moonlit ②Candlelit
+④Sanguine and asked to make them user-pickable rather than lock one. Decision: originate a semantic token
+system as the mechanism — every colour is a token in `src/app.css` (the one canonical home for the
+numbers; components read tokens only), three palettes ship as `[data-theme]` sets, and the settings store
+mirrors a persisted `theme` field onto the root (applied at module load → no first-paint flash, plus
+reactively → live-preview). Owner's calls: **Candlelit default**, **Setup-only** picker, **icon-only**
+swatch pills (moon/flame/chalk glyphs + accessible names). Intent + taste-queue live in
+`gestures-creative-direction.md` (map, not copy — points at `app.css` for hex). ③Neutral-jewel and
+⑤Twilight-ember explored and parked (not killed). Tradeoff: three palettes to maintain vs one, accepted —
+the token layer made it near-free and it doubles as the tool-family kit. Rationale for tokens-as-switch:
+the restyle work (define tokens once) and the switch (define three sets) are the same work.
+
+2026-07-04 — **In-session chrome: one vertical icon menu + decoupled Exit; pace cue extended to the
+canvas backdrop.** Context: owner dogfooded the morning session and asked for two refinements, taken as
+separate commits after the theming. (1) Collapse the two-corner HUD button stacks into a single vertical
+glass icon-only menu at the bottom-left (nothing on the right but the directional nav arrow); label +
+hotkey move into each button's tooltip; Exit pulled out to a standalone glass disc top-left so
+run-ending reads as its own gesture, apart from the per-pose tools. (2) Cast the green→red pace cue as a
+pointer-events-none inset edge glow over the canvas backdrop / around the pose (centre clear, ramps with
+the same `band` + `--pace-*` tokens as the pill, off on rest/end) so the whole frame — not just the
+clock — signals time. Nav arrows deliberately left two-sided for now (parked as a STATUS follow-up).
+
+2026-07-04 — **Setup polish (same session): themed form controls + entry copy/width.** Two small
+follow-on passes after dogfooding the restyled Setup. (1) The `<select>` and number fields leaked native
+browser chrome that clashed with the palette (blue focus ring, cramped spinner arrows, untinted dropdown
+arrow); replaced with an accent focus ring on any focus, a CSS select chevron in `--fg-muted`, hidden
+native number spinners (values are typed; Quick keeps presets), and an `accent-color` checkbox — the
+controls now read as one themed set. (2) Added a one-sentence warm explainer under the title (what/why),
+folded the "…to begin" nudge into the picker button and removed the redundant standalone hint, and matched
+the params panel to the folder-picker width via a shared `--setup-col` set on the Setup screen and
+inherited by FolderInput (custom-property cascade crosses the component boundary — no magic-number
+duplication).
