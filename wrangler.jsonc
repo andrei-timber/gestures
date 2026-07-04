@@ -15,7 +15,10 @@
     "not_found_handling": "none"
   },
   // One domain hosts a family of /apps/* tools, so bind a route (not a whole custom domain).
+  // Two patterns: the bare canonical URL (no trailing slash) and everything beneath it —
+  // a lone `/apps/gestures/*` would miss `/apps/gestures`, so that visit wouldn't route here.
   "routes": [
+    { "pattern": "andreitim.com/apps/gestures", "zone_name": "andreitim.com" },
     { "pattern": "andreitim.com/apps/gestures/*", "zone_name": "andreitim.com" }
   ]
 }
