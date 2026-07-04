@@ -31,6 +31,8 @@ export interface DriveFile {
   readonly id: string
   readonly name: string
   readonly mimeType: string
+  /** A subfolder's own resource key, when it carries one — needed to list into it. */
+  readonly resourceKey?: string
 }
 
 /** Why a Drive load failed, for a friendly UI message. See {@link DriveError}. */
@@ -90,7 +92,7 @@ export function buildListUrl(ref: DriveFolderRef, apiKey: string, pageToken?: st
   const params = new URLSearchParams({
     q: `'${ref.folderId}' in parents and trashed=false`,
     key: apiKey,
-    fields: 'nextPageToken,files(id,name,mimeType)',
+    fields: 'nextPageToken,files(id,name,mimeType,resourceKey)',
     pageSize: '1000',
     orderBy: 'name_natural',
     supportsAllDrives: 'true',
@@ -149,9 +151,17 @@ export async function fetchDriveImages(
   const ref = parseFolderRef(link)
   if (!ref) throw new DriveError('bad-link', "That doesn't look like a Drive folder link.")
 
-  const headers = ref.resourceKey
-    ? { 'X-Goog-Drive-Resource-Keys': `${ref.folderId}/${ref.resourceKey}` }
-    : undefined
+  // A file id → resource key map, seeded from the pasted link and grown as the
+  // walk discovers subfolders that carry their own key. Drive's
+  // `X-Goog-Drive-Resource-Keys` header is a lookup table (`id/key,id/key,…`), so
+  // sending every known mapping on each call lets a keyed subfolder list once its
+  // parent has revealed its key; unrelated entries are ignored.
+  const resourceKeys = new Map<string, string>()
+  if (ref.resourceKey) resourceKeys.set(ref.folderId, ref.resourceKey)
+  const headersFor = (): Record<string, string> | undefined =>
+    resourceKeys.size === 0
+      ? undefined
+      : { 'X-Goog-Drive-Resource-Keys': Array.from(resourceKeys, ([id, key]) => `${id}/${key}`).join(',') }
 
   const files: DriveFile[] = []
   const queue: string[] = [ref.folderId]
@@ -160,7 +170,7 @@ export async function fetchDriveImages(
     const folderId = queue.shift() as string
     let children: DriveFile[]
     try {
-      children = await listChildren(doFetch, folderId, apiKey, headers)
+      children = await listChildren(doFetch, folderId, apiKey, headersFor())
     } catch (err) {
       // The root's failure is the load's failure; but one unreadable *subfolder*
       // (a per-item sharing override or its own missing resource key) must not
@@ -175,6 +185,7 @@ export async function fetchDriveImages(
       if (child.mimeType === FOLDER_MIME) {
         if (!visited.has(child.id) && visited.size < MAX_FOLDERS) {
           visited.add(child.id)
+          if (child.resourceKey) resourceKeys.set(child.id, child.resourceKey)
           queue.push(child.id)
         }
       } else {

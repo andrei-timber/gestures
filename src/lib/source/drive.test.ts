@@ -175,6 +175,26 @@ describe('fetchDriveImages', () => {
     })
   })
 
+  it('carries a subfolder’s own resource key into its listing', async () => {
+    const fetch = vi.fn((url: string, _init?: { headers?: Record<string, string> }) => {
+      if (url.includes(FOLDER_ID)) {
+        // The root's listing reveals a subfolder that needs its own key.
+        return Promise.resolve(
+          jsonResponse({ files: [{ id: 'sub', name: 'Sub', mimeType: FOLDER_MIME, resourceKey: '1-sub' }] }),
+        )
+      }
+      return Promise.resolve(jsonResponse({ files: [img('a', 'a.jpg')] }))
+    })
+    await fetchDriveImages(`https://drive.google.com/drive/folders/${FOLDER_ID}?resourcekey=0-root`, 'KEY', {
+      fetch,
+    })
+    // Root call: just the root key. Subfolder call: both mappings, so Drive can resolve 'sub'.
+    expect(fetch.mock.calls[0][1]?.headers).toEqual({ 'X-Goog-Drive-Resource-Keys': `${FOLDER_ID}/0-root` })
+    expect(fetch.mock.calls[1][1]?.headers).toEqual({
+      'X-Goog-Drive-Resource-Keys': `${FOLDER_ID}/0-root,sub/1-sub`,
+    })
+  })
+
   it('maps 404 to a not-found DriveError mentioning sharing', async () => {
     const fetch = vi.fn().mockResolvedValueOnce(jsonResponse({}, false, 404))
     await expect(fetchDriveImages(FOLDER_ID, 'KEY', { fetch })).rejects.toMatchObject({
