@@ -53,6 +53,15 @@
   )
   const poseFilter = $derived(session.aids.grayscale ? 'grayscale(1)' : 'none')
 
+  // Clock label: while paused the pill reads "PAUSED" beside the frozen time (so
+  // the resume point stays visible); otherwise just the countdown. Built as one
+  // string so the separating space survives Svelte's template whitespace trim.
+  const clockLabel = $derived(
+    session.phase === 'paused'
+      ? `PAUSED ${formatClock(session.remaining)}`
+      : formatClock(session.remaining),
+  )
+
   // Pace cue (step 21): a faint, always-on tint on the countdown pill that warms
   // green → yellow → orange → red as the pose drains (see `cueBand`). A calm
   // peripheral "where am I" signal, no sound. Lit only while a pose is actively
@@ -133,19 +142,6 @@
     <div class="veil"><span>Rest</span></div>
   {/if}
 
-  <!-- Paused: a large glass pause badge over a lightly-dimmed reference,
-       held until space resumes the run. -->
-  {#if session.phase === 'paused'}
-    <div class="veil paused">
-      <div class="pause-badge glass" aria-label="Paused" role="img">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="7" y="5" width="3.4" height="14" rx="1.2" />
-          <rect x="13.6" y="5" width="3.4" height="14" rx="1.2" />
-        </svg>
-      </div>
-    </div>
-  {/if}
-
   <!-- Glass side controls: skip a pose either way to scrub through the run. -->
   <button class="nav prev glass" aria-label="Previous pose" onclick={() => session.prev()}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
@@ -155,14 +151,18 @@
   </button>
 
   <!-- Countdown: glass pill, bottom-centre, legible over bright references. Its
-       faint fill tint tracks the pace band (green → red) as the pose drains. -->
+       faint fill tint tracks the pace band (green → red) as the pose drains.
+       While paused the pill reads "PAUSED" beside the frozen time — neutral glass
+       (no pace tint, since `band` is null off the running phase) — and the pose
+       stays fully visible so drawing can continue indefinitely. -->
   <span
     class="clock glass"
+    class:paused={session.phase === 'paused'}
     class:resting={session.resting}
     class:cue-green={band === 'green'}
     class:cue-yellow={band === 'yellow'}
     class:cue-orange={band === 'orange'}
-    class:cue-red={band === 'red'}>{formatClock(session.remaining)}</span>
+    class:cue-red={band === 'red'}>{clockLabel}</span>
 
   <!-- Exit, decoupled from the tool menu and pinned top-left: ending the run is a
        deliberate, separate gesture, kept away from the per-pose tools so it's
@@ -306,12 +306,6 @@
     background: color-mix(in srgb, var(--bg) 88%, transparent);
   }
 
-  /* Pause dims the reference only lightly (half the rest veil) — the artist
-     keeps studying the pose while stopped. */
-  .veil.paused {
-    background: color-mix(in srgb, var(--bg) 44%, transparent);
-  }
-
   .veil span {
     color: var(--fg-muted);
     font-size: 1.1rem;
@@ -319,23 +313,8 @@
     text-transform: uppercase;
   }
 
-  /* The frosted `.glass` surface (clock, nav, pause badge, HUD chips) is a shared
-     design-system class in `app.css`; per-element sizing/layout lives below. */
-
-  .pause-badge {
-    display: grid;
-    place-items: center;
-    width: 5.25rem;
-    height: 5.25rem;
-    border-radius: 50%;
-    color: var(--fg);
-  }
-
-  .pause-badge svg {
-    width: 2.5rem;
-    height: 2.5rem;
-    fill: currentColor;
-  }
+  /* The frosted `.glass` surface (clock, nav, HUD chips) is a shared design-system
+     class in `app.css`; per-element sizing/layout lives below. */
 
   .nav {
     position: absolute;
@@ -397,6 +376,12 @@
 
   .clock.resting {
     opacity: 0.55;
+  }
+
+  /* Paused: the "PAUSED" label rides a touch wider so it reads as a state, not a
+     time; the pill stays neutral glass (no pace tint). */
+  .clock.paused {
+    letter-spacing: 0.12em;
   }
 
   /* Pace-cue tints: a faint wash of the band hue over the glass fill, warming as

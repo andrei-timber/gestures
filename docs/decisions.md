@@ -3,6 +3,21 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-05 — **Pause stops the clock without touching the pose; the pill reads "PAUSED" + time.**
+Context: dogfooding, the owner wanted pause to double as an open-ended "keep drawing" mode — no dim, no
+overlay competing with the reference. Concern: the interim Session-G treatment (2026-07-03) veiled the
+pose at 44% bg and floated a large glass pause badge, which fights that use. Decision: drop the
+`.veil.paused` wash + `.pause-badge` entirely — the reference renders untouched while stopped — and move
+the paused state into the countdown pill, which now reads `PAUSED 0:26` (label + frozen time, built as
+one derived string so the separator survives Svelte's template-whitespace trim; the pill takes neutral
+glass via a `.clock.paused` letter-spacing bump). The pace glows were already correct: `band` is gated on
+`phase === 'running'`, so both the edge-vignette `.cue-glow` and the pill's pace tint go null the instant
+you pause — browser-confirmed, no change needed. Tradeoff: no at-a-glance "is it paused?" signal from
+across the room anymore (the badge was bold); accepted — the pill label is unambiguous and the whole point
+is an undisturbed pose. Supersedes the pause-veil half of the 2026-07-03 Session-G chrome decision; the
+Esc-ends / glass-clock / nav-arrow parts of that decision still stand. Verified end-to-end in-browser
+(pause → pose fully visible, pill `PAUSED 0:26`, zero glow; resume → live `0:23` with green tint back).
+
 2026-07-04 — **Cloudflare deploy config landed; subpath by build layout, SPA fallback dropped.**
 Context: the ☁️ companion track (`deploy-notes.md`) — get Gestures shippable to
 `andreitim.com/apps/gestures/` on Workers Static Assets. Two build-level calls came out of it. (1)
