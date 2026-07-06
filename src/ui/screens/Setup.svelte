@@ -82,6 +82,12 @@
     settings.intervalSeconds = value === 'custom' ? lastCustomSeconds : Number(value)
   }
 
+  // Focusing a number field selects its value, so a tap-and-type replaces it
+  // outright — no manual clear first. Especially matters on iPad (owner's flow).
+  function selectAll(event: FocusEvent): void {
+    ;(event.currentTarget as HTMLInputElement).select()
+  }
+
   const ready = $derived(source.count > 0 && plan.length > 0)
 
   function start(): void {
@@ -150,6 +156,7 @@
         min="10"
         step="1"
         bind:value={settings.poseCount}
+        onfocus={selectAll}
         onblur={() => (settings.poseCount = clampPoseCount(settings.poseCount))}
       />
     </label>
@@ -176,6 +183,7 @@
             max="90"
             step="0.5"
             value={settings.intervalSeconds / 60}
+            onfocus={selectAll}
             oninput={(e) =>
               (settings.intervalSeconds = customIntervalSeconds(Number(e.currentTarget.value)))}
             onblur={() => (settings.intervalSeconds = clampIntervalSeconds(settings.intervalSeconds))}
@@ -191,6 +199,7 @@
         min="0"
         step="1"
         bind:value={settings.restSeconds}
+        onfocus={selectAll}
         onblur={() => (settings.restSeconds = clampRestSeconds(settings.restSeconds))}
       />
     </label>
