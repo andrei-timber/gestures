@@ -1,7 +1,7 @@
 <script lang="ts">
   import { APP_NAME } from '@/lib/constants'
   import { MIN_POSES } from '@/lib/session/limits'
-  import { formatDuration } from '@/lib/format'
+  import { formatDuration, formatSequence } from '@/lib/format'
   import { makeRng } from '@/lib/session/order'
   import { buildPlan } from '@/lib/session/plan'
   import { QUICK_INTERVALS_SECONDS, customIntervalSeconds, quickCeiling } from '@/lib/session/quick'
@@ -51,6 +51,8 @@
   // Live plan + total-time FYI recompute from settings as the user tweaks.
   const plan = $derived(buildPlan(settings, poolSize))
   const total = $derived(totalSeconds(plan, settings.restSeconds))
+  // The run's full shape, one line: `10× 1 min → 8× 2 min → …` (spec §5 FYI).
+  const sequence = $derived(formatSequence(plan))
   const effectiveCount = $derived(Math.min(settings.poseCount, poolSize))
   // Two reasons the run may be shorter than asked: health caps clamp the count,
   // or the folder holds fewer images than requested.
@@ -203,7 +205,7 @@
     {#if intervalOutOfRange}
       <span class="capped">Interval out of range — pick 0.5–90 min to start.</span>
     {:else}
-      ≈ {formatDuration(total)} · {plan.length} pose{plan.length === 1 ? '' : 's'}
+      ≈ {formatDuration(total)} · {sequence}
       {#if healthCapped}<span class="capped">(capped for health)</span>
       {:else if folderCapped}<span class="capped">(limited by folder)</span>{/if}
     {/if}
