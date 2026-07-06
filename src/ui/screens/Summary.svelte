@@ -18,7 +18,14 @@
       session.elapsedSeconds,
     )}
   </p>
-  <button class="again" onclick={() => screen.show('setup')}>New session</button>
+  <div class="actions">
+    <!-- Keep drawing the last pose with no timer (Esc → Setup). Offered only when
+         a pose is still loaded to continue. -->
+    {#if session.currentImage}
+      <button class="continue" onclick={() => screen.show('freedraw')}>Continue the pose</button>
+    {/if}
+    <button class="again" onclick={() => screen.show('setup')}>New session</button>
+  </div>
 </section>
 
 <style>
@@ -43,6 +50,14 @@
     font-size: 0.95rem;
   }
 
+  /* Two side-by-side actions; wrap on very narrow screens. */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
   .again {
     background: var(--accent);
     border-color: transparent;
@@ -53,5 +68,15 @@
   .again:hover {
     border-color: transparent;
     background: color-mix(in srgb, var(--accent) 88%, white);
+  }
+
+  /* Secondary action — an outline button, subordinate to the accent "New session". */
+  .continue {
+    border: 1px solid var(--fg-muted);
+    color: var(--fg);
+  }
+
+  .continue:hover {
+    border-color: var(--fg);
   }
 </style>

@@ -4,9 +4,12 @@
  * on. Kept separate from the session runtime (`session.svelte.ts`) so the shell
  * can route independently of the drawing clock; later steps drive `show(...)`
  * from real triggers (Start, session end, return-to-setup).
+ *
+ * `freedraw` is an off-flow branch reachable from Summary: hold the last pose on
+ * screen with no timer, to keep drawing it as long as you like (Esc → Setup).
  */
 
-export type Screen = 'setup' | 'session' | 'summary'
+export type Screen = 'setup' | 'session' | 'summary' | 'freedraw'
 
 function createScreenStore() {
   let current = $state<Screen>('setup')
