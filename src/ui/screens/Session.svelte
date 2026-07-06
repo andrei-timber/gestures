@@ -499,11 +499,23 @@
       border-color 0.15s ease;
   }
 
-  .tool:hover:not(:disabled),
   .tool:focus-visible {
     opacity: 1;
     background: color-mix(in srgb, white 8%, transparent);
     border-color: transparent;
+  }
+
+  /* Hover feedback only where a real pointer exists. On touch (iPad) a tap
+     latches `:hover` until the next interaction, so a one-shot action like
+     Refresh stayed lit long after it fired — reading as a stuck "pressed" state.
+     Gating hover behind the media query lets a tapped tool fall straight back to
+     its resting look once the action runs. */
+  @media (hover: hover) {
+    .tool:hover:not(:disabled) {
+      opacity: 1;
+      background: color-mix(in srgb, white 8%, transparent);
+      border-color: transparent;
+    }
   }
 
   /* No spare image to swap in — the control reads as inert, not a dimmed action. */
