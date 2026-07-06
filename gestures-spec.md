@@ -195,10 +195,15 @@ Randomization controls only the *display order* of this spaced, deduped selectio
 - ✅ **Grayscale / value toggle** — one-key desaturate. Headline craft feature (near-unique in the field).
 - ✅ **Pause keeps the reference on screen** — fixes the top competitor complaint; steal drawing time.
 - ✅ **Extend / add-time** to current pose; **prev / next.**
+- ✅ **Refresh image** — one-key swap of the current reference for one you haven't drawn yet, when a
+  pose feels too-recently-seen. Pulls from the folder's unused images, never re-shows anything already
+  seen, resets the pose clock to full, and disables once the folder holds no unused image.
+- ✅ **Continue the pose** — from the session recap, hold the last reference with **no timer** for
+  open-ended drawing (Esc / exit returns to setup). The "keep drawing indefinitely" sibling of pause.
 - ✅ **Grid / line-of-action overlay** — toggle.
 - ✅ **Gentle end cue** — optional soft beep for the last ~3s + subtle visual.
 - ✅ **Keyboard-first, documented shortcuts** — space=pause, ←/→=nav, m=mirror-H, v=mirror-V,
-  g=grayscale, r=grid, +=extend.
+  g=grayscale, r=grid, +=extend, f=refresh-image.
 
 **Per-pose, not sticky:** mirror, grayscale, and grid are sanity-check tools scoped to the pose in
 front of you — they **reset on every pose change** (auto-advance, prev/next), never carried across as a

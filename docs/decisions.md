@@ -3,6 +3,35 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-06 — **Owner-feedback polish batch: in-session Refresh image + Continue-the-pose, plus three
+setup nits.** Context: the owner ran a session and returned five refinements, each shipped as its own
+commit. Four are mechanical; two carry real design calls. (1) **Refresh image** (new §6 helper, timing
+menu + hotkey `f`): swap a too-recently-seen reference without leaving the pose. Owner chose all three
+forks — *pull the next already-prefetched pose into the current slot* (instant paint) and backfill the
+tail from a random unused spare, rather than decoding a cold random image; *reset the pose clock to
+full* (a fresh reference is a fresh drawing); *disable the control when no unused image remains* rather
+than reorder-with-repeat or recycle — so Refresh only ever shows something unseen, and no image the
+artist has drawn recurs (the displaced image leaves the run entirely). The pure picking + array-shift
+(`session/refresh.ts`) and the clock reset (`resetPoseTime` in `runtime.ts`) are unit-tested; the store
+owns the residual pool + a reactive `SvelteSet` seen-set (needed so `canRefresh` re-derives as spares
+drain — a plain `Set` tripped the `prefer-svelte-reactivity` lint and wouldn't react) and the `warm`
+side-effect. `Math.random` seeds at the store edge, matching run-start selection. Browser-verified: 8
+distinct spares consumed with zero repeats, button disables exactly at exhaustion. (2) **Continue the
+pose** — a new off-flow `freedraw` screen reached from the Summary recap: the last reference held
+full-screen, no timer, no HUD, Esc/exit → Setup. Reads `session.currentImage`, which the store already
+keeps on the pose it ended on, so no runtime change was needed. Rationale: the "keep drawing
+indefinitely" want the owner voiced for pause (2026-07-05) also applies at run's end. Folded into spec
+§6. (3) **Setup FYI shows the full sequence** — replaced the bare "N poses" with the run's grouped shape
+(`5× 1 min → 3× 2 min → …`) via a pure, tested `formatSequence` (collapses consecutive equal
+durations); fits one line on desktop/iPad. (4) **Number fields select-on-focus** — tap-and-type
+replaces the value outright (iPad friction the owner hit). (5) **Source cards 10% wider + filled-link
+cue** — a scoped `--setup-col` override on `.sources` widens only the two source cards (the params panel
+keeps the base width, inherited from `.screen`), and a Drive field with a value takes an accent-tinted
+border/fill while an empty one dims, so a pasted link reads without clicking into the long URL.
+Tradeoff/watch: the timing menu is now three buttons tall — parked a STATUS follow-up to eyeball its
+spacing vs the mid-screen nav arrow on short (phone/iPad-landscape) viewports. Gate green — 182 tests,
+typecheck, lint.
+
 2026-07-05 — **Pause stops the clock without touching the pose; the pill reads "PAUSED" + time.**
 Context: dogfooding, the owner wanted pause to double as an open-ended "keep drawing" mode — no dim, no
 overlay competing with the reference. Concern: the interim Session-G treatment (2026-07-03) veiled the
