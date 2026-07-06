@@ -3,6 +3,19 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-06 — **Polish batch, second-check round: touch sticky-tap + free-draw view aids.** Two fixes
+after the owner re-checked the batch above. (1) **Tool buttons latched "pressed" after a tap.** On iPad a
+tap sticks `:hover` until the next interaction, so a one-shot Refresh looked stuck-on long after firing.
+Decision: gate the tool-button hover feedback behind `@media (hover: hover)` (hover styling only where a
+real pointer exists); `:focus-visible` stays unconditional for keyboard. Desktop hover verified unchanged;
+the iPad tap behaviour is the textbook fix, owner to confirm on-device. (2) **Continue-the-pose gains the
+view-aids menu** (mirror/grayscale/grid), still without the timing menu or pose counter. Wrinkle: the
+session runtime is `ended` on the free-draw screen and its aid toggles no-op outside running/paused — so
+rather than relax those guards (the run really is over), free-draw owns a **local** aids `$state` and
+renders the same transform/filter/grid. Tradeoff: the four aid-icon SVGs are duplicated from
+`Session.svelte` (noted in-file) rather than extracted to a shared component — accepted as lower-risk than
+refactoring the verified session HUD for two screens; extract if a third consumer appears.
+
 2026-07-06 — **Owner-feedback polish batch: in-session Refresh image + Continue-the-pose, plus three
 setup nits.** Context: the owner ran a session and returned five refinements, each shipped as its own
 commit. Four are mechanical; two carry real design calls. (1) **Refresh image** (new §6 helper, timing
