@@ -52,6 +52,7 @@
     <input
       type="url"
       inputmode="url"
+      class:filled={link.trim() !== ''}
       placeholder="https://drive.google.com/drive/folders/…"
       bind:value={link}
       onkeydown={onKeydown}
@@ -104,6 +105,19 @@
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
+  }
+
+  /* Empty vs pasted needs to read at a glance (owner feedback): an empty field
+     sits fainter with a dim placeholder, so it's obviously blank; a field with a
+     link picks up an accent-tinted border + fill so a pasted value shows without
+     clicking in and scrolling the long URL. */
+  input::placeholder {
+    color: color-mix(in srgb, var(--fg-muted) 55%, transparent);
+  }
+
+  input.filled {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, color-mix(in srgb, var(--bg) 55%, transparent));
   }
 
   input:hover:not(:disabled) {

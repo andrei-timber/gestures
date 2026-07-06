@@ -314,6 +314,11 @@
   /* Local picker + remote-link section side by side; wrap to stacked on narrow
      iPad-portrait widths so neither column gets crushed. */
   .sources {
+    /* The two source cards run 10% wider than the params panel below — more room
+       to read a pasted Drive link at a glance (owner feedback). Overriding
+       `--setup-col` here cascades into FolderInput/RemoteInput without touching
+       the panel, which inherits the base width from `.screen`. */
+    --setup-col: calc(21rem * 1.1);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
