@@ -140,6 +140,19 @@ export function addTime(state: RuntimeState, seconds = ADD_TIME_SECONDS): Runtim
   return { ...state, remaining: state.remaining + seconds }
 }
 
+/**
+ * Reset the current pose's countdown to its full planned duration — the clock
+ * half of an image refresh (spec §6): a swapped-in reference is a fresh drawing,
+ * so it gets full time. Works while running or paused; ignored during a rest
+ * slide (no pose to time) and from other phases. The image swap itself lives in
+ * the store (it owns the run images); this only touches the machine's clock.
+ */
+export function resetPoseTime(state: RuntimeState): RuntimeState {
+  if (state.phase !== 'running' && state.phase !== 'paused') return state
+  if (state.resting) return state
+  return { ...state, remaining: state.plan[state.index] ?? state.remaining }
+}
+
 /** Flip the current pose horizontally (spec §6 mirror-H). No-op outside a run. */
 export function toggleMirrorH(state: RuntimeState): RuntimeState {
   if (state.phase !== 'running' && state.phase !== 'paused') return state

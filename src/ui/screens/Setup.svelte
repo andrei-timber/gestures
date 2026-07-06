@@ -96,7 +96,9 @@
     // spaced, display-ordered images, then play them alongside the plan.
     const rng = makeRng(Math.floor(Math.random() * 0x1_0000_0000))
     const images = selectRun(source.images, plan.length, rng, settings.randomize)
-    session.load(plan, images, settings.restSeconds)
+    // Pass the full pool too: its residual (images the run didn't pick) is what
+    // in-session Refresh swaps in.
+    session.load(plan, images, settings.restSeconds, source.images)
     session.start()
     // Warm the opening frame during the transition so the first pose paints
     // instantly; the in-session window prefetch takes over from there.

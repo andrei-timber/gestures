@@ -36,6 +36,8 @@
     // Both the shifted "+" and its unshifted "=" so no modifier is needed.
     '+': () => session.addTime(),
     '=': () => session.addTime(),
+    // Swap the current reference for an unseen one (no-op when no spare remains).
+    f: () => session.refresh(),
     // Per-pose sanity checks — mirror / grayscale / grid — that reset on advance.
     m: () => session.toggleMirrorH(),
     v: () => session.toggleMirrorV(),
@@ -225,6 +227,14 @@
     </button>
     <button class="tool" title="Extend time (+)" aria-label="Extend time (+)" onclick={() => session.addTime()}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+    </button>
+    <!-- Refresh: swap the current reference for an unseen one. Disabled once the
+         folder holds no image the run hasn't used. -->
+    <button class="tool" disabled={!session.canRefresh} title="Refresh image (f)" aria-label="Refresh image (f)" onclick={() => session.refresh()}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 11a8 8 0 0 0-14.3-4.4M4 5v3.5h3.5" />
+        <path d="M4 13a8 8 0 0 0 14.3 4.4M20 19v-3.5h-3.5" />
+      </svg>
     </button>
   </div>
 
@@ -489,11 +499,17 @@
       border-color 0.15s ease;
   }
 
-  .tool:hover,
+  .tool:hover:not(:disabled),
   .tool:focus-visible {
     opacity: 1;
     background: color-mix(in srgb, white 8%, transparent);
     border-color: transparent;
+  }
+
+  /* No spare image to swap in — the control reads as inert, not a dimmed action. */
+  .tool:disabled {
+    opacity: 0.3;
+    cursor: default;
   }
 
   .tool svg {

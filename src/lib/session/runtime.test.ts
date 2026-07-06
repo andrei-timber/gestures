@@ -8,6 +8,7 @@ import {
   pause,
   posesDrawn,
   prev,
+  resetPoseTime,
   resume,
   start,
   tick,
@@ -88,6 +89,29 @@ describe('end (manual End / Esc)', () => {
   it('stops tick from advancing after ending', () => {
     const ended = end(run(start(createRuntime([60, 120])), 5))
     expect(run(ended, 300)).toBe(ended) // tick is a no-op once ended
+  })
+})
+
+describe('resetPoseTime (image refresh)', () => {
+  it('restores the current pose to its full duration, mid-pose', () => {
+    const drained = run(start(createRuntime([60, 120])), 40) // 20s left on pose 1
+    expect(drained.remaining).toBe(20)
+    expect(resetPoseTime(drained).remaining).toBe(60)
+  })
+
+  it('resets the pose currently on screen, not the first', () => {
+    const s = run(start(createRuntime([60, 120, 300])), 90) // 30s into pose 2
+    expect(s.index).toBe(1)
+    expect(resetPoseTime(s).remaining).toBe(120)
+  })
+
+  it('works while paused and is a no-op during rest or once ended', () => {
+    const paused = pause(run(start(createRuntime([60, 120])), 40))
+    expect(resetPoseTime(paused).remaining).toBe(60)
+    const resting = run(start(createRuntime([3, 60], 5)), 3) // in the rest after pose 1
+    expect(resetPoseTime(resting)).toBe(resting)
+    const ended = end(start(createRuntime([60])))
+    expect(resetPoseTime(ended)).toBe(ended)
   })
 })
 

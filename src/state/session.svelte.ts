@@ -16,6 +16,7 @@ import {
   pause as pauseRuntime,
   posesDrawn as posesDrawnRuntime,
   prev as prevRuntime,
+  resetPoseTime as resetPoseTimeRuntime,
   resume as resumeRuntime,
   start as startRuntime,
   tick,
@@ -26,14 +27,21 @@ import {
   type Aids,
   type Phase,
 } from '@/lib/session/runtime'
+import { SvelteSet } from 'svelte/reactivity'
+import { pickSpare, refreshRun } from '@/lib/session/refresh'
 import { totalSeconds } from '@/lib/session/timing'
-import { prefetchIndices } from '@/lib/source/preload'
+import { prefetchIndices, warm } from '@/lib/source/preload'
 import type { SourceImage } from '@/state/source.svelte'
 
 function createSessionStore() {
   let state = $state(createRuntime([]))
   // Display-ordered run images, parallel to the plan (images[i] ↔ plan[i]).
   let images = $state<readonly SourceImage[]>([])
+  // The full loaded pool (superset of the run) and every URL ever placed in the
+  // run — the residual `pool \ used` is what Refresh draws fresh images from.
+  let pool = $state<readonly SourceImage[]>([])
+  // Reactive so `canRefresh` re-derives as spares are consumed; mutated in place.
+  const used = new SvelteSet<string>()
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stopTimer(): void {
@@ -110,13 +118,34 @@ function createSessionStore() {
     },
 
     /**
-     * Load a run: a per-pose duration plan, its display-ordered images
-     * (parallel arrays), and the rest between poses. Returns to idle.
+     * True when Refresh can swap the current pose for an unseen image: a live
+     * pose (running or paused, not resting) and at least one pool image never
+     * placed in the run. Drives the Refresh control's disabled state.
      */
-    load(plan: readonly number[], runImages: readonly SourceImage[] = [], restSeconds = 0): void {
+    get canRefresh(): boolean {
+      if (state.phase !== 'running' && state.phase !== 'paused') return false
+      if (state.resting) return false
+      return pool.some((img) => !used.has(img.url))
+    },
+
+    /**
+     * Load a run: a per-pose duration plan, its display-ordered images
+     * (parallel arrays), the rest between poses, and the full loaded pool the
+     * images were drawn from (its residual feeds Refresh; defaults to the run
+     * images, i.e. no spares). Returns to idle.
+     */
+    load(
+      plan: readonly number[],
+      runImages: readonly SourceImage[] = [],
+      restSeconds = 0,
+      sourcePool: readonly SourceImage[] = runImages,
+    ): void {
       stopTimer()
       state = createRuntime(plan, restSeconds)
       images = runImages
+      pool = sourcePool
+      used.clear()
+      for (const img of runImages) used.add(img.url)
     },
     start(): void {
       state = startRuntime(state)
@@ -147,6 +176,26 @@ function createSessionStore() {
     /** Extend the current pose, adding time to its live countdown. */
     addTime(): void {
       state = addTimeRuntime(state)
+    },
+    /**
+     * Swap the current reference for an unseen one (spec §6 refresh): pull the
+     * next — already-prefetched — pose into the current slot for an instant
+     * paint, backfill the tail from a random spare, and reset the pose clock to
+     * full. The displaced image leaves the run, so nothing seen recurs. No-op
+     * when no spare remains (see {@link canRefresh}). `Math.random` is the edge's
+     * seed, matching the run-start selection — the pure picking is injected.
+     */
+    refresh(): void {
+      if (state.phase !== 'running' && state.phase !== 'paused') return
+      if (state.resting) return
+      const spare = pickSpare(pool, used, Math.random)
+      if (spare === null) return
+      images = refreshRun(images, state.index, spare)
+      used.add(spare.url)
+      state = resetPoseTimeRuntime(state)
+      // Warm the just-swapped current (cold only on the final pose) and the new
+      // tail, so the swap and the eventual advance both paint without a hitch.
+      void warm([images[state.index].url, images[images.length - 1].url])
     },
     /** Flip the current pose horizontally (per-pose sanity check). */
     toggleMirrorH(): void {
