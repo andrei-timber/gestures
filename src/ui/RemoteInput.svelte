@@ -65,8 +65,6 @@
     <p class="note">Drive loading isn’t configured in this build (no API key).</p>
   {:else if error}
     <p class="note error">{error}</p>
-  {:else}
-    <p class="note faint">Could consider Dropbox &amp; Box later if there’s demand.</p>
   {/if}
 </div>
 
@@ -145,12 +143,6 @@
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.78rem;
-  }
-
-  /* An aside, not an instruction — sits quieter than errors/config notes. */
-  .faint {
-    opacity: 0.6;
-    font-size: 0.72rem;
   }
 
   .error {
