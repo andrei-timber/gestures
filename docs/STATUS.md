@@ -14,16 +14,46 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
   longer stick **"pressed" after a tap** on touch (`@media (hover: hover)` gate), and **Continue the pose**
   now carries the **view-aids menu** (mirror/grayscale/grid; still no timing menu or pose count). Seven
   commits total, each self-contained. Not an M2 step.
-- **Next step:** **M2 — Capture (Tier 2 Drive write) + Box/Dropbox read (spec §3/§7/§13).** Two slices:
-  (a) GIS sign-in (`drive.file`) + session capture/upload; (b) **Box + Dropbox** public-folder read behind
-  the existing `RemoteInput` SOON rows. ⚠ Box/Dropbox need an **app token** (no anonymous API-key list like
-  Drive) — may want a tiny Worker (§3 auth wrinkle, §9). Milestone start — at the next session-start, lay
-  out the M2 ledger, then agree Scope + DoD. Kicks off with **spikes S2 (Drive write) / S3 (Box) / S4
-  (Dropbox)**. No code yet — plan-gate.
+- **M2 opened (2026-07-08):** ledger laid out below. **Spike S2 (Drive write) ✅ passed** — `drive.file`
+  download-bytes → `files.create` is byte-exact, can parent into the user's own folder; findings +
+  Box/Dropbox park logged (`decisions.md`, spec §3/§13). **Box + Dropbox parked** (need a Worker; owner's
+  call) — placeholder rows + Setup copy removed, quiet "maybe later" line left. So **M2 = Drive write
+  only.** Uncommitted: the RemoteInput/Setup stub removal + the doc revisions (one commit).
+- **Next step:** **M2 slice (a), step a1 — GIS sign-in (`drive.file`).** Plan-gate: agree Scope + DoD
+  before build code. First owner setup task: create an **OAuth Client ID** (Web-app type) in the Google
+  Cloud project (JS origins: `http://localhost:5173` + `https://andreitim.com`; no redirect URI for the
+  GIS token model). Then wire `initTokenClient` + capture-time prompt.
 - **Verify:** live — `curl https://andreitim.com/apps/gestures/` → **200** (Version `a1ab6b46`,
-  2026-07-06). Gate green — **182 tests, typecheck, lint**. M1 iPad run confirmed by owner (2026-07-04);
-  the polish batch is desktop browser-verified — owner to spot-check the touch fixes on iPad (sticky-tap +
-  free-draw aids).
+  2026-07-06; no redeploy this session). Gate: **typecheck + lint green** after the stub removal (run
+  `pnpm test` before commit to confirm 182 still pass). Owner still to spot-check the M1 polish touch
+  fixes on iPad (sticky-tap + free-draw aids).
+
+## M2 step ledger — Capture (Tier 2 Drive write)
+Drive write behind the GIS token model (spec §3/§7/§13). **Box + Dropbox read was the original slice (b)
+— parked 2026-07-08** (both need a server-side app token → a Worker; Box also proxying every image; owner
+cut them, §3 + `decisions.md`). So M2 is Drive write only. Slice (a) is a plan-gate: agree Scope + DoD
+before build code.
+
+**Spike (done):**
+- [x] S2 — **download-bytes → `files.create`** proven under `drive.file`: byte-exact round-trip (md5
+      match), root-folder create works, and can parent into the user's *own* existing folder (so
+      `<ref>/sessions/` default is reachable). Spike content cleaned up. (2026-07-08)
+- [—] S3 / S4 (Box / Dropbox) — **not run; parked** (see above).
+
+**Slice (a) — Drive write (`drive.file`) — not started:**
+- [ ] a1 — GIS sign-in (token model, `drive.file` scope, ~1h tokens + silent re-request via
+      `prompt:''`); prompted only on capture, never for the core timer. Needs an **OAuth Client ID**
+      (Web-app type) added to the Google Cloud project — owner setup step.
+- [ ] a2 — Session capture into the user's **own** Drive (decoupled from the ref source, which may be
+      someone else's public folder): find-or-create `Gestures Sessions/` in My-Drive root (id remembered
+      locally) → `Gestures Sessions/<date>/`; write reference copies `Ref_<n>.<ext>` via download-bytes →
+      `files.create`. ⚠ in-browser the source image URL must be CORS-readable to grab bytes (curl spike
+      bypassed this). *(Google-Picker "Change folder…" = P1 fast-follow, parked.)*
+- [ ] a3 — In-app drawing upload at session end, named to correspond to the reference numbering.
+- [ ] a4 — Reconcile the Setup copy: "Files stay in your browser — nothing is uploaded" is true for ref
+      loading but not for opt-in capture (which uploads to the user's own Drive) — distinguish the two.
+
+Spike findings + Box/Dropbox park: `docs/decisions.md` (2026-07-08). Write mechanics: `gestures-spec.md` §3/§7.
 
 ## Milestones
 Sequenced order (spec §13). Companion tracks 🎨/☁️ are interleaved deliverables, not milestones — content
@@ -36,7 +66,7 @@ in `gestures-spec.md` §14.
 | 🎨 | Creative-direction session — originate design system, then restyle M0 (§14) | ✓ (taste-queue open) |
 | ☁️ | Cloudflare setup guide + first deploy (§14; Workers Static Assets — `docs/deploy-notes.md`) | ✓ (live) |
 | M1 | Drive read (Tier 1, public folder link) | ✓ (live) |
-| M2 | Capture (Tier 2 Drive write, `drive.file`) + Box/Dropbox read | ☐ |
+| M2 | Capture (Tier 2 Drive write, `drive.file`) — Box/Dropbox parked (§3) | ☐ |
 | M3 | Review composites + dated timeline | ☐ |
 
 Full roadmap, sequencing rationale, and each item's contents: `gestures-spec.md` §13 (roadmap) · §14

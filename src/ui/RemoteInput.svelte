@@ -14,12 +14,9 @@
   let status = $state<'idle' | 'loading'>('idle')
   let error = $state('')
 
-  // Box / Dropbox flows are planned (spec §3 ImageSource abstraction) — stubbed
-  // rows now so the shape is set; each becomes a working provider later.
-  const soon = [
-    { name: 'Box', placeholder: 'https://app.box.com/folder/…' },
-    { name: 'Dropbox', placeholder: 'https://www.dropbox.com/scl/fo/…' },
-  ]
+  // Box / Dropbox were scoped out: both need a server-side app token (no anonymous
+  // link listing like Drive), not worth a Worker for a solo tool. Revisit on demand.
+  // Decided 2026-07-08 (docs/decisions.md; spec §3).
 
   async function load(): Promise<void> {
     if (status === 'loading' || link.trim() === '') return
@@ -64,17 +61,12 @@
     </button>
   </div>
 
-  {#each soon as provider (provider.name)}
-    <div class="row">
-      <input type="url" placeholder={provider.placeholder} disabled aria-label={`${provider.name} folder link`} />
-      <button class="soon" disabled>Soon</button>
-    </div>
-  {/each}
-
   {#if !configured}
     <p class="note">Drive loading isn’t configured in this build (no API key).</p>
   {:else if error}
     <p class="note error">{error}</p>
+  {:else}
+    <p class="note faint">Could consider Dropbox &amp; Box later if there’s demand.</p>
   {/if}
 </div>
 
@@ -149,18 +141,16 @@
     cursor: default;
   }
 
-  /* Placeholder-provider button reads as an inert label, not a dimmed action. */
-  button.soon {
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--fg-muted);
-  }
-
   .note {
     margin: 0;
     color: var(--fg-muted);
     font-size: 0.78rem;
+  }
+
+  /* An aside, not an instruction — sits quieter than errors/config notes. */
+  .faint {
+    opacity: 0.6;
+    font-size: 0.72rem;
   }
 
   .error {

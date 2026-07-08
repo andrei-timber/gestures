@@ -98,18 +98,18 @@ private folder → enumerate images" is impossible without restricted `drive.rea
   public sharing is on the user; we ship no reference content ourselves. ✅ (So §11/§12 licensing concerns
   are moot: users use their own folders; we host/share nothing.)
 
-### Additional read sources — Box & Dropbox (✅ planned M2)
-Same **`ImageSource` abstraction** as Drive Tier 1 — the user pastes a public folder link, the app lists
-images and displays them (the `RemoteInput` UI already ships disabled Box/Dropbox rows as placeholders).
-- ⚠ **Auth wrinkle (unlike Drive):** neither Box nor Dropbox offers an *anonymous API-key* listing of a
-  shared folder's contents — both require an **app access token** (OAuth app credentials). Two options:
-  a public client-side app token, or a **tiny Cloudflare Worker** holding the secret (the first real use
-  of §9's "a Worker only if a need appears" escape hatch). This is a genuine tension with the no-backend
-  constraint — settle it per provider at the M2 spike.
-- **Display URLs:** Dropbox shared links → direct content (`dl.dropboxusercontent.com` / `raw=1`); Box →
-  shared-item download URLs. Confirm each renders (like Drive's keyless thumbnail endpoint) at the spike.
-- ⚠ **De-risk with read-spikes S3 (Box) / S4 (Dropbox)** at M2 start — confirm a public shared folder
-  lists + images display, and whether an app token can stay client-side or needs a Worker — before build.
+### Additional read sources — Box & Dropbox (⏸ parked — revisit on demand · decided 2026-07-08)
+Would use the same **`ImageSource` abstraction** as Drive Tier 1, but **cut from M2** — kept here as the
+map to the finding, not a to-do. The M2-start research (would-be spikes S3/S4) settled why:
+- **The blocker:** neither Box nor Dropbox offers an *anonymous API-key* listing like Drive — **both
+  require a server-side app token** (short-lived, refresh needs the app secret), so each **forces a tiny
+  Cloudflare Worker** to hold the secret. **Box is worse:** its images also need auth to display, so the
+  Worker must **proxy every image** in the hot path (Dropbox display is likely tokenless via
+  `dl.dropboxusercontent.com`/`raw=1`, so only its listing would need the Worker).
+- **Owner's call (2026-07-08):** not worth a backend for a solo tool the owner doesn't personally need —
+  overcomplication against the no-backend ethos (§9). The `RemoteInput` placeholder rows were removed; a
+  quiet "could consider Dropbox & Box later if there's demand" line stands in. **The §9 Worker escape
+  hatch stays un-triggered.** Revisit only if real demand appears. (`docs/decisions.md`, 2026-07-08.)
 
 ### The honest trade (decided)
 Tier 1 (public folder link) is the **primary** path — the only one that gracefully handles thousands of
@@ -214,9 +214,24 @@ session-wide setting.
 ## 7. Posterior review / session capture (Phase 2, research Part C) ✅ direction
 
 Frictionless and optional (drawabox 50% rule — review must not become busywork).
-- ✅ **Session folder:** default **`<reference-folder>/sessions/<date>/`**; the target folder is
-  **user-configurable** (e.g. `<some other folder>/<date>`). Used for both reference copies and uploaded
-  drawings.
+- ✅ **Sign-in is capture-only.** The core timer/slideshow stays fully anonymous — no login to open the
+  app, load references, or draw. The GIS `drive.file` consent is prompted **only when the user clicks
+  Save** at the end recap (a user gesture, as Google requires). First time: account-chooser → consent →
+  an "unverified app" click-through (accepted for solo use; basic OAuth verification — not CASA, which
+  `drive.file` is exempt from — removes it if capture is ever opened to others). After that a silent
+  `prompt:''` re-request usually writes with no popup. Token is per-browser (sign in once per device).
+  Settled 2026-07-08 (`docs/decisions.md`; S2 spike).
+- ✅ **Session folder — app-created default in the user's *own* Drive** (revised 2026-07-08, was
+  `<reference-folder>/sessions/…`). The reference source may be a public folder **someone else** shared,
+  which `drive.file` can read but not write into (the signed-in user isn't its owner) — so captures are
+  **decoupled from the reference source** and always land in the user's own Drive: find-or-create
+  **`Gestures Sessions/`** in My Drive root (root-create always works under `drive.file`; its folder id is
+  remembered locally so it's never duplicated), then **`Gestures Sessions/<date>/`**. Used for both
+  reference copies and uploaded drawings.
+- 🟡 **Configurable destination via Google Picker — parked to P1** (owner's call 2026-07-08). Picking a
+  folder grants `drive.file` write to *that* folder even if the app didn't create it, so the Picker is the
+  natural "Change folder…" affordance — but M2 ships the zero-friction app-created default first; the
+  Picker is a fast-follow. (Same Picker mechanism as the P1 private-folder read, §3.)
 - ✅ **Reference copies** written as **`Ref_<number>.<jpg|png|webp>`** (original extension preserved).
 - ✅ **Drawings uploaded in-app at session end** (not a manual Drive step), named to correspond to the
   reference numbering.
@@ -326,22 +341,21 @@ plain CSS + tokens · sequencing (dev setup → M0 → creative direction → Cl
 
 > **Verification spikes (throwaway tests, run at the start of the relevant milestone — no product code):**
 > **S1** (before M1, ✅ done 2026-07-04) — confirm an *unlisted* "anyone-with-link" folder lists via **API
-> key only**; note Shared-Drive / `resourceKey` handling. **S2** (before M2) — confirm the **download-bytes
-> → `files.create`** re-upload write path works under `drive.file` (the robust alternative to `files.copy`).
-> **S3 / S4** (before M2) — confirm a **public Box / Dropbox folder** lists + images display, and whether
-> the required **app token** can stay client-side or needs a Worker (§3 auth wrinkle). All are ~15-min
-> checks that de-risk the architecture before real build.
+> key only**; note Shared-Drive / `resourceKey` handling. **S2** (M2, ✅ done 2026-07-08) — confirmed the
+> **download-bytes → `files.create`** multipart re-upload works under `drive.file` (byte-exact round-trip;
+> can even parent into the user's *own* existing folder → `<ref>/sessions/` default is reachable). **S3 /
+> S4** (Box / Dropbox) — **not run; both parked at M2 start** (desk research showed each needs a server-side
+> app token → a Worker; owner cut them — §3, `docs/decisions.md`). S1/S2 are ~15-min checks that de-risk the
+> architecture before real build.
 
 - **M0 — Delightful core (local folder source).** Static shell; **local-folder image source** (real
   images, no Drive/Cloud setup); session engine (Class + Quick), mirror, grayscale, grid, pause-keeps-ref,
   extend, keyboard, calm countdown, end cue.
 - **M1 — Drive read (Tier 1).** Spike **S1** → public folder link → API-key listing (jpg/png/webp) →
   slideshow. Auto total-time FYI.
-- **M2 — Capture (Tier 2 Drive write) + more read sources (Box, Dropbox).** Two slices. **(a) Drive
-  write:** spike **S2** → GIS sign-in (`drive.file`); write `sessions/<date>/Ref_N.ext`; in-app drawing
-  upload at session end; configurable session folder. **(b) Box + Dropbox read:** spikes **S3/S4** →
-  public-folder listing behind the existing `RemoteInput` rows (app-token auth; the §3 auth wrinkle —
-  possibly a tiny Worker).
+- **M2 — Capture (Tier 2 Drive write).** Spike **S2 ✅** → GIS sign-in (`drive.file`); write
+  `sessions/<date>/Ref_N.ext`; in-app drawing upload at session end; configurable session folder.
+  *(Box + Dropbox read was the original slice (b) — **parked 2026-07-08**, both need a Worker; §3.)*
 - **M3 — Review composites.** Canvas paired images → session folder; dated timeline.
 - **Later (P1+).** Private-folder Picker read, custom segment builder, brightness/notan/favorites/
   draw-on-reference, contact sheet, PSD compositing.

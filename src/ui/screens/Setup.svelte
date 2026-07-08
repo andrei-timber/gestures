@@ -116,7 +116,7 @@
 
   <div class="pickers">
     <p class="sources-label">
-      Choose a local references folder, or paste a public Google Drive, Box, or Dropbox folder link.
+      Choose a local references folder, or paste a public Google Drive folder link.
     </p>
     <div class="sources">
       <FolderInput />

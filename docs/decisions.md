@@ -3,6 +3,24 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-08 — **M2 opens: S2 write-spike passes; Box/Dropbox parked (no Worker).** Context: M2 start laid
+out two slices — (a) Drive write, (b) Box/Dropbox read — each fronted by throwaway spikes. Findings: **S2
+(Drive write) ✅** — `drive.file` token minted via the OAuth Playground; a real 75 KB reference was
+fetched → re-uploaded with a **multipart `files.create`** → downloaded back **byte-exact (md5 match)**;
+folder-create in My-Drive root works, and — the load-bearing surprise — the app **can parent a new folder
+into the user's *own* pre-existing folder** it never created (drive.file grants that because the *user*
+owns it), so the spec's `<ref-folder>/sessions/<date>/` default is reachable (only fails when the ref
+folder was shared by *someone else*). All spike content deleted (204s). Concern for **S3/S4 (Box/Dropbox)**:
+desk research showed neither offers Drive-style anonymous listing — **both need a server-side app token
+(refresh needs the secret) → a tiny Cloudflare Worker**, and **Box additionally needs the Worker to proxy
+every image** (its display bytes are also auth-gated; Dropbox display is likely tokenless via `raw=1`).
+Decision (owner, 2026-07-08): **park Box + Dropbox** — not worth standing up a backend for a solo tool the
+owner doesn't need; the §9 Worker escape hatch stays un-triggered. Removed the `RemoteInput` Box/Dropbox
+placeholder rows + the Setup intro's Box/Dropbox mention; left a quiet "could consider … if there's demand"
+line. Tradeoff: fewer sources vs. the no-backend ethos held and M2 stays client-side. Spec §3 (Box/Dropbox
+block + §13 roadmap/spikes) revised to match; this is the build-level companion to that product cut. M2 is
+now **Drive write only**.
+
 2026-07-06 — **Polish batch, second-check round: touch sticky-tap + free-draw view aids.** Two fixes
 after the owner re-checked the batch above. (1) **Tool buttons latched "pressed" after a tap.** On iPad a
 tap sticks `:hover` until the next interaction, so a one-shot Refresh looked stuck-on long after firing.
