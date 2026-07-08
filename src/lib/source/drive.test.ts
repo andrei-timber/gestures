@@ -66,8 +66,8 @@ describe('buildListUrl', () => {
 })
 
 describe('driveImageUrl / toSourceImages', () => {
-  it('builds a keyless thumbnail URL at the requested width', () => {
-    expect(driveImageUrl('abc', 800)).toBe('https://drive.google.com/thumbnail?id=abc&sz=w800')
+  it('builds a keyless lh3 CDN URL at the requested width', () => {
+    expect(driveImageUrl('abc', 800)).toBe('https://lh3.googleusercontent.com/d/abc=w800')
   })
 
   it('keeps only raster references, natural-sorted, mapped to display URLs', () => {

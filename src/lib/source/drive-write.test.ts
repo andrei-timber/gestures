@@ -2,20 +2,29 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   DriveWriteError,
   buildFolderSearchUrl,
+  copyReferenceImages,
   createFolder,
   ensureSessionFolder,
   escapeQueryValue,
+  extensionOf,
   findFolder,
   findOrCreateFolder,
   folderSearchQuery,
+  refImageName,
   sessionFolderName,
   uploadFile,
   writeTextFile,
   type WriteFetch,
 } from './drive-write'
+import type { SourceImage } from './images'
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
   return { ok, status, json: () => Promise.resolve(body) } as unknown as Response
+}
+
+/** A byte-read response for the copy path: carries ok/status and a blob. */
+function blobResponse(ok = true, status = 200): Response {
+  return { ok, status, blob: () => Promise.resolve(new Blob(['bytes'])) } as unknown as Response
 }
 
 describe('escapeQueryValue', () => {
@@ -144,5 +153,84 @@ describe('uploadFile / writeTextFile', () => {
   it('surfaces an upload error as DriveWriteError', async () => {
     const fetch = vi.fn().mockResolvedValue(jsonResponse({ error: { message: 'Quota' } }, false, 403))
     await expect(uploadFile('x', 'p', new Blob(['x']), 'tok', fetch)).rejects.toThrow('Quota')
+  })
+})
+
+describe('extensionOf', () => {
+  it('lowercases the real extension', () => {
+    expect(extensionOf('pose2.JPG')).toBe('.jpg')
+    expect(extensionOf('a.b.webp')).toBe('.webp')
+  })
+
+  it('defaults to .jpg for an unusable name (none / dotfile / trailing dot)', () => {
+    expect(extensionOf('noext')).toBe('.jpg')
+    expect(extensionOf('.gitignore')).toBe('.jpg')
+    expect(extensionOf('trailing.')).toBe('.jpg')
+  })
+})
+
+describe('refImageName', () => {
+  it('zero-pads to the width of the total so a lexical listing stays in order', () => {
+    expect(refImageName(1, 12, 'anything.png')).toBe('Ref_01.png')
+    expect(refImageName(10, 12, 'x.jpg')).toBe('Ref_10.jpg')
+  })
+
+  it('does not pad when the total is single-digit', () => {
+    expect(refImageName(3, 5, 'sketch.JPEG')).toBe('Ref_3.jpeg')
+  })
+})
+
+describe('copyReferenceImages', () => {
+  const img = (name: string, url: string): SourceImage => ({ name, url })
+
+  it('copies every image in order as Ref_N.<ext>, reporting the full count', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const images = [img('a.jpg', 'blob:a'), img('b.png', 'blob:b')]
+    const result = await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload })
+    expect(result).toEqual({ uploaded: 2, total: 2 })
+    // Named Ref_1/Ref_2 (single-digit total → no pad), parented to the dated folder, with the token.
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Ref_2.png'])
+    expect(upload.mock.calls[0].slice(1)).toEqual(['dated', expect.any(Blob), 'tok'])
+    expect(fetchBytes.mock.calls.map((c) => c[0])).toEqual(['blob:a', 'blob:b'])
+  })
+
+  it('skips a throttled image (non-ok byte read) but keeps the rest', async () => {
+    const fetchBytes = vi
+      .fn()
+      .mockResolvedValueOnce(blobResponse(false, 429)) // first ref throttled
+      .mockResolvedValueOnce(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+    })
+    expect(result).toEqual({ uploaded: 1, total: 2 })
+    // Only the second image uploaded — and it keeps its own index (Ref_2), not renumbered.
+    expect(upload).toHaveBeenCalledTimes(1)
+    expect(upload.mock.calls[0][0]).toBe('Ref_2.jpg')
+  })
+
+  it('drops just the image whose fetch throws (CORS-opaque / blip)', async () => {
+    const fetchBytes = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('CORS'))
+      .mockResolvedValueOnce(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+    })
+    expect(result).toEqual({ uploaded: 1, total: 2 })
+  })
+
+  it('is a no-op for an empty run', async () => {
+    const fetchBytes = vi.fn()
+    const upload = vi.fn()
+    expect(await copyReferenceImages([], 'dated', 'tok', { fetchBytes, upload })).toEqual({
+      uploaded: 0,
+      total: 0,
+    })
+    expect(fetchBytes).not.toHaveBeenCalled()
   })
 })

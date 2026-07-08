@@ -1,9 +1,9 @@
 /**
  * Capture-to-Drive state (`gestures-spec.md` §3/§7, M2 slice a). Sign-in happens
  * **only here**, when the user logs a finished session (spec §3) — the core timer
- * never authenticates. This first slice signs in and writes the free-form notes
- * into a dated `Gestures Sessions/<date>/` folder in the user's own Drive; copying
- * the ordered reference images and uploading the user's drawings land next (a2/a3).
+ * never authenticates. It signs in, writes the free-form notes, and copies the
+ * run's ordered references (`Ref_1…N`) into a dated `Gestures Sessions/<date>/`
+ * folder in the user's own Drive; uploading the user's own drawings lands next (a3).
  *
  * The Client ID is inlined by Vite (not a secret — origin-locked, spec §3); absent
  * in a dev checkout without `.env.local` → the Save affordance hides rather than
@@ -11,7 +11,8 @@
  */
 
 import { DriveAuthError, createDriveAuth } from '@/lib/source/drive-auth'
-import { DriveWriteError, ensureSessionFolder, writeTextFile } from '@/lib/source/drive-write'
+import { DriveWriteError, copyReferenceImages, ensureSessionFolder, writeTextFile } from '@/lib/source/drive-write'
+import type { SourceImage } from '@/lib/source/images'
 
 const clientId = import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID ?? ''
 
@@ -44,10 +45,12 @@ function createCaptureStore() {
 
     /**
      * Sign in (first time only, via Google's popup) and write the session notes
-     * into `Gestures Sessions/<today>/`. Idempotent folders — re-logging the same
-     * day reuses them. Swallows nothing: failures surface a friendly `message`.
+     * plus the ordered reference images (`Ref_1…N`) into `Gestures Sessions/<today>/`.
+     * Idempotent folders — re-logging the same day reuses them. The image copy is
+     * best-effort: a throttled ref is skipped and reported, not fatal. Swallows
+     * nothing else: failures surface a friendly `message`.
      */
-    async log(notes: string): Promise<void> {
+    async log(notes: string, images: readonly SourceImage[] = []): Promise<void> {
       if (!auth || status === 'working') return
       status = 'working'
       message = ''
@@ -55,9 +58,15 @@ function createCaptureStore() {
         const token = await auth.getToken()
         const folderId = await ensureSessionFolder(new Date(), token)
         await writeTextFile('notes.txt', folderId, notes, token)
+        const copy = await copyReferenceImages(images, folderId, token)
         folderUrl = `https://drive.google.com/drive/folders/${folderId}`
         status = 'done'
-        message = 'Session logged to your Drive.'
+        message =
+          copy.total === 0
+            ? 'Session logged to your Drive.'
+            : copy.uploaded === copy.total
+              ? `Session logged — ${copy.uploaded} reference${copy.uploaded === 1 ? '' : 's'} copied.`
+              : `Session logged — copied ${copy.uploaded} of ${copy.total} references (the rest were throttled; try again shortly).`
       } catch (err) {
         status = 'error'
         message =

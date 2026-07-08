@@ -102,16 +102,20 @@ export function buildListUrl(ref: DriveFolderRef, apiKey: string, pageToken?: st
   return `${FILES_ENDPOINT}?${params.toString()}`
 }
 
-/** Default display width (px). Drive's thumbnail CDN serves up to ~1600 crisply. */
+/** Default display width (px). The lh3 CDN serves public files up to ~1600 crisply. */
 export const DISPLAY_WIDTH = 1600
 
 /**
- * Displayable URL for a Drive file id. The `drive.google.com/thumbnail` endpoint
- * serves public files with no API key and no expiry (unlike the `thumbnailLink`
- * in the list response, which is short-lived) — settled in the M1/S1 spike.
+ * Displayable URL for a Drive file id, via the `lh3.googleusercontent.com/d/<id>`
+ * CDN at width `=w<px>`. Like `drive.google.com/thumbnail` it serves public files
+ * with no API key and no expiry, but it's more cache-friendly / less throttled
+ * (M2 a5) **and** — unlike `/thumbnail` — sends permissive CORS headers, so its
+ * bytes are readable by an in-browser `fetch` (verified 2026-07-08). That's what
+ * lets M2 capture (a2) re-upload the session's Drive references: one URL serves
+ * both display and byte-copy. (M1's `/thumbnail` choice couldn't be byte-read.)
  */
 export function driveImageUrl(id: string, width = DISPLAY_WIDTH): string {
-  return `https://drive.google.com/thumbnail?id=${id}&sz=w${width}`
+  return `https://lh3.googleusercontent.com/d/${id}=w${width}`
 }
 
 /** Keep the raster references (by extension, spec §3), sort naturally, map to display records. */

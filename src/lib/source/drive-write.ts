@@ -11,6 +11,8 @@
  * injected `fetch` (mirroring `drive.ts`).
  */
 
+import type { SourceImage } from './images'
+
 /** Google's marker mimeType for a folder (same constant as the read side). */
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
 const FILES_URL = 'https://www.googleapis.com/drive/v3/files'
@@ -176,4 +178,70 @@ export function writeTextFile(
   fetchImpl?: WriteFetch,
 ): Promise<string> {
   return uploadFile(name, parentId, new Blob([text], { type: 'text/plain' }), token, fetchImpl)
+}
+
+/** Pure: the lowercased extension (with dot) of a filename, defaulting to `.jpg`. */
+export function extensionOf(name: string): string {
+  const dot = name.lastIndexOf('.')
+  // No dot, a leading dot (dotfile), or a trailing dot → no usable extension.
+  return dot > 0 && dot < name.length - 1 ? name.slice(dot).toLowerCase() : '.jpg'
+}
+
+/**
+ * Pure: the Drive filename for the `index`-th (1-based) session reference —
+ * `Ref_<n>.<ext>`, zero-padded to the width of `total` so a plain lexical folder
+ * listing stays in pose order (`Ref_01` before `Ref_10`). a3 names the matching
+ * drawings on the same scheme so a reference and its drawing sort together.
+ */
+export function refImageName(index: number, total: number, originalName: string): string {
+  const width = String(total).length
+  return `Ref_${String(index).padStart(width, '0')}${extensionOf(originalName)}`
+}
+
+/** The outcome of a {@link copyReferenceImages} run — how many of the run's refs landed. */
+export interface CopyResult {
+  readonly uploaded: number
+  readonly total: number
+}
+
+/** Injectable deps for {@link copyReferenceImages} — so the orchestrator is node-testable. */
+export interface CopyDeps {
+  /** Reads an image's displayable URL back as bytes (CORS-readable: `blob:` or lh3). */
+  readonly fetchBytes?: (url: string) => Promise<Response>
+  /** Uploads one blob; defaults to {@link uploadFile}. */
+  readonly upload?: (name: string, parentId: string, blob: Blob, token: string) => Promise<string>
+}
+
+/**
+ * Copy the run's ordered references into `parentId` as `Ref_1…N`, fetching each
+ * image's bytes from its own displayable URL (`blob:` for local picks, the
+ * CORS-readable lh3 CDN for Drive — see {@link driveImageUrl}) and re-uploading
+ * via multipart. **Best-effort and sequential**: one image failing (a transient
+ * throttle, a CORS-opaque URL) is skipped rather than aborting the rest, and the
+ * slow drip is gentle on Drive's per-IP rate limit. Returns how many of `total`
+ * landed, so the caller can report a partial copy honestly.
+ */
+export async function copyReferenceImages(
+  images: readonly SourceImage[],
+  parentId: string,
+  token: string,
+  deps: CopyDeps = {},
+): Promise<CopyResult> {
+  const fetchBytes = deps.fetchBytes ?? ((url: string) => globalThis.fetch(url))
+  const upload = deps.upload ?? ((name, pId, blob, tok) => uploadFile(name, pId, blob, tok))
+  const total = images.length
+  let uploaded = 0
+  for (let i = 0; i < total; i++) {
+    const image = images[i]
+    try {
+      const res = await fetchBytes(image.url)
+      if (!res.ok) continue // transient throttle (429/503) — skip, keep the rest
+      const blob = await res.blob()
+      await upload(refImageName(i + 1, total, image.name), parentId, blob, token)
+      uploaded++
+    } catch {
+      // A CORS-opaque URL or a mid-copy network blip drops just this one image.
+    }
+  }
+  return { uploaded, total }
 }

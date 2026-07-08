@@ -41,18 +41,27 @@ before build code.
       on Summary (disclaimer + Free-form Notes textarea) → creates `Gestures Sessions/<date>/` + writes
       `notes.txt`. Config `VITE_GOOGLE_OAUTH_CLIENT_ID`. Gate green (205 tests). ⏳ **owner to verify the
       live Google sign-in** (native popup can't be automated).
-- [ ] a2 — Copy the **ordered session reference images** (`Ref_1…N`) into the dated folder via
-      download-bytes → multipart upload (`uploadFile` already built). ⚠ in-browser the source URL must be
-      CORS-readable — local `blob:` URLs are fine; Drive thumbnail URLs need a CORS check.
+- [~] a2 — Copy the **ordered session reference images** (`Ref_1…N`) into the dated folder via
+      download-bytes → multipart upload (`uploadFile` already built). **CORS probe done (2026-07-08):**
+      Drive `drive.google.com/thumbnail` is **CORS-blocked** for byte reads; only `lh3.googleusercontent.com/d/<id>`
+      is CORS-readable — so a2 **folds in a5's lh3 display switch** (owner call): `driveImageUrl` → lh3, one
+      URL serves both display and byte-copy. Local `blob:` URLs copy full-quality; Drive copies are the
+      w1600 lh3 render (no `drive.file` scope to read someone else's originals). Build steps:
+      1. `drive.ts` `driveImageUrl` → lh3 + doc/test.  2. Expose `session.images` (final ordered run).
+      3. `drive-write.ts` `copyReferenceImages` (per-image bytes-fetch → `uploadFile Ref_NN.<ext>`,
+         best-effort, returns uploaded/total) + `refImageName`/`extensionOf` pure helpers + tests.
+      4. `capture.log(notes, images)` copies after notes.  5. `Summary.svelte` passes `session.images`,
+         updates disclaimer, shows copy progress.  DoD: node tests green → owner live-verifies `Ref_*` land.
 - [ ] a3 — **Drawing upload**: recap affordance to upload the user's numbered drawing JPGs from the
       computer, named to correspond to the reference numbering.
 - [ ] a4 — Reconcile the Setup copy: "Files stay in your browser — nothing is uploaded" is true for ref
       loading but not for opt-in capture (which uploads to the user's own Drive) — distinguish the two.
-- [ ] a5 — **Display robustness** (folded in 2026-07-08 after a live Drive-throttle bite): switch the
-      slideshow display URL from `drive.google.com/thumbnail` to the `lh3.googleusercontent.com/d/<id>`
-      CDN (more cache-friendly / less throttled) **and** add a **503 retry-with-backoff** on image load so
-      transient throttles self-heal into a retry instead of a blank frame. ⚠ Verify only once the current
-      throttle clears (both endpoints 503 now). Touches `drive.ts` `driveImageUrl` (spec §3 display URL).
+- [ ] a5 — **Display robustness** (folded in 2026-07-08 after a live Drive-throttle bite). The lh3
+      display-URL switch (`drive.google.com/thumbnail` → `lh3.googleusercontent.com/d/<id>`, more
+      cache-friendly / less throttled) is **being done in a2** (the CORS probe forced it). a5's remaining
+      half: a **503/429 retry-with-backoff** on image load so transient throttles self-heal into a retry
+      instead of a blank frame. ⚠ Verify only once the current throttle clears (lh3 429s now). Touches the
+      slideshow `<img>` load path (spec §3 display URL).
 
 *(Google-Picker "Change folder…" destination = P1 fast-follow, parked — spec §7.)*
 

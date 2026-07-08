@@ -109,6 +109,13 @@ function createSessionStore() {
       return images[state.index] ?? null
     },
     /**
+     * The run's images in their final display order (Refresh swaps included) —
+     * the truthful "what I drew" list M2 capture copies into Drive as `Ref_1…N`.
+     */
+    get images(): readonly SourceImage[] {
+      return images
+    },
+    /**
      * The image URLs to warm around `index` — the prefetch window, read straight
      * off the run images. Indexes only the handful of window positions, so a pose
      * swap never allocates a URL for every image in a large run.

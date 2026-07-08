@@ -14,8 +14,9 @@
 
   // Optional capture (M2 slice a): log the session to the user's Drive. Sign-in is
   // deferred to the actual Save click (spec §3) — the panel just gathers notes.
-  // Image copies + drawing upload arrive in a2/a3; the disclaimer stays honest to
-  // what this build writes today.
+  // Save writes notes.txt + copies the run's ordered references (Ref_1…N); the
+  // user's own drawing upload arrives in a3. The disclaimer stays honest to what
+  // this build writes today.
   let logging = $state(false)
   let notes = $state('')
   const today = sessionFolderName(new Date())
@@ -53,8 +54,10 @@
       {:else}
         <p class="disclaimer">
           Saves to <strong>Gestures&nbsp;Sessions/{today}/</strong> in your Google&nbsp;Drive — creates the
-          folder and writes a <strong>notes.txt</strong>. You’ll sign in with Google the first time.
-          <span class="soon">(Copying the session images &amp; uploading your drawings come next.)</span>
+          folder, writes a <strong>notes.txt</strong>, and copies the
+          <strong>{session.posesDrawn}</strong> reference{session.posesDrawn === 1 ? '' : 's'} you drew.
+          You’ll sign in with Google the first time.
+          <span class="soon">(Uploading your own drawings comes next.)</span>
         </p>
         <textarea
           bind:value={notes}
@@ -64,7 +67,11 @@
           disabled={capture.status === 'working'}
         ></textarea>
         <div class="log-actions">
-          <button class="save" disabled={capture.status === 'working'} onclick={() => capture.log(notes)}>
+          <button
+            class="save"
+            disabled={capture.status === 'working'}
+            onclick={() => capture.log(notes, session.images.slice(0, session.posesDrawn))}
+          >
             {capture.status === 'working' ? 'Saving…' : 'Save to Drive'}
           </button>
           <button class="cancel" onclick={closeLog} disabled={capture.status === 'working'}>Cancel</button>
