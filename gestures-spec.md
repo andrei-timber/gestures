@@ -79,6 +79,11 @@ private folder → enumerate images" is impossible without restricted `drive.rea
   Cycle-safe (visited-id set); it's the user's job to pick which folder to share. ✅
 - **Display URL:** `drive.google.com/thumbnail?id=<id>&sz=w1600` — keyless, public, no expiry (unlike the
   `thumbnailLink` in the list response), ~1600px crisp. Settled in the M1/S1 spike (2026-07-04). ✅
+  - ⚠ **Fragility observed 2026-07-08:** this endpoint returns **503 under throttle** — bulk-uploading
+    ~2k images (thumbnails not yet generated) plus heavy per-IP Drive traffic 503'd *every* image (both
+    `/thumbnail` and the `lh3` CDN). Transient (recovers as generation finishes + throttle cools), not a
+    code fault — but it's the "Drive display chronically breaks" risk made real. **Hardening (STATUS a5):**
+    move to the `lh3.googleusercontent.com/d/<id>` CDN + a 503 retry-with-backoff so blanks self-heal.
 - Display via `thumbnailLink` (refresh on expiry) + a larger render for the active slide; lazy-load; cache.
 - ✅ **Empirical spike S1 (M1, done 2026-07-04):** confirmed an unlisted "anyone-with-link" folder lists
   via API-key only (private → 404; shared → 200 + children). Key is app-owned, referrer-restricted,
@@ -214,6 +219,12 @@ session-wide setting.
 ## 7. Posterior review / session capture (Phase 2, research Part C) ✅ direction
 
 Frictionless and optional (drawabox 50% rule — review must not become busywork).
+- ✅ **End-screen "Log session" UX** (owner-specified 2026-07-08). On the session-complete recap: a **Log
+  session** button that reveals a brief disclaimer of what it writes + a **"Free-form Notes"** textarea.
+  Saving signs in (capture-only, below) and leaves the dated folder holding a **`notes.txt`** (the notes)
+  **and the ordered session reference images** (`Ref_1…N`), plus a **suggestion to upload your numbered
+  drawing JPGs from the computer** (named to correspond). Build order: **a1** ships sign-in + folder +
+  `notes.txt`; **a2** adds the reference-image copies; **a3** the drawing upload.
 - ✅ **Sign-in is capture-only.** The core timer/slideshow stays fully anonymous — no login to open the
   app, load references, or draw. The GIS `drive.file` consent is prompted **only when the user clicks
   Save** at the end recap (a user gesture, as Google requires). First time: account-chooser → consent →

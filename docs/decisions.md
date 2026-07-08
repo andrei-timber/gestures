@@ -3,6 +3,24 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-08 — **M2 a1 built: `drive.file` sign-in + Log-session notes; Drive display 503-throttle found.**
+Context: with the OAuth Client ID in hand, built slice-a step a1 — GIS token model (`drive-auth.ts`:
+pure token cache/expiry node-tested, browser GIS glue guarded, silent `prompt:''` re-request,
+single-flight), write helpers (`drive-write.ts`: idempotent find-or-create folder + multipart upload,
+node-tested with injected fetch), reactive `capture.svelte.ts`, and the **Log session** panel on the
+Summary recap (disclaimer + Free-form Notes textarea → `Gestures Sessions/<date>/notes.txt`). Config
+`VITE_GOOGLE_OAUTH_CLIENT_ID` (not a secret — origin-locked). Owner confirmed the **live sign-in + write
+works**. The full end-screen capture UX (button + disclaimer + notes + ordered image copies + a
+drawing-upload suggestion) was owner-specified and folded into spec §7; a1 ships auth + folder + notes,
+a2 the image copies, a3 the drawing upload. Concern that surfaced live: the slideshow went blank —
+diagnosed as **HTTP 503 from Google's image endpoints** (both `/thumbnail` and `lh3`), a transient per-IP
+throttle triggered by bulk-uploading ~2k images (thumbnail-generation backlog) + the day's spike traffic;
+**not a code regression** (`drive.ts` display path untouched; our preloader only warms 2 ahead). Decision:
+**park display-robustness as STATUS a5** — move to the `lh3.googleusercontent.com/d/<id>` CDN + 503
+retry-with-backoff so transient throttles self-heal; verify once the throttle clears. Tradeoff: shipping
+a1 without waiting on the external throttle vs. a fully green live slideshow — accepted, the throttle is
+Google-side and time-bound. Spec §3 (display-URL fragility) + §7 (capture UX) updated.
+
 2026-07-08 — **M2 opens: S2 write-spike passes; Box/Dropbox parked (no Worker).** Context: M2 start laid
 out two slices — (a) Drive write, (b) Box/Dropbox read — each fronted by throwaway spikes. Findings: **S2
 (Drive write) ✅** — `drive.file` token minted via the OAuth Playground; a real 75 KB reference was

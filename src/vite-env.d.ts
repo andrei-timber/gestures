@@ -9,6 +9,14 @@ interface ImportMetaEnv {
    * disables the Drive input with a friendly note.
    */
   readonly VITE_GOOGLE_DRIVE_API_KEY?: string
+
+  /**
+   * Google OAuth 2.0 **Client ID** (Web-application type) for Tier-2 `drive.file`
+   * capture (`gestures-spec.md` §3/§7, M2). Used by the GIS token model to mint
+   * short-lived sign-in tokens; **not a secret** (origin-locked, ships in the
+   * bundle like the API key). Supplied via `.env.local`; empty disables Save.
+   */
+  readonly VITE_GOOGLE_OAUTH_CLIENT_ID?: string
 }
 
 interface ImportMeta {

@@ -3,30 +3,24 @@
 Single status surface. `/session-start` reads this; `/session-wrap` resets the "Now" block.
 
 ## Now
-- **Focus:** **M1 — Drive read (Tier 1) — done & live (2026-07-04), owner-verified on iPad.** Recursive
-  public-folder read: paste a share link → API-key `files.list` walks the folder + subfolders → session
-  renders the Drive references. Shipped in commit `10e0f32`, deployed Version `8710473c`. Ledger archived
-  to `docs/history.md`; decisions + spec §3 revision logged. **M1 milestone closed.**
-- **Since M1 (post-milestone polish, 2026-07-06):** owner-feedback batch shipped & redeployed — in-session
-  **Refresh image** (`f`) + **Continue the pose** (no-timer free-draw from the recap), setup **FYI
-  full-sequence** line, number-field **select-on-focus**, and **wider source cards + filled-Drive-link**
-  cue. Spec §6 + decisions logged. Then a second-check round (redeploy Version `a1ab6b46`): tool buttons no
-  longer stick **"pressed" after a tap** on touch (`@media (hover: hover)` gate), and **Continue the pose**
-  now carries the **view-aids menu** (mirror/grayscale/grid; still no timing menu or pose count). Seven
-  commits total, each self-contained. Not an M2 step.
-- **M2 opened (2026-07-08):** ledger laid out below. **Spike S2 (Drive write) ✅ passed** — `drive.file`
-  download-bytes → `files.create` is byte-exact, can parent into the user's own folder; findings +
-  Box/Dropbox park logged (`decisions.md`, spec §3/§13). **Box + Dropbox parked** (need a Worker; owner's
-  call) — placeholder rows + Setup copy removed, quiet "maybe later" line left. So **M2 = Drive write
-  only.** Uncommitted: the RemoteInput/Setup stub removal + the doc revisions (one commit).
-- **Next step:** **M2 slice (a), step a1 — GIS sign-in (`drive.file`).** Plan-gate: agree Scope + DoD
-  before build code. First owner setup task: create an **OAuth Client ID** (Web-app type) in the Google
-  Cloud project (JS origins: `http://localhost:5173` + `https://andreitim.com`; no redirect URI for the
-  GIS token model). Then wire `initTokenClient` + capture-time prompt.
-- **Verify:** live — `curl https://andreitim.com/apps/gestures/` → **200** (Version `a1ab6b46`,
-  2026-07-06; no redeploy this session). Gate: **typecheck + lint green** after the stub removal (run
-  `pnpm test` before commit to confirm 182 still pass). Owner still to spot-check the M1 polish touch
-  fixes on iPad (sticky-tap + free-draw aids).
+- **Focus:** **M2 — Capture (Tier 2 Drive write, `drive.file`).** M1 (Drive read) is closed & live
+  (Version `a1ab6b46`); its ledger is in `docs/history.md`. M2 = Drive write only (Box/Dropbox parked
+  2026-07-08 — spec §3). Ledger below.
+- **a1 done & owner-verified (2026-07-08):** GIS `drive.file` sign-in (`drive-auth.ts`), write helpers
+  (`drive-write.ts`), reactive `capture.svelte.ts`, and the **Log session** panel on the Summary recap
+  (disclaimer + Free-form Notes → `Gestures Sessions/<date>/notes.txt`). Owner confirmed the **live
+  sign-in + write works**. Config `VITE_GOOGLE_OAUTH_CLIENT_ID` in `.env.local`. Committed this session.
+- **⚠ Live issue found (external, transient):** the slideshow went blank mid-verify — **HTTP 503 from
+  Google's image endpoints** (`/thumbnail` *and* `lh3`), a per-IP throttle from bulk-uploading ~2k images
+  (thumbnail-generation backlog) + the day's spike traffic. **Not a code regression.** Recovers on its
+  own; hardening folded into **ledger a5** (lh3 CDN + 503 retry). See `decisions.md` / spec §3.
+- **Next step:** **a2 — copy the ordered session reference images** (`Ref_1…N`) into the dated folder
+  (`uploadFile` already built; needs the session's ordered image list + byte fetch, CORS-checked for
+  Drive URLs). Then a3 (drawing upload), a4 (Setup copy), a5 (display robustness — verify once throttle clears).
+- **Verify:** `pnpm dev` → finish a session → **Log session** on the recap → sign in → confirm
+  `Gestures Sessions/<date>/notes.txt` in Drive. Gate green — **205 tests, typecheck (185 files), lint,
+  build** (2026-07-08). Live site unchanged (Version `a1ab6b46`; no redeploy this session). Owner still to
+  spot-check M1 polish touch fixes on iPad; slideshow render pending the Google throttle clearing.
 
 ## M2 step ledger — Capture (Tier 2 Drive write)
 Drive write behind the GIS token model (spec §3/§7/§13). **Box + Dropbox read was the original slice (b)
@@ -40,18 +34,27 @@ before build code.
       `<ref>/sessions/` default is reachable). Spike content cleaned up. (2026-07-08)
 - [—] S3 / S4 (Box / Dropbox) — **not run; parked** (see above).
 
-**Slice (a) — Drive write (`drive.file`) — not started:**
-- [ ] a1 — GIS sign-in (token model, `drive.file` scope, ~1h tokens + silent re-request via
-      `prompt:''`); prompted only on capture, never for the core timer. Needs an **OAuth Client ID**
-      (Web-app type) added to the Google Cloud project — owner setup step.
-- [ ] a2 — Session capture into the user's **own** Drive (decoupled from the ref source, which may be
-      someone else's public folder): find-or-create `Gestures Sessions/` in My-Drive root (id remembered
-      locally) → `Gestures Sessions/<date>/`; write reference copies `Ref_<n>.<ext>` via download-bytes →
-      `files.create`. ⚠ in-browser the source image URL must be CORS-readable to grab bytes (curl spike
-      bypassed this). *(Google-Picker "Change folder…" = P1 fast-follow, parked.)*
-- [ ] a3 — In-app drawing upload at session end, named to correspond to the reference numbering.
+**Slice (a) — Drive write (`drive.file`). End-screen "Log session" UX (spec §7).**
+- [x] a1 — Auth + folder + notes (2026-07-08). GIS sign-in (`drive-auth.ts`: token cache/expiry pure +
+      node-tested; GIS glue guarded), write helpers (`drive-write.ts`: find-or-create folder, multipart
+      upload, node-tested w/ injected fetch), reactive `capture.svelte.ts`, and the **Log session** panel
+      on Summary (disclaimer + Free-form Notes textarea) → creates `Gestures Sessions/<date>/` + writes
+      `notes.txt`. Config `VITE_GOOGLE_OAUTH_CLIENT_ID`. Gate green (205 tests). ⏳ **owner to verify the
+      live Google sign-in** (native popup can't be automated).
+- [ ] a2 — Copy the **ordered session reference images** (`Ref_1…N`) into the dated folder via
+      download-bytes → multipart upload (`uploadFile` already built). ⚠ in-browser the source URL must be
+      CORS-readable — local `blob:` URLs are fine; Drive thumbnail URLs need a CORS check.
+- [ ] a3 — **Drawing upload**: recap affordance to upload the user's numbered drawing JPGs from the
+      computer, named to correspond to the reference numbering.
 - [ ] a4 — Reconcile the Setup copy: "Files stay in your browser — nothing is uploaded" is true for ref
       loading but not for opt-in capture (which uploads to the user's own Drive) — distinguish the two.
+- [ ] a5 — **Display robustness** (folded in 2026-07-08 after a live Drive-throttle bite): switch the
+      slideshow display URL from `drive.google.com/thumbnail` to the `lh3.googleusercontent.com/d/<id>`
+      CDN (more cache-friendly / less throttled) **and** add a **503 retry-with-backoff** on image load so
+      transient throttles self-heal into a retry instead of a blank frame. ⚠ Verify only once the current
+      throttle clears (both endpoints 503 now). Touches `drive.ts` `driveImageUrl` (spec §3 display URL).
+
+*(Google-Picker "Change folder…" destination = P1 fast-follow, parked — spec §7.)*
 
 Spike findings + Box/Dropbox park: `docs/decisions.md` (2026-07-08). Write mechanics: `gestures-spec.md` §3/§7.
 
@@ -78,6 +81,7 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Bare root `andreitim.com/` returns 522 — add a redirect rule (→ `/apps/gestures/`) or a landing page — spawned in deploy track (2026-07-04)
 - [ ] Promote the proxied-apex-record to an explicit numbered prerequisite step in `deploy-notes.md` (it bit the first deploy even with the zone already on Cloudflare) — spawned in deploy track (2026-07-04)
 - [ ] Drive-key **quota is shared across all users** — fine for a hobby tool; if `files.list` ever strains it, add caching or a tiny Worker proxy (spec §3) — spawned M1-1 (2026-07-04)
+- [ ] `VITE_GOOGLE_OAUTH_CLIENT_ID` must be set in the Cloudflare build env (like the Drive API key) before capture works on the live deploy — update `docs/deploy-notes.md` when M2 ships — spawned a1 (2026-07-08)
 - [ ] Timing menu is now **three buttons tall** (pause/extend/refresh) — eyeball its spacing vs the mid-screen nav arrow on short viewports (phone/iPad-landscape); may need the split-rail math retuned — spawned polish batch (2026-07-06)
 
 Resolved: `www.andreitim.com` alias — proxied `www` record + redirect rule → apex, verified 301 to
