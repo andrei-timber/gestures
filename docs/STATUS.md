@@ -6,21 +6,23 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
 - **Focus:** **M2 — Capture (Tier 2 Drive write, `drive.file`).** M1 (Drive read) is closed & live
   (Version `a1ab6b46`); its ledger is in `docs/history.md`. M2 = Drive write only (Box/Dropbox parked
   2026-07-08 — spec §3). Ledger below.
-- **a1 done & owner-verified (2026-07-08):** GIS `drive.file` sign-in (`drive-auth.ts`), write helpers
-  (`drive-write.ts`), reactive `capture.svelte.ts`, and the **Log session** panel on the Summary recap
-  (disclaimer + Free-form Notes → `Gestures Sessions/<date>/notes.txt`). Owner confirmed the **live
-  sign-in + write works**. Config `VITE_GOOGLE_OAUTH_CLIENT_ID` in `.env.local`. Committed this session.
-- **⚠ Live issue found (external, transient):** the slideshow went blank mid-verify — **HTTP 503 from
-  Google's image endpoints** (`/thumbnail` *and* `lh3`), a per-IP throttle from bulk-uploading ~2k images
-  (thumbnail-generation backlog) + the day's spike traffic. **Not a code regression.** Recovers on its
-  own; hardening folded into **ledger a5** (lh3 CDN + 503 retry). See `decisions.md` / spec §3.
-- **Next step:** **a2 — copy the ordered session reference images** (`Ref_1…N`) into the dated folder
-  (`uploadFile` already built; needs the session's ordered image list + byte fetch, CORS-checked for
-  Drive URLs). Then a3 (drawing upload), a4 (Setup copy), a5 (display robustness — verify once throttle clears).
-- **Verify:** `pnpm dev` → finish a session → **Log session** on the recap → sign in → confirm
-  `Gestures Sessions/<date>/notes.txt` in Drive. Gate green — **205 tests, typecheck (185 files), lint,
-  build** (2026-07-08). Live site unchanged (Version `a1ab6b46`; no redeploy this session). Owner still to
-  spot-check M1 polish touch fixes on iPad; slideshow render pending the Google throttle clearing.
+- **a1 + a2 built (2026-07-08):** a1 (GIS `drive.file` sign-in, write helpers, **Log session** panel →
+  `notes.txt`) is owner-verified live. **a2** copies the run's ordered references (`Ref_1…N`) into the
+  dated folder: CORS probe forced the **lh3 display-URL switch** (thumbnail bytes are CORS-blocked; lh3 is
+  readable) — folded in from a5. Plus per-session dated folders (`<date>`, `<date>-2…`), parallel copy
+  (pool of 5), and a per-recap capture reset. a1 committed (`2f3e456` = a2 code); the three refinements
+  are an **uncommitted batch**. See `decisions.md` (2026-07-08 a2).
+- **⚠ External throttle still active:** Google's image endpoints 429/503 from the ~2k-image bulk upload
+  (per-IP, time-bound, **not a code regression**). Blocks live-verify of lh3 display *and* the Drive-ref
+  copy path; local-folder copy is unaffected. a5's remaining half (retry-with-backoff) verifies once it clears.
+- **Next step:** **a3 — drawing upload**: a recap affordance to upload the user's numbered drawing JPGs
+  from the computer, named to correspond to the reference numbering (`Ref_N` ↔ the drawing). Then a4
+  (Setup copy reconcile), a5 (503/429 retry-with-backoff — verify once throttle clears).
+- **Verify:** `pnpm dev` → local-folder session → finish → **Log session** → sign in → confirm
+  `Gestures Sessions/<date>/` has `notes.txt` + `Ref_1.jpg…`; run a **second** same-day session → confirm
+  it lands in `<date>-2` and shows no stale "logged" status. Gate green — **218 tests, typecheck (185
+  files), lint** (2026-07-08). Live site unchanged (Version `a1ab6b46`; no redeploy). Owner still to
+  spot-check M1 polish on iPad; lh3 display + Drive-ref copy pending the Google throttle clearing.
 
 ## M2 step ledger — Capture (Tier 2 Drive write)
 Drive write behind the GIS token model (spec §3/§7/§13). **Box + Dropbox read was the original slice (b)
@@ -41,27 +43,24 @@ before build code.
       on Summary (disclaimer + Free-form Notes textarea) → creates `Gestures Sessions/<date>/` + writes
       `notes.txt`. Config `VITE_GOOGLE_OAUTH_CLIENT_ID`. Gate green (205 tests). ⏳ **owner to verify the
       live Google sign-in** (native popup can't be automated).
-- [~] a2 — Copy the **ordered session reference images** (`Ref_1…N`) into the dated folder via
-      download-bytes → multipart upload (`uploadFile` already built). **CORS probe done (2026-07-08):**
-      Drive `drive.google.com/thumbnail` is **CORS-blocked** for byte reads; only `lh3.googleusercontent.com/d/<id>`
-      is CORS-readable — so a2 **folds in a5's lh3 display switch** (owner call): `driveImageUrl` → lh3, one
-      URL serves both display and byte-copy. Local `blob:` URLs copy full-quality; Drive copies are the
-      w1600 lh3 render (no `drive.file` scope to read someone else's originals). Build steps:
-      1. `drive.ts` `driveImageUrl` → lh3 + doc/test.  2. Expose `session.images` (final ordered run).
-      3. `drive-write.ts` `copyReferenceImages` (per-image bytes-fetch → `uploadFile Ref_NN.<ext>`,
-         best-effort, returns uploaded/total) + `refImageName`/`extensionOf` pure helpers + tests.
-      4. `capture.log(notes, images)` copies after notes.  5. `Summary.svelte` passes `session.images`,
-         updates disclaimer, shows copy progress.  DoD: node tests green → owner live-verifies `Ref_*` land.
+- [x] a2 — Copy the **ordered session references** (`Ref_1…N`) into the dated folder (2026-07-08). CORS
+      probe: `drive.google.com/thumbnail` bytes are **CORS-blocked**, only `lh3.googleusercontent.com/d/<id>`
+      is readable → **folded in a5's lh3 display switch** (`driveImageUrl` → lh3, one URL serves display +
+      byte-copy). `copyReferenceImages` (bounded pool of 5, best-effort per-image skip, position-tied
+      `Ref_NN.<ext>`), `session.images` exposed, `capture.log(notes, images)`, `createSessionFolder`
+      (per-session `<date>[-N]` folder, cached id), per-recap `capture.newSession()` reset. Local refs copy
+      full-quality; Drive refs are the w1600 lh3 render (no `drive.file` scope for others' originals). Gate:
+      218 tests. ⏳ **owner to live-verify** `Ref_*` land + `-2` folder + no stale status (auth + Drive).
 - [ ] a3 — **Drawing upload**: recap affordance to upload the user's numbered drawing JPGs from the
       computer, named to correspond to the reference numbering.
 - [ ] a4 — Reconcile the Setup copy: "Files stay in your browser — nothing is uploaded" is true for ref
       loading but not for opt-in capture (which uploads to the user's own Drive) — distinguish the two.
 - [ ] a5 — **Display robustness** (folded in 2026-07-08 after a live Drive-throttle bite). The lh3
       display-URL switch (`drive.google.com/thumbnail` → `lh3.googleusercontent.com/d/<id>`, more
-      cache-friendly / less throttled) is **being done in a2** (the CORS probe forced it). a5's remaining
-      half: a **503/429 retry-with-backoff** on image load so transient throttles self-heal into a retry
-      instead of a blank frame. ⚠ Verify only once the current throttle clears (lh3 429s now). Touches the
-      slideshow `<img>` load path (spec §3 display URL).
+      cache-friendly / less throttled) **shipped in a2** (the CORS probe forced it). a5's remaining half: a
+      **503/429 retry-with-backoff** on image load so transient throttles self-heal into a retry instead of
+      a blank frame. ⚠ Verify only once the current throttle clears (lh3 429s now). Touches the slideshow
+      `<img>` load path (spec §3 display URL).
 
 *(Google-Picker "Change folder…" destination = P1 fast-follow, parked — spec §7.)*
 
@@ -92,6 +91,7 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Drive-key **quota is shared across all users** — fine for a hobby tool; if `files.list` ever strains it, add caching or a tiny Worker proxy (spec §3) — spawned M1-1 (2026-07-04)
 - [ ] `VITE_GOOGLE_OAUTH_CLIENT_ID` must be set in the Cloudflare build env (like the Drive API key) before capture works on the live deploy — update `docs/deploy-notes.md` when M2 ships — spawned a1 (2026-07-08)
 - [ ] Timing menu is now **three buttons tall** (pause/extend/refresh) — eyeball its spacing vs the mid-screen nav arrow on short viewports (phone/iPad-landscape); may need the split-rail math retuned — spawned polish batch (2026-07-06)
+- [ ] Re-logging the **same** session re-writes `notes.txt` and re-copies refs as **duplicate** Drive files (Drive allows dup names; no find-existing→update). Low-harm; fix = look up the existing file id and PATCH, or disable Save after a full `done` — spawned a2 (2026-07-08)
 
 Resolved: `www.andreitim.com` alias — proxied `www` record + redirect rule → apex, verified 301 to
 `/apps/gestures/` (2026-07-04).

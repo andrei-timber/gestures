@@ -11,7 +11,7 @@
  */
 
 import { DriveAuthError, createDriveAuth } from '@/lib/source/drive-auth'
-import { DriveWriteError, copyReferenceImages, ensureSessionFolder, writeTextFile } from '@/lib/source/drive-write'
+import { DriveWriteError, copyReferenceImages, createSessionFolder, writeTextFile } from '@/lib/source/drive-write'
 import type { SourceImage } from '@/lib/source/images'
 
 const clientId = import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID ?? ''
@@ -26,6 +26,10 @@ function createCaptureStore() {
   let status = $state<CaptureStatus>('idle')
   let message = $state('')
   let folderUrl = $state('')
+  // The dated folder created for *this* session, cached so a re-log (e.g. after a
+  // throttled partial copy) reuses it instead of minting a fresh `<date>-N`.
+  // Cleared by reset(), which the recap calls on mount → each session gets its own.
+  let sessionFolderId: string | null = null
 
   return {
     /** False in a build without a Client ID → the Save UI stays hidden. */
@@ -56,10 +60,10 @@ function createCaptureStore() {
       message = ''
       try {
         const token = await auth.getToken()
-        const folderId = await ensureSessionFolder(new Date(), token)
-        await writeTextFile('notes.txt', folderId, notes, token)
-        const copy = await copyReferenceImages(images, folderId, token)
-        folderUrl = `https://drive.google.com/drive/folders/${folderId}`
+        sessionFolderId ??= await createSessionFolder(new Date(), token)
+        await writeTextFile('notes.txt', sessionFolderId, notes, token)
+        const copy = await copyReferenceImages(images, sessionFolderId, token)
+        folderUrl = `https://drive.google.com/drive/folders/${sessionFolderId}`
         status = 'done'
         message =
           copy.total === 0
@@ -76,11 +80,25 @@ function createCaptureStore() {
       }
     },
 
-    /** Back to the pristine state (e.g. when the panel is dismissed or reopened). */
+    /**
+     * Clear the visible result (status/message/link) — used when the panel is
+     * dismissed or reopened. Keeps the cached session folder, so re-logging the
+     * same session still lands in the same `<date>` folder rather than a `-N`.
+     */
     reset(): void {
       status = 'idle'
       message = ''
       folderUrl = ''
+    },
+
+    /**
+     * A brand-new session's recap is mounting: drop everything, including the
+     * cached folder, so this session logs into its own fresh `<date>[-N]` folder
+     * and no prior "logged" result lingers. Called once per recap mount.
+     */
+    newSession(): void {
+      this.reset()
+      sessionFolderId = null
     },
   }
 }

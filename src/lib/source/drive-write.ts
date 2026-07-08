@@ -131,16 +131,60 @@ export async function findOrCreateFolder(
 }
 
 /**
- * Resolve the dated session folder `Gestures Sessions/<YYYY-MM-DD>/` in the user's
- * own Drive, creating either level as needed. Returns the dated folder's id.
+ * Pure: the next un-taken dated folder name given the day's existing folder names.
+ * The day's first session is the bare date; later ones get `<date>-2`, `<date>-3`,
+ * … (filling any gap left by a deleted folder). Unrelated names are ignored.
  */
-export async function ensureSessionFolder(
+export function nextDatedFolderName(date: Date, existing: readonly string[]): string {
+  const base = sessionFolderName(date)
+  const taken = new Set(existing)
+  if (!taken.has(base)) return base
+  let n = 2
+  while (taken.has(`${base}-${n}`)) n++
+  return `${base}-${n}`
+}
+
+/** Pure: the `files.list` URL for every live child *folder* of `parentId` (names only). */
+export function buildChildFoldersUrl(parentId: string): string {
+  const params = new URLSearchParams({
+    q: [`mimeType='${FOLDER_MIME}'`, `'${escapeQueryValue(parentId)}' in parents`, 'trashed=false'].join(' and '),
+    fields: 'files(name)',
+    spaces: 'drive',
+    pageSize: '1000',
+  })
+  return `${FILES_URL}?${params.toString()}`
+}
+
+/**
+ * The names of every live child folder under `parentId` (one page — 1000 folders
+ * is years of daily sessions). Used to pick the next free dated-folder name.
+ */
+export async function listChildFolderNames(
+  parentId: string,
+  token: string,
+  fetchImpl: WriteFetch = globalThis.fetch as unknown as WriteFetch,
+): Promise<string[]> {
+  const res = await fetchImpl(buildChildFoldersUrl(parentId), { method: 'GET', headers: authHeaders(token) })
+  if (!res.ok) await readError(res, 'Couldn’t search your Drive')
+  const body = (await res.json()) as { files?: { name: string }[] }
+  return (body.files ?? []).map((f) => f.name)
+}
+
+/**
+ * Create a **fresh** dated session folder in the user's own Drive and return its
+ * id. Each logged session gets its own folder — `Gestures Sessions/<date>` for the
+ * day's first, then `<date>-2`, `<date>-3`, … — so running the app twice in a day
+ * never merges two sessions. The caller caches the returned id so re-logging the
+ * *same* session (e.g. a throttle retry) reuses this folder instead of minting `-2`.
+ */
+export async function createSessionFolder(
   date: Date,
   token: string,
   fetchImpl?: WriteFetch,
 ): Promise<string> {
   const rootId = await findOrCreateFolder(SESSIONS_ROOT_NAME, 'root', token, fetchImpl)
-  return findOrCreateFolder(sessionFolderName(date), rootId, token, fetchImpl)
+  const existing = await listChildFolderNames(rootId, token, fetchImpl)
+  return createFolder(nextDatedFolderName(date, existing), rootId, token, fetchImpl)
 }
 
 /**
@@ -204,22 +248,29 @@ export interface CopyResult {
   readonly total: number
 }
 
+/** How many references copy at once by default — bounded to stay under Drive's per-IP rate limit. */
+export const COPY_CONCURRENCY = 5
+
 /** Injectable deps for {@link copyReferenceImages} — so the orchestrator is node-testable. */
 export interface CopyDeps {
   /** Reads an image's displayable URL back as bytes (CORS-readable: `blob:` or lh3). */
   readonly fetchBytes?: (url: string) => Promise<Response>
   /** Uploads one blob; defaults to {@link uploadFile}. */
   readonly upload?: (name: string, parentId: string, blob: Blob, token: string) => Promise<string>
+  /** Max simultaneous copies (default {@link COPY_CONCURRENCY}); pass 1 for a strict order. */
+  readonly concurrency?: number
 }
 
 /**
  * Copy the run's ordered references into `parentId` as `Ref_1…N`, fetching each
  * image's bytes from its own displayable URL (`blob:` for local picks, the
  * CORS-readable lh3 CDN for Drive — see {@link driveImageUrl}) and re-uploading
- * via multipart. **Best-effort and sequential**: one image failing (a transient
- * throttle, a CORS-opaque URL) is skipped rather than aborting the rest, and the
- * slow drip is gentle on Drive's per-IP rate limit. Returns how many of `total`
- * landed, so the caller can report a partial copy honestly.
+ * via multipart. Runs a **bounded pool** of `concurrency` copies at once (much
+ * faster than one-at-a-time, still gentle on Drive's rate limit). **Best-effort**:
+ * one image failing (a transient throttle, a CORS-opaque URL) is skipped rather
+ * than aborting the rest, and each ref keeps its own index regardless of the order
+ * the pool finishes in. Returns how many of `total` landed, so the caller can
+ * report a partial copy honestly.
  */
 export async function copyReferenceImages(
   images: readonly SourceImage[],
@@ -231,17 +282,27 @@ export async function copyReferenceImages(
   const upload = deps.upload ?? ((name, pId, blob, tok) => uploadFile(name, pId, blob, tok))
   const total = images.length
   let uploaded = 0
-  for (let i = 0; i < total; i++) {
-    const image = images[i]
-    try {
-      const res = await fetchBytes(image.url)
-      if (!res.ok) continue // transient throttle (429/503) — skip, keep the rest
-      const blob = await res.blob()
-      await upload(refImageName(i + 1, total, image.name), parentId, blob, token)
-      uploaded++
-    } catch {
-      // A CORS-opaque URL or a mid-copy network blip drops just this one image.
+  let cursor = 0
+
+  // Each worker pulls the next index until the run is exhausted; a shared cursor
+  // keeps the naming tied to position (Ref_<i+1>), never to completion order.
+  async function worker(): Promise<void> {
+    while (cursor < total) {
+      const i = cursor++
+      const image = images[i]
+      try {
+        const res = await fetchBytes(image.url)
+        if (!res.ok) continue // transient throttle (429/503) — skip, keep the rest
+        const blob = await res.blob()
+        await upload(refImageName(i + 1, total, image.name), parentId, blob, token)
+        uploaded++
+      } catch {
+        // A CORS-opaque URL or a mid-copy network blip drops just this one image.
+      }
     }
   }
+
+  const width = Math.max(1, Math.min(deps.concurrency ?? COPY_CONCURRENCY, total))
+  await Promise.all(Array.from({ length: width }, worker))
   return { uploaded, total }
 }

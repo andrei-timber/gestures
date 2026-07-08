@@ -4,12 +4,13 @@ import {
   buildFolderSearchUrl,
   copyReferenceImages,
   createFolder,
-  ensureSessionFolder,
+  createSessionFolder,
   escapeQueryValue,
   extensionOf,
   findFolder,
   findOrCreateFolder,
   folderSearchQuery,
+  nextDatedFolderName,
   refImageName,
   sessionFolderName,
   uploadFile,
@@ -122,18 +123,36 @@ describe('findOrCreateFolder', () => {
   })
 })
 
-describe('ensureSessionFolder', () => {
-  it('creates the root then the dated child, returning the dated id', async () => {
+describe('nextDatedFolderName', () => {
+  const date = new Date(2026, 6, 8)
+
+  it('uses the bare date for the day’s first session', () => {
+    expect(nextDatedFolderName(date, [])).toBe('2026-07-08')
+    expect(nextDatedFolderName(date, ['2026-07-07', 'other'])).toBe('2026-07-08')
+  })
+
+  it('suffixes -2, -3 … as the day fills up', () => {
+    expect(nextDatedFolderName(date, ['2026-07-08'])).toBe('2026-07-08-2')
+    expect(nextDatedFolderName(date, ['2026-07-08', '2026-07-08-2'])).toBe('2026-07-08-3')
+  })
+
+  it('fills a gap left by a deleted folder', () => {
+    expect(nextDatedFolderName(date, ['2026-07-08', '2026-07-08-3'])).toBe('2026-07-08-2')
+  })
+})
+
+describe('createSessionFolder', () => {
+  it('reuses the root but always creates a fresh dated folder, suffixing a same-day repeat', async () => {
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce(jsonResponse({ files: [] })) // find "Gestures Sessions"
-      .mockResolvedValueOnce(jsonResponse({ id: 'rootId' })) // create it
-      .mockResolvedValueOnce(jsonResponse({ files: [] })) // find dated folder under root
-      .mockResolvedValueOnce(jsonResponse({ id: 'datedId' })) // create it
-    const id = await ensureSessionFolder(new Date(2026, 6, 8), 'tok', fetch)
+      .mockResolvedValueOnce(jsonResponse({ files: [{ id: 'rootId' }] })) // find "Gestures Sessions" (exists)
+      .mockResolvedValueOnce(jsonResponse({ files: [{ name: '2026-07-08' }] })) // list day's folders — bare taken
+      .mockResolvedValueOnce(jsonResponse({ id: 'datedId' })) // create the -2 folder
+    const id = await createSessionFolder(new Date(2026, 6, 8), 'tok', fetch)
     expect(id).toBe('datedId')
-    // The dated create is parented to the freshly-made root.
-    expect(JSON.parse(fetch.mock.calls[3][1].body).parents).toEqual(['rootId'])
+    const createBody = JSON.parse(fetch.mock.calls[2][1].body)
+    expect(createBody.name).toBe('2026-07-08-2')
+    expect(createBody.parents).toEqual(['rootId'])
   })
 })
 
@@ -183,16 +202,48 @@ describe('refImageName', () => {
 describe('copyReferenceImages', () => {
   const img = (name: string, url: string): SourceImage => ({ name, url })
 
-  it('copies every image in order as Ref_N.<ext>, reporting the full count', async () => {
+  it('copies every image in order as Ref_N.<ext>, reporting the full count (concurrency 1)', async () => {
     const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
     const upload = vi.fn().mockResolvedValue('id')
     const images = [img('a.jpg', 'blob:a'), img('b.png', 'blob:b')]
-    const result = await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload })
+    const result = await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload, concurrency: 1 })
     expect(result).toEqual({ uploaded: 2, total: 2 })
     // Named Ref_1/Ref_2 (single-digit total → no pad), parented to the dated folder, with the token.
     expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Ref_2.png'])
     expect(upload.mock.calls[0].slice(1)).toEqual(['dated', expect.any(Blob), 'tok'])
     expect(fetchBytes.mock.calls.map((c) => c[0])).toEqual(['blob:a', 'blob:b'])
+  })
+
+  it('names each ref by its own position regardless of pool completion order', async () => {
+    // b (index 2) resolves before a (index 1) — its name must still be Ref_2, not Ref_1.
+    const fetchBytes = vi.fn((url: string) =>
+      url === 'slow'
+        ? new Promise<Response>((r) => queueMicrotask(() => queueMicrotask(() => r(blobResponse()))))
+        : Promise.resolve(blobResponse()),
+    )
+    const upload = vi.fn().mockResolvedValue('id')
+    const result = await copyReferenceImages([img('a.jpg', 'slow'), img('b.png', 'fast')], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+    })
+    expect(result).toEqual({ uploaded: 2, total: 2 })
+    expect(upload.mock.calls.map((c) => c[0]).sort()).toEqual(['Ref_1.jpg', 'Ref_2.png'])
+  })
+
+  it('runs up to `concurrency` copies at once', async () => {
+    let inFlight = 0
+    let peak = 0
+    const fetchBytes = vi.fn(async () => {
+      inFlight++
+      peak = Math.max(peak, inFlight)
+      await Promise.resolve()
+      inFlight--
+      return blobResponse()
+    })
+    const upload = vi.fn().mockResolvedValue('id')
+    const images = Array.from({ length: 6 }, (_, i) => img(`p${i}.jpg`, `u${i}`))
+    await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload, concurrency: 3 })
+    expect(peak).toBe(3) // three workers overlap, not all six
   })
 
   it('skips a throttled image (non-ok byte read) but keeps the rest', async () => {
@@ -204,6 +255,7 @@ describe('copyReferenceImages', () => {
     const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
       fetchBytes,
       upload,
+      concurrency: 1,
     })
     expect(result).toEqual({ uploaded: 1, total: 2 })
     // Only the second image uploaded — and it keeps its own index (Ref_2), not renumbered.
@@ -220,6 +272,7 @@ describe('copyReferenceImages', () => {
     const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
       fetchBytes,
       upload,
+      concurrency: 1,
     })
     expect(result).toEqual({ uploaded: 1, total: 2 })
   })

@@ -21,6 +21,11 @@
   let notes = $state('')
   const today = sessionFolderName(new Date())
 
+  // Fresh recap for a fresh session: clear any prior "logged" result and the
+  // cached folder, so starting another session before uploading doesn't show the
+  // last one's status and the next log lands in its own dated folder.
+  capture.newSession()
+
   function openLog(): void {
     capture.reset()
     logging = true

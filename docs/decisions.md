@@ -3,6 +3,29 @@
 Append-only, dated. Y-statement shape: context → concern → decision → tradeoff.
 Build-level decisions made while implementing; product decisions live in `gestures-spec.md`.
 
+2026-07-08 — **M2 a2 built: session-ref copy to Drive; CORS probe forces the lh3 display switch (a5's
+half folds into a2); per-session dated folders; parallel copy.** Context: a2 copies the run's ordered
+references (`Ref_1…N`) into the dated folder via download-bytes → multipart upload. Concern: in-browser
+the source URL must be **CORS-readable** to re-read its bytes. Probe (real public folder, from the app
+origin): `drive.google.com/thumbnail` is reachable as an `<img>` but its bytes are **CORS-blocked** (no
+`Access-Control-Allow-Origin`, 3/3); `lh3.googleusercontent.com/d/<id>` **is** CORS-permissive (readable
+`type:"cors"` blob) — only currently 429-throttled (same bulk-upload throttle as a1's 503). Decision
+(owner): **fold a5's lh3 display switch into a2** — `driveImageUrl` → lh3 so one URL serves both display
+and byte-copy, rather than carrying two schemes; a5 keeps only its 503/429 retry-with-backoff half.
+Tradeoffs accepted: (1) Drive-ref copies are the **w1600 lh3 render, not originals** — `drive.file` gives
+no scope to read someone else's original bytes, and the lh3 render is the only client-readable version
+(local refs stay full-quality from their `File`); (2) lh3 returning real image bytes un-throttled is
+still owner-verify-pending (429 masks it now), same caveat a5 already carries. Two follow-on refinements
+from owner dogfeedback, same session: **per-session dated folders** — `ensureSessionFolder` (find-or-reuse)
+→ `createSessionFolder` (always fresh): the day's first is `<date>`, later ones `<date>-2/-3…`
+(`nextDatedFolderName`, gap-filling), the id cached on the capture store so a re-log of the *same* session
+reuses it; and **parallel copy** — a bounded worker pool (`COPY_CONCURRENCY=5`) replaces the one-at-a-time
+loop (~5× faster, still under Drive's rate limit), naming tied to position via a shared cursor so `Ref_N`
+is correct regardless of completion order. Also fixed: the capture store's "logged" status/folder now
+reset per recap mount (`capture.newSession()`), so starting another session before uploading no longer
+shows the prior one's result. Known wart parked (STATUS follow-up): re-logging the *same* session
+re-writes `notes.txt` + re-copies refs as **duplicate** Drive files (no find-existing→update yet).
+
 2026-07-08 — **M2 a1 built: `drive.file` sign-in + Log-session notes; Drive display 503-throttle found.**
 Context: with the OAuth Client ID in hand, built slice-a step a1 — GIS token model (`drive-auth.ts`:
 pure token cache/expiry node-tested, browser GIS glue guarded, silent `prompt:''` re-request,
