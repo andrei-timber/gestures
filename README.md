@@ -11,10 +11,8 @@ Published: https://andreitim.com/apps/gestures
 This is the first of a small family of freely-published art tools, I'd like to built while learning to draw. 
 Next upcoming: Ecorchet anatomy helpers and more in-depth longitudinal agentic progress tracking for improvement. 
 
-> **Status:** early development. The full specification (what, why, and every decision) lives in
-> [`gestures-spec.md`](./gestures-spec.md); the competitive/technical research substrate is in
-> [`gestures-apps-examples-research.md`](./gestures-apps-examples-research.md). This README is a map,
-> not a copy — see the spec for details.
+This is intentionally built via Claude Code and heavily AI-assisted coding approach, which is more suitable for small apps.
+I'm approaching it so to advance my art practice, share tools for free with others and explore new AI-first coding paradigms.
 
 ## Stack
 
