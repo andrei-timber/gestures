@@ -8,11 +8,14 @@ reviewable progress.
 
 Published: https://andreitim.com/apps/gestures
 
-This is the first of a small family of freely-published art tools, I'd like to built while learning to draw. 
-Next upcoming: Ecorchet anatomy helpers and more in-depth longitudinal agentic progress tracking for improvement. 
+This is the first of a small family of freely-published art tools, I'd like to built while learning art myself. 
+Next upcoming: Ecorchet anatomy helpers and more in-depth longitudinal agentic progress tracking for self-improvement. 
 
-This is intentionally built via Claude Code and heavily AI-assisted coding approach, which is more suitable for small apps.
-I'm approaching it so to advance my art practice, share tools for free with others and explore new AI-first coding paradigms.
+This is intentionally built via Claude Code and heavily AI-generated coding approach, which is more suitable for small apps.
+The rationale for such approach is three-fold: 
+- to advance my own art practice without much overhead,
+- to share simple niche tools that I think should be free for everyone,
+- to have a sandbox and a forcing function for hands-on AI-based development explorations.
 
 ## Stack
 
