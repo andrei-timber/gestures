@@ -1,10 +1,9 @@
 # Gestures
 
-A minimalist, fast, atmospheric web app for **figure / gesture drawing practice**. Point it at a Google
+A seamless web app for **figure / gesture drawing practice**. Point it at a Google
 Drive (or local) folder of pose references, set a couple of parameters, and it plays a timed slideshow of
-random poses to draw along with — with one-key mirror, grayscale/value mode, a grid overlay, and a
-pause that keeps the reference on screen. A later phase archives sessions to Drive so practice becomes
-reviewable progress.
+random poses to draw along with. Includes horizontal/vertical mirroring, grayscale/value mode, a grid overlay, and a
+few other workflow settings. A later phase archives sessions to Drive with notes so practice becomes reviewable.
 
 Published: https://andreitim.com/apps/gestures
 
