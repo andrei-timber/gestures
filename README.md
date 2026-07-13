@@ -1,7 +1,7 @@
 # Gestures
 
 A seamless web app for **figure / gesture drawing practice**. Point it at a Google
-Drive (or local) folder of pose references, set a couple of parameters, and it plays a timed slideshow of
+Drive (or local) folder of references, set parameters, and it plays a timed slideshow of
 random poses to draw along with. Includes horizontal/vertical mirroring, grayscale/value mode, a grid overlay, and a
 few other workflow settings. A later phase archives sessions to Drive with notes so practice becomes reviewable.
 
