@@ -96,3 +96,52 @@ and the linked design notes; kept here as a one-line ledger.
 - [x] End / `Esc` left the 1s interval ticking — pure `end()` transition + store command that stops the timer; `endSession()` routes through it.
 - [x] Session-G chrome polish pulled forward during Session E (interim `.glass` pill for clock/arrows, glass pause icon, Esc-to-end, inline legend); 🎨 pass formalises the tokens.
 - [x] Class mode floored the count to `MIN_POSES` *after* Setup's pool cap (blank slides on a <10-image folder) — Class now needs ≥10 images and falls back to Quick; `buildPlan`'s `poolCap` can pull Quick below `MIN_POSES`.
+
+## M2 — Capture (Tier 2 Drive write) — done (2026-08-01)
+Drive write behind the GIS `drive.file` token model (`gestures-spec.md` §3/§7/§13). Box + Dropbox read was
+the original slice (b) — **parked 2026-07-08** (both need a server-side app token → a Worker; owner cut
+them, §3 + `decisions.md`), so M2 shipped as Drive write only. **Closed 2026-08-01 with a4/a5 skipped by
+the owner** — the capture path works end to end and the app is in its intended state; see `decisions.md`.
+
+**Spike:**
+- [x] S2 — **download-bytes → `files.create`** proven under `drive.file`: byte-exact round-trip (md5
+      match), root-folder create works, and can parent into the user's *own* existing folder. Spike
+      content cleaned up. (2026-07-08)
+- [—] S3 / S4 (Box / Dropbox) — **not run; parked** with slice (b).
+
+**Slice (a) — Drive write. End-screen "Log session" UX (spec §7).**
+- [x] a1 — Auth + folder + notes (2026-07-08). GIS sign-in (`drive-auth.ts`: token cache/expiry pure +
+      node-tested; GIS glue guarded), write helpers (`drive-write.ts`: find-or-create folder, multipart
+      upload, node-tested w/ injected fetch), reactive `capture.svelte.ts`, and the **Log session** panel
+      on Summary (disclaimer + Free-form Notes textarea) → creates `Gestures Sessions/<date>/` + writes
+      `notes.txt`. Config `VITE_GOOGLE_OAUTH_CLIENT_ID`. Gate: 205 tests. Commits `ba531ca`, `2f3e456`.
+- [x] a2 — Ordered session references `Ref_1…N` copied into the dated folder (2026-07-08). CORS probe:
+      `drive.google.com/thumbnail` bytes are **CORS-blocked**, only `lh3.googleusercontent.com/d/<id>` is
+      readable → **folded in a5's lh3 display switch** (`driveImageUrl` → lh3, one URL serves display +
+      byte-copy). `copyReferenceImages` (bounded pool of 5, best-effort per-image skip, position-tied
+      `Ref_NN.<ext>`), `session.images` exposed, `capture.log(notes, images)`, `createSessionFolder`
+      (per-session `<date>[-N]` folder, cached id), per-recap `capture.newSession()` reset. Local refs copy
+      full-quality; Drive refs are the w1600 lh3 render. Gate: 218 tests. Commit `99f40bc`.
+- [x] a3 — **PSD upload → paired composites** (2026-08-01). Scope revised mid-session (owner): the
+      drawings arrive as the session `.psd` (one `Layer <n>` per pose, hidden flag ignored, `Background`
+      excluded) and **only the pair is saved**, never the bare drawing — so M3's composite *render* landed
+      here. `capture/psd.ts` (lazy `ag-psd`, layer selection pure + node-tested), `capture/composite.ts`
+      (pure geometry node-tested, canvas draw browser-verified), `capture/report.ts`, `copySessionFiles`
+      (ref copy + pair build off **one** byte read). Browser-verified against the real 57 MB PSD — 11/11
+      layers in 1.4 s, pair 2800×1400 at 156 KB, margins 210 px, seam gap 169 px vs 165 expected. Gate:
+      259 tests. Commits `0a5e182`, `535c3ff`; deployed as Version `688d42ab`.
+- [—] a4 — Reconcile the Setup copy ("Files stay in your browser — nothing is uploaded" is true for
+      reference loading but not for opt-in capture). **Skipped** at M2 close; re-parked as a follow-up in
+      STATUS — it only matters if capture is ever opened beyond the owner.
+- [—] a5 — **Display robustness.** Its lh3 display-URL half shipped in a2 (the CORS probe forced it); the
+      remaining **503/429 retry-with-backoff** on image load was **skipped** — the 2026-07-08 throttle
+      cleared on its own and it was only insurance against a next one. Re-parked as a STATUS follow-up.
+
+*(Google-Picker "Change folder…" destination stays a P1 fast-follow — spec §7.)*
+
+## M3 — Review surface + dated timeline — done/closed (2026-08-01)
+Closed **without an in-app build** (owner's call). Its composite *render* had already shipped early in M2
+a3, so what remained was only the browse surface — and the owner reviews sessions directly in Google Drive
+(the dated `Gestures Sessions/<date>/` folders already are the timeline) plus offline scripts. Building an
+in-app viewer would have duplicated a workflow that already works. Rationale in `decisions.md`
+(2026-08-01).

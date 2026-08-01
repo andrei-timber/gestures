@@ -342,6 +342,13 @@ plain CSS + tokens · sequencing (dev setup → M0 → creative direction → Cl
 
 ## 13. Roadmap
 
+> **✅ Complete (2026-08-01).** Every milestone below is closed and live; the project is in **maintenance
+> mode** — ad-hoc sessions on owner-brought ideas, feedback and fixes, no active milestone. M2 closed with
+> its a4/a5 steps skipped, and **M3 closed without an in-app build**: a3 had already pulled the composite
+> *render* forward, and the owner reviews sessions in Drive (the dated folders are the timeline) plus
+> offline scripts. State + session shape: `docs/STATUS.md`; rationale: `docs/decisions.md` (2026-08-01);
+> archived ledgers: `docs/history.md`.
+
 > **Sequencing (owner-set · revised 2026-07-03):** 🧭 **Dev setup pass** ✓ → **M0** (build core against a
 > local folder) → 🎨 **creative-direction session** (originate the design system, then restyle M0) → ☁️
 > **Cloudflare setup guide + first deploy** → **M1+**. *Reorder:* Cloudflare was originally slotted before

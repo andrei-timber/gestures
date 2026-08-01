@@ -31,6 +31,9 @@ to test responsive HUD wrapping, set `.screen { width: … }` via the page conso
 ## Work cadence  (`/session-start` and `/session-wrap` point here)
 State lives in `docs/STATUS.md` (single status surface) and `docs/decisions.md` (append-only dated
 Y-statement log). Product decisions stay in `gestures-spec.md`; `docs/decisions.md` logs build-level ones.
+**The roadmap is complete (2026-08-01) — the project is in 🛠 maintenance mode**: no active milestone, no
+step ledger, ad-hoc sessions driven by whatever the owner brings. `docs/STATUS.md` → *Maintenance mode*
+is canonical for how a session runs; the rituals below still apply, minus the milestone machinery.
 - **Session-start** — read `docs/STATUS.md`, orient in 2-3 sentences (where things stand, what's next,
   blockers), then agree **Scope + Definition-of-done** before editing. A plan-gate whether or not plan
   mode is on: apply nothing until scope is agreed.

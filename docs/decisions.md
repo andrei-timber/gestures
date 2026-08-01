@@ -400,3 +400,20 @@ against the live site). They were what they looked like — a time-bound, per-IP
 ~2k-image bulk upload, not a code regression — so no fix was warranted and none was made. a5's remaining
 half (503/429 retry-with-backoff on image load) is now verifiable; it stays worth building as insurance
 against the next throttle rather than as a fix for this one.
+
+2026-08-01 — **M2 and M3 closed; the project enters maintenance mode.** In the context of a roadmap with
+two nominally-open milestones but a working end-to-end app, facing the fact that everything still on the
+list was insurance or convenience rather than capability, the owner **closed M2 with a4/a5 skipped and
+closed M3 without building it**, accepting that two known gaps stay documented-but-unfixed, because the
+remaining work bought nothing the owner needs. Specifics: **a4** (Setup's "nothing is uploaded" copy is
+now inaccurate for opt-in capture) only matters if capture is ever opened beyond the owner — flagged at
+close and re-parked as a follow-up, not silently dropped. **a5** (503/429 retry-with-backoff) was
+insurance against a repeat of the 2026-07-08 throttle, which cleared on its own. **M3** had already lost
+its substance when a3 pulled the composite *render* forward; the remainder was a browse surface, and the
+owner reviews sessions directly in Drive — the dated `Gestures Sessions/<date>/` folders *are* the
+timeline — plus offline scripts. Building an in-app viewer would have duplicated a working workflow.
+Consequence: from here the project runs **ad-hoc** — the owner brings a feature idea, feedback or a bug,
+and each session scopes just that. No active milestone, no step ledger by default (one comes back only for
+a change spanning multiple sessions, and is archived at its close). The Follow-ups queue in `STATUS.md`
+becomes a **menu to pick from, not a backlog to burn down**. Mode + session shape documented in
+`docs/STATUS.md` (§Now, §Maintenance mode); `CLAUDE.md` → Work cadence points at it.
