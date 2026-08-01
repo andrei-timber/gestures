@@ -1,7 +1,8 @@
-# Gestures
+# Gestures App
 
-A seamless web app for **figure / gesture drawing practice**. Point it at a Google
-Drive (or local) folder of references, set parameters, and it plays a timed slideshow of
+A seamless laptop / ipad / iphone friendly web app for **figure / gesture drawing practice**. 
+
+Point it at a Google Drive (or local) folder of references, set parameters, and it plays a timed slideshow of
 random poses to draw along with. Includes horizontal/vertical mirroring, grayscale/value mode, a grid overlay, and a
 few other workflow settings. Finished sessions can be archived to Drive with notes so practice becomes reviewable.
 
@@ -18,19 +19,26 @@ The rationale for such approach is three-fold:
 
 ## Capabilities
 
-Point the app at a folder, choose how many poses and how long, and start. There are two modes: a class run,
-where poses begin short and grow longer towards the end, and a quick run at one fixed interval. The total
-time is shown before you commit to it. Mid-session you can mirror the reference, switch it to grayscale,
-turn on a grid, pause without losing the pose, add time when one is going well, or move between poses.
-Everything has a keyboard shortcut, and your settings are remembered for next time.
+Point the app at a Google Drive or local folder, choose how many poses and how long, and start. 
+
+There are two modes: 
+- a class run, where poses begin short duration (1 minute) and grow longer towards the end, 
+- a quick run at one fixed interval.
+The total time is shown before you commit to it.
+
+Mid-session you can 
+- mirror the ref (horizontally and vertically),
+- switch it to grayscale,
+- turn on a grid,
+- pause without losing the pose,
+- add time,
+- reload the new random pose from the folder (if you don't like the current one),
+- move between poses.
 
 When a session ends you can log it to your own Google Drive. It creates a dated folder with your notes and
-the references you just drew from, kept in order. If you attach the Photoshop file you drew in, one layer
-per pose (each layer keeping Photoshop's default name, `Layer 1`, `Layer 2` and so on, numbered in the
-order of the poses; a `Background` sheet and any other layers are ignored, as is whether a layer is hidden),
-the app splits it apart and pairs every drawing with the reference it came from, side by side,
-one image per pose. Nothing else is uploaded, and the dated folders build up into a record of your practice
-you can look back through.
+the references you just drew from, kept in order. 
+
+If you attach the Photoshop file you drew in, one layer per pose (each layer keeping Photoshop's default name, `Layer 1`, `Layer 2` and so on, numbered in the order of the poses; the `Background` sheet and any other layers are ignored, as is whether a layer is hidden). The app splits PSD file apart and pairs every drawing with the reference it came from, side by side, one image per pose. Nothing else is uploaded, and the dated folders build up into a record of your practice you can look back through.
 
 Because the references and the archive both live in your Drive rather than inside the app, your practice
 travels with you. The app is designed to run just as easily on an iPad or iPhone as on a laptop, so you can
