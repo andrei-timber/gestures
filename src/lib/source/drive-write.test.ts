@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   DriveWriteError,
   buildFolderSearchUrl,
-  copyReferenceImages,
+  copySessionFiles,
   createFolder,
   createSessionFolder,
   escapeQueryValue,
@@ -11,10 +11,12 @@ import {
   findOrCreateFolder,
   folderSearchQuery,
   nextDatedFolderName,
+  pairImageName,
   refImageName,
   sessionFolderName,
   uploadFile,
   writeTextFile,
+  type NumberedDrawing,
   type WriteFetch,
 } from './drive-write'
 import type { SourceImage } from './images'
@@ -199,22 +201,89 @@ describe('refImageName', () => {
   })
 })
 
-describe('copyReferenceImages', () => {
-  const img = (name: string, url: string): SourceImage => ({ name, url })
 
-  it('copies every image in order as Ref_N.<ext>, reporting the full count (concurrency 1)', async () => {
+describe('pairImageName', () => {
+  it('pads to the same width as the refs so Pair_03 sorts beside Ref_03', () => {
+    expect(pairImageName(3, 12)).toBe('Pair_03.jpg')
+    expect(pairImageName(10, 12)).toBe('Pair_10.jpg')
+    expect(pairImageName(3, 5)).toBe('Pair_3.jpg')
+  })
+})
+
+describe('copySessionFiles', () => {
+  const img = (name: string, url: string): SourceImage => ({ name, url })
+  const drawing = (number: number): NumberedDrawing => ({ number, canvas: `canvas${number}` })
+
+  /** Deps that render a pair from the two halves, so calls are inspectable. */
+  function pairDeps() {
+    return {
+      decode: vi.fn((blob: Blob) => Promise.resolve({ decoded: blob })),
+      renderPair: vi.fn((reference: unknown, d: unknown) =>
+        Promise.resolve(new Blob([`pair:${String(reference)}:${String(d)}`])),
+      ),
+    }
+  }
+
+  it('copies every reference in order as Ref_N.<ext>, reporting the full count', async () => {
     const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
     const upload = vi.fn().mockResolvedValue('id')
     const images = [img('a.jpg', 'blob:a'), img('b.png', 'blob:b')]
-    const result = await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload, concurrency: 1 })
-    expect(result).toEqual({ uploaded: 2, total: 2 })
+    const result = await copySessionFiles(images, [], 'dated', 'tok', { fetchBytes, upload, concurrency: 1 })
+    expect(result).toEqual({ refs: { uploaded: 2, total: 2 }, pairs: { uploaded: 0, total: 0 } })
     // Named Ref_1/Ref_2 (single-digit total → no pad), parented to the dated folder, with the token.
     expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Ref_2.png'])
     expect(upload.mock.calls[0].slice(1)).toEqual(['dated', expect.any(Blob), 'tok'])
     expect(fetchBytes.mock.calls.map((c) => c[0])).toEqual(['blob:a', 'blob:b'])
   })
 
-  it('names each ref by its own position regardless of pool completion order', async () => {
+  it('uploads a Pair_N beside each reference the PSD covers, from one byte read', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const deps = pairDeps()
+    const images = [img('a.jpg', 'u1'), img('b.jpg', 'u2')]
+    const result = await copySessionFiles(images, [drawing(1), drawing(2)], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+      concurrency: 1,
+      ...deps,
+    })
+    expect(result).toEqual({ refs: { uploaded: 2, total: 2 }, pairs: { uploaded: 2, total: 2 } })
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Pair_1.jpg', 'Ref_2.jpg', 'Pair_2.jpg'])
+    // One fetch per reference — attaching a PSD must not double the CDN requests.
+    expect(fetchBytes).toHaveBeenCalledTimes(2)
+    // Each pair is built from its own pose's drawing, reference first.
+    expect(deps.renderPair.mock.calls.map((c) => c[1])).toEqual(['canvas1', 'canvas2'])
+  })
+
+  it('pairs only the poses the PSD covers, leaving the other references alone', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const images = [img('a.jpg', 'u1'), img('b.jpg', 'u2'), img('c.jpg', 'u3')]
+    const result = await copySessionFiles(images, [drawing(2)], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+      concurrency: 1,
+      ...pairDeps(),
+    })
+    expect(result).toEqual({ refs: { uploaded: 3, total: 3 }, pairs: { uploaded: 1, total: 1 } })
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Ref_2.jpg', 'Pair_2.jpg', 'Ref_3.jpg'])
+  })
+
+  it('ignores a drawing whose pose the run never reached', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    // A 2-pose run with a 5-layer PSD: layers 3-5 have no reference to pair with.
+    const result = await copySessionFiles([img('a.jpg', 'u1'), img('b.jpg', 'u2')], [drawing(1), drawing(5)], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+      concurrency: 1,
+      ...pairDeps(),
+    })
+    expect(result.pairs).toEqual({ uploaded: 1, total: 1 })
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg', 'Pair_1.jpg', 'Ref_2.jpg'])
+  })
+
+  it('names each file by its own pose regardless of pool completion order', async () => {
     // b (index 2) resolves before a (index 1) — its name must still be Ref_2, not Ref_1.
     const fetchBytes = vi.fn((url: string) =>
       url === 'slow'
@@ -222,11 +291,11 @@ describe('copyReferenceImages', () => {
         : Promise.resolve(blobResponse()),
     )
     const upload = vi.fn().mockResolvedValue('id')
-    const result = await copyReferenceImages([img('a.jpg', 'slow'), img('b.png', 'fast')], 'dated', 'tok', {
+    const result = await copySessionFiles([img('a.jpg', 'slow'), img('b.png', 'fast')], [], 'dated', 'tok', {
       fetchBytes,
       upload,
     })
-    expect(result).toEqual({ uploaded: 2, total: 2 })
+    expect(result.refs).toEqual({ uploaded: 2, total: 2 })
     expect(upload.mock.calls.map((c) => c[0]).sort()).toEqual(['Ref_1.jpg', 'Ref_2.png'])
   })
 
@@ -242,47 +311,70 @@ describe('copyReferenceImages', () => {
     })
     const upload = vi.fn().mockResolvedValue('id')
     const images = Array.from({ length: 6 }, (_, i) => img(`p${i}.jpg`, `u${i}`))
-    await copyReferenceImages(images, 'dated', 'tok', { fetchBytes, upload, concurrency: 3 })
+    await copySessionFiles(images, [], 'dated', 'tok', { fetchBytes, upload, concurrency: 3 })
     expect(peak).toBe(3) // three workers overlap, not all six
   })
 
-  it('skips a throttled image (non-ok byte read) but keeps the rest', async () => {
+  it('skips a throttled reference — and its pair — but keeps the rest', async () => {
     const fetchBytes = vi
       .fn()
       .mockResolvedValueOnce(blobResponse(false, 429)) // first ref throttled
       .mockResolvedValueOnce(blobResponse())
     const upload = vi.fn().mockResolvedValue('id')
-    const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
+    const result = await copySessionFiles([img('a.jpg', 'u1'), img('b.jpg', 'u2')], [drawing(1), drawing(2)], 'dated', 'tok', {
       fetchBytes,
       upload,
       concurrency: 1,
+      ...pairDeps(),
     })
-    expect(result).toEqual({ uploaded: 1, total: 2 })
-    // Only the second image uploaded — and it keeps its own index (Ref_2), not renumbered.
-    expect(upload).toHaveBeenCalledTimes(1)
-    expect(upload.mock.calls[0][0]).toBe('Ref_2.jpg')
+    expect(result).toEqual({ refs: { uploaded: 1, total: 2 }, pairs: { uploaded: 1, total: 2 } })
+    // Only the second pose's files landed — keeping its own index, not renumbered.
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_2.jpg', 'Pair_2.jpg'])
   })
 
-  it('drops just the image whose fetch throws (CORS-opaque / blip)', async () => {
-    const fetchBytes = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('CORS'))
-      .mockResolvedValueOnce(blobResponse())
+  it('drops just the reference whose fetch throws (CORS-opaque / blip)', async () => {
+    const fetchBytes = vi.fn().mockRejectedValueOnce(new Error('CORS')).mockResolvedValueOnce(blobResponse())
     const upload = vi.fn().mockResolvedValue('id')
-    const result = await copyReferenceImages([img('a.jpg', 'u1'), img('b.jpg', 'u2')], 'dated', 'tok', {
+    const result = await copySessionFiles([img('a.jpg', 'u1'), img('b.jpg', 'u2')], [], 'dated', 'tok', {
       fetchBytes,
       upload,
       concurrency: 1,
     })
-    expect(result).toEqual({ uploaded: 1, total: 2 })
+    expect(result.refs).toEqual({ uploaded: 1, total: 2 })
+  })
+
+  it('keeps the reference copy when a pair fails to render', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValue('id')
+    const result = await copySessionFiles([img('a.jpg', 'u1')], [drawing(1)], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+      concurrency: 1,
+      decode: vi.fn().mockResolvedValue({}),
+      renderPair: vi.fn().mockRejectedValue(new Error('no 2d context')),
+    })
+    expect(result).toEqual({ refs: { uploaded: 1, total: 1 }, pairs: { uploaded: 0, total: 1 } })
+    expect(upload.mock.calls.map((c) => c[0])).toEqual(['Ref_1.jpg'])
+  })
+
+  it('keeps the reference copy when the pair upload is throttled', async () => {
+    const fetchBytes = vi.fn().mockResolvedValue(blobResponse())
+    const upload = vi.fn().mockResolvedValueOnce('id').mockRejectedValueOnce(new Error('429'))
+    const result = await copySessionFiles([img('a.jpg', 'u1')], [drawing(1)], 'dated', 'tok', {
+      fetchBytes,
+      upload,
+      concurrency: 1,
+      ...pairDeps(),
+    })
+    expect(result).toEqual({ refs: { uploaded: 1, total: 1 }, pairs: { uploaded: 0, total: 1 } })
   })
 
   it('is a no-op for an empty run', async () => {
     const fetchBytes = vi.fn()
     const upload = vi.fn()
-    expect(await copyReferenceImages([], 'dated', 'tok', { fetchBytes, upload })).toEqual({
-      uploaded: 0,
-      total: 0,
+    expect(await copySessionFiles([], [], 'dated', 'tok', { fetchBytes, upload })).toEqual({
+      refs: { uploaded: 0, total: 0 },
+      pairs: { uploaded: 0, total: 0 },
     })
     expect(fetchBytes).not.toHaveBeenCalled()
   })

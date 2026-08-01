@@ -242,7 +242,17 @@ export function refImageName(index: number, total: number, originalName: string)
   return `Ref_${String(index).padStart(width, '0')}${extensionOf(originalName)}`
 }
 
-/** The outcome of a {@link copyReferenceImages} run — how many of the run's refs landed. */
+/**
+ * Pure: the Drive filename for pose `index`'s reference↔drawing composite, padded
+ * to the same width as {@link refImageName} so `Pair_03` sorts alongside `Ref_03`.
+ * Always `.jpg` — the pair is rendered and encoded by the browser.
+ */
+export function pairImageName(index: number, total: number): string {
+  const width = String(total).length
+  return `Pair_${String(index).padStart(width, '0')}.jpg`
+}
+
+/** How many of one family of files (references, pairs) landed out of what was attempted. */
 export interface CopyResult {
   readonly uploaded: number
   readonly total: number
@@ -251,7 +261,22 @@ export interface CopyResult {
 /** How many references copy at once by default — bounded to stay under Drive's per-IP rate limit. */
 export const COPY_CONCURRENCY = 5
 
-/** Injectable deps for {@link copyReferenceImages} — so the orchestrator is node-testable. */
+/**
+ * Run `task` over `0…total-1` with at most `concurrency` in flight, resolving
+ * when every index has been attempted. Workers pull from a shared cursor, so an
+ * item's index never depends on the order the pool finishes in — that's what lets
+ * both callers name files by *position* while still uploading in parallel.
+ */
+async function runPool(total: number, concurrency: number, task: (index: number) => Promise<void>): Promise<void> {
+  let cursor = 0
+  async function worker(): Promise<void> {
+    while (cursor < total) await task(cursor++)
+  }
+  const width = Math.max(1, Math.min(concurrency, total))
+  await Promise.all(Array.from({ length: width }, worker))
+}
+
+/** Injectable deps for {@link copySessionFiles} — so the orchestrator is node-testable. */
 export interface CopyDeps {
   /** Reads an image's displayable URL back as bytes (CORS-readable: `blob:` or lh3). */
   readonly fetchBytes?: (url: string) => Promise<Response>
@@ -261,48 +286,81 @@ export interface CopyDeps {
   readonly concurrency?: number
 }
 
+/** One pose's drawing, still as pixels (mirrors `capture/psd`'s {@link DrawingImage}). */
+export interface NumberedDrawing {
+  readonly number: number
+  readonly canvas: unknown
+}
+
+/** What a {@link copySessionFiles} run wrote: the references, and the pairs built from them. */
+export interface SessionCopyResult {
+  readonly refs: CopyResult
+  readonly pairs: CopyResult
+}
+
+/** Injectable deps for {@link copySessionFiles} — so the orchestrator is node-testable. */
+export interface SessionCopyDeps extends CopyDeps {
+  /** Decodes fetched reference bytes into something drawable (browser: `createImageBitmap`). */
+  readonly decode?: (blob: Blob) => Promise<unknown>
+  /** Renders one reference↔drawing pair to a JPEG blob (browser: canvas). */
+  readonly renderPair?: (reference: unknown, drawing: unknown) => Promise<Blob>
+}
+
 /**
- * Copy the run's ordered references into `parentId` as `Ref_1…N`, fetching each
- * image's bytes from its own displayable URL (`blob:` for local picks, the
- * CORS-readable lh3 CDN for Drive — see {@link driveImageUrl}) and re-uploading
- * via multipart. Runs a **bounded pool** of `concurrency` copies at once (much
- * faster than one-at-a-time, still gentle on Drive's rate limit). **Best-effort**:
- * one image failing (a transient throttle, a CORS-opaque URL) is skipped rather
- * than aborting the rest, and each ref keeps its own index regardless of the order
- * the pool finishes in. Returns how many of `total` landed, so the caller can
- * report a partial copy honestly.
+ * Write everything a logged session leaves in `parentId`: each ordered reference
+ * as `Ref_1…N`, and — for every pose the user actually drew — the paired
+ * reference↔drawing composite as `Pair_N`. Both come out of a **single** byte
+ * read per reference, so attaching a PSD doesn't double the requests to Google's
+ * (rate-limited) image CDN.
+ *
+ * Same bounded pool and best-effort stance as before: a throttled reference skips
+ * that pose entirely (no bytes, no pair), a pair that fails to render or upload
+ * drops on its own without taking the reference copy with it, and every file keeps
+ * the index of its pose rather than of its completion order. The drawing itself is
+ * never uploaded — only the pair (owner's call 2026-08-01, spec §7).
  */
-export async function copyReferenceImages(
+export async function copySessionFiles(
   images: readonly SourceImage[],
+  drawings: readonly NumberedDrawing[],
   parentId: string,
   token: string,
-  deps: CopyDeps = {},
-): Promise<CopyResult> {
+  deps: SessionCopyDeps = {},
+): Promise<SessionCopyResult> {
   const fetchBytes = deps.fetchBytes ?? ((url: string) => globalThis.fetch(url))
   const upload = deps.upload ?? ((name, pId, blob, tok) => uploadFile(name, pId, blob, tok))
   const total = images.length
+  // Only poses that have both halves can be paired — that's the honest denominator.
+  const byPose = new Map(drawings.map((d) => [d.number, d]))
+  const pairable = drawings.filter((d) => d.number >= 1 && d.number <= total).length
   let uploaded = 0
-  let cursor = 0
+  let paired = 0
 
-  // Each worker pulls the next index until the run is exhausted; a shared cursor
-  // keeps the naming tied to position (Ref_<i+1>), never to completion order.
-  async function worker(): Promise<void> {
-    while (cursor < total) {
-      const i = cursor++
-      const image = images[i]
-      try {
-        const res = await fetchBytes(image.url)
-        if (!res.ok) continue // transient throttle (429/503) — skip, keep the rest
-        const blob = await res.blob()
-        await upload(refImageName(i + 1, total, image.name), parentId, blob, token)
-        uploaded++
-      } catch {
-        // A CORS-opaque URL or a mid-copy network blip drops just this one image.
-      }
+  await runPool(total, deps.concurrency ?? COPY_CONCURRENCY, async (i) => {
+    const image = images[i]
+    const pose = i + 1
+    let blob: Blob
+    try {
+      const res = await fetchBytes(image.url)
+      if (!res.ok) return // transient throttle (429/503) — skip, keep the rest
+      blob = await res.blob()
+      await upload(refImageName(pose, total, image.name), parentId, blob, token)
+      uploaded++
+    } catch {
+      // A CORS-opaque URL or a mid-copy network blip drops just this one pose.
+      return
     }
-  }
 
-  const width = Math.max(1, Math.min(deps.concurrency ?? COPY_CONCURRENCY, total))
-  await Promise.all(Array.from({ length: width }, worker))
-  return { uploaded, total }
+    const drawing = byPose.get(pose)
+    if (!drawing || !deps.decode || !deps.renderPair) return
+    try {
+      const reference = await deps.decode(blob)
+      const pair = await deps.renderPair(reference, drawing.canvas)
+      await upload(pairImageName(pose, total), parentId, pair, token)
+      paired++
+    } catch {
+      // An unrenderable pair leaves the reference copy standing.
+    }
+  })
+
+  return { refs: { uploaded, total }, pairs: { uploaded: paired, total: pairable } }
 }
