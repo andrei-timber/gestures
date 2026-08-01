@@ -1,6 +1,7 @@
 # Gestures App
 
 A seamless laptop / ipad / iphone friendly web app for **figure / gesture drawing practice**. 
+Basically, free mobile Cloud-based "[Line of action](https://line-of-action.com/)" with your own refs and a few automation features I personally missed.
 
 Point it at a Google Drive (or local) folder of references, set parameters, and it plays a timed slideshow of
 random poses to draw along with. Includes horizontal/vertical mirroring, grayscale/value mode, a grid overlay, and a
