@@ -26,7 +26,9 @@ Everything has a keyboard shortcut, and your settings are remembered for next ti
 
 When a session ends you can log it to your own Google Drive. It creates a dated folder with your notes and
 the references you just drew from, kept in order. If you attach the Photoshop file you drew in, one layer
-per pose, the app splits it apart and pairs every drawing with the reference it came from, side by side,
+per pose (each layer keeping Photoshop's default name, `Layer 1`, `Layer 2` and so on, numbered in the
+order of the poses; a `Background` sheet and any other layers are ignored, as is whether a layer is hidden),
+the app splits it apart and pairs every drawing with the reference it came from, side by side,
 one image per pose. Nothing else is uploaded, and the dated folders build up into a record of your practice
 you can look back through.
 
