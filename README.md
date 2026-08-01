@@ -18,12 +18,11 @@ There are two modes:
 - a quick run at one fixed interval.
 The total time is shown before you commit to it.
 
-Mid-session you can 
+Mid-session you can: 
 - mirror the ref (horizontally and vertically),
 - switch it to grayscale,
 - turn on a grid,
-- pause without losing the pose,
-- add time,
+- pause or add time without losing the pose,
 - reload the new random pose from the folder (if you don't like the current one),
 - move between poses.
 
