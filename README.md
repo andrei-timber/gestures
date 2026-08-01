@@ -3,7 +3,7 @@
 A seamless web app for **figure / gesture drawing practice**. Point it at a Google
 Drive (or local) folder of references, set parameters, and it plays a timed slideshow of
 random poses to draw along with. Includes horizontal/vertical mirroring, grayscale/value mode, a grid overlay, and a
-few other workflow settings. A later phase archives sessions to Drive with notes so practice becomes reviewable.
+few other workflow settings. Finished sessions can be archived to Drive with notes so practice becomes reviewable.
 
 Published: https://andreitim.com/apps/gestures
 
@@ -15,6 +15,24 @@ The rationale for such approach is three-fold:
 - to advance my own art practice without much overhead,
 - to share simple niche tools that I think should be free for everyone,
 - to have a sandbox and a forcing function for hands-on AI-based development explorations.
+
+## Capabilities
+
+Point the app at a folder, choose how many poses and how long, and start. There are two modes: a class run,
+where poses begin short and grow longer towards the end, and a quick run at one fixed interval. The total
+time is shown before you commit to it. Mid-session you can mirror the reference, switch it to grayscale,
+turn on a grid, pause without losing the pose, add time when one is going well, or move between poses.
+Everything has a keyboard shortcut, and your settings are remembered for next time.
+
+When a session ends you can log it to your own Google Drive. It creates a dated folder with your notes and
+the references you just drew from, kept in order. If you attach the Photoshop file you drew in, one layer
+per pose, the app splits it apart and pairs every drawing with the reference it came from, side by side,
+one image per pose. Nothing else is uploaded, and the dated folders build up into a record of your practice
+you can look back through.
+
+Because the references and the archive both live in your Drive rather than inside the app, your practice
+travels with you. The app is designed to run just as easily on an iPad or iPhone as on a laptop, so you can
+open it next to your sketchbook wherever you are and pick up the same references and past sessions.
 
 ## Stack
 
@@ -31,7 +49,7 @@ cp .env.example .env.local   # then add a Google Drive API key (see docs/deploy-
 pnpm dev                     # http://localhost:5173/apps/gestures/
 ```
 
-The Drive key is optional — local-folder and drag-and-drop sources work without it; it only powers the
+The Drive key is optional: local-folder and drag-and-drop sources work without it; it only powers the
 Drive share-link source.
 
 | Script | Does |
