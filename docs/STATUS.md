@@ -10,27 +10,26 @@ Single status surface. `/session-start` reads this; `/session-wrap` resets the "
   sign-in + **Log session** panel → `notes.txt`; ordered `Ref_1…N` copy; per-session dated folders
   (`<date>`, `<date>-2…`); parallel copy (pool of 5); per-recap capture reset. The CORS probe forced the
   **lh3 display-URL switch** (thumbnail bytes are CORS-blocked) — folded in from a5.
-- **a3 built (2026-08-01), uncommitted:** drawings now arrive as **the session `.psd`** (one layer per
-  pose) and only the **paired composite** is saved — `Pair_<n>`, reference left / drawing right, white
-  ground, 15% outer margins, seam gap 15% of the drawing's width. New `src/lib/capture/`
+- **a3 shipped, committed & live (2026-08-01)** — commits `0a5e182` (feat) + `535c3ff` (docs), pushed;
+  **deployed as Version `688d42ab`**. Drawings arrive as **the session `.psd`** (one layer per pose) and
+  only the **paired composite** is saved: `Pair_<n>`, reference left / drawing right, white ground, 15%
+  outer margins, seam gap 15% of the drawing's width. New `src/lib/capture/`
   (`psd.ts` · `composite.ts` · `report.ts`), `copyReferenceImages` → `copySessionFiles` (ref copy + pair
-  build off **one** byte read), `ag-psd` added as a lazily-imported dep. Spec §7 rewritten; two
-  `decisions.md` entries. Browser-verified against the real 57 MB PSD (11/11 layers in 1.4 s; pair
-  2800×1400, 156 KB, margins 210 px, seam gap 169 px vs 165 expected). ⏳ **owner to verify the live
-  Save** (Google popup can't be automated).
+  build off **one** byte read), `ag-psd` as a lazily-imported dep (own 282 kB chunk; main bundle stays
+  88.6 kB). Browser-verified against the real 57 MB PSD — 11/11 layers in 1.4 s, pair 2800×1400 at
+  156 KB, margins 210 px, seam gap 169 px vs 165 expected. ⏳ **owner to verify the live Save with a PSD
+  attached** (Google popup can't be automated): does `Pair_<n>` land beside `Ref_<n>`?
 - **✅ Google throttle cleared (2026-08-01, owner-confirmed live).** The 429/503s from the ~2k-image bulk
   upload were time-bound and per-IP, as diagnosed — not a code regression. lh3 display and the Drive-ref
   copy path are unblocked, so a5's remaining half (retry-with-backoff) is now verifiable.
-- **Next step:** **a4 — reconcile the Setup copy** ("Files stay in your browser — nothing is uploaded" is
-  false for opt-in capture). Then a5 (503/429 retry-with-backoff — now unblocked).
-- **Verify:** `pnpm dev` → local-folder session → finish → **Log session** → attach a session `.psd` →
-  confirm the panel reports the pairable poses → Save → sign in → confirm `Gestures Sessions/<date>/` has
-  `notes.txt` + `Ref_01…` + `Pair_01…`, and that each pair reads reference-left / drawing-right. Gate
-  green — **259 tests, typecheck (200 files), lint** (2026-08-01). **Deployed 2026-08-01** (Version
-  `688d42ab`): live bundle carries the a3 copy, `ag-psd` split into its own lazy chunk (main 88.6 kB /
-  gz 31.7; chunk 282 kB / gz 83.5, fetched only when a PSD is attached). Owner still to spot-check M1
-  polish on iPad. ⚠ Live capture needs the OAuth client's **authorized JavaScript origin** to include
-  `https://andreitim.com` — if sign-in fails there but works on localhost, that's the cause.
+- **Next step:** **a4 — reconcile the Setup copy.** "Files stay in your browser — nothing is uploaded"
+  (`src/ui/screens/Setup.svelte`) is true for reference loading but false for opt-in capture, which now
+  uploads notes, references *and* composites to the user's own Drive — distinguish the two without
+  souring the calm entry copy. Then a5 (503/429 retry-with-backoff — now unblocked).
+- **Verify:** `pnpm test && pnpm lint && pnpm typecheck` — gate green at wrap: **259 tests, typecheck
+  (200 files), lint** (2026-08-01). Browser-check a4's copy on Setup once written. Owner still to
+  spot-check M1 polish on iPad. ⚠ Live capture needs the OAuth client's **authorized JavaScript origin**
+  to include `https://andreitim.com` — if sign-in fails there but works on localhost, that's the cause.
 
 ## M2 step ledger — Capture (Tier 2 Drive write)
 Drive write behind the GIS token model (spec §3/§7/§13). **Box + Dropbox read was the original slice (b)
@@ -72,8 +71,9 @@ before build code.
       display-URL switch (`drive.google.com/thumbnail` → `lh3.googleusercontent.com/d/<id>`, more
       cache-friendly / less throttled) **shipped in a2** (the CORS probe forced it). a5's remaining half: a
       **503/429 retry-with-backoff** on image load so transient throttles self-heal into a retry instead of
-      a blank frame. ⚠ Verify only once the current throttle clears (lh3 429s now). Touches the slideshow
-      `<img>` load path (spec §3 display URL).
+      a blank frame. Unblocked — the throttle cleared 2026-08-01, so this is now insurance against the
+      *next* one rather than a fix for a live bite. Touches the slideshow `<img>` load path (spec §3
+      display URL).
 
 *(Google-Picker "Change folder…" destination = P1 fast-follow, parked — spec §7.)*
 
@@ -104,6 +104,9 @@ Discovered out-of-scope work, parked one line each: `- [ ] <what> — spawned in
 - [ ] Drive-key **quota is shared across all users** — fine for a hobby tool; if `files.list` ever strains it, add caching or a tiny Worker proxy (spec §3) — spawned M1-1 (2026-07-04)
 - [ ] `VITE_GOOGLE_OAUTH_CLIENT_ID` must be set in the Cloudflare build env (like the Drive API key) before capture works on the live deploy — update `docs/deploy-notes.md` when M2 ships — spawned a1 (2026-07-08)
 - [ ] Timing menu is now **three buttons tall** (pause/extend/refresh) — eyeball its spacing vs the mid-screen nav arrow on short viewports (phone/iPad-landscape); may need the split-rail math retuned — spawned polish batch (2026-07-06)
+- [ ] The seven older local session PSDs (`04-07`…`30-07`) **can't be backfilled into pairs** — those runs
+      predate capture, so no `Ref_*` exists in Drive for them (only `2026-07-26` and `2026-08-01` folders
+      exist). Would need the original references re-identified by hand — spawned a3 backfill (2026-08-01)
 - [ ] Composites built from a **Drive-sourced** run use the lh3 w1600 render, so the reference half is
       capped at ~1600px while the drawing half is full PSD resolution — fine at the 1400px cell, revisit
       if the pair cell ever grows — spawned a3 (2026-08-01)
