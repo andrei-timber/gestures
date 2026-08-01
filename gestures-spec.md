@@ -244,15 +244,22 @@ Frictionless and optional (drawabox 50% rule — review must not become busywork
   natural "Change folder…" affordance — but M2 ships the zero-friction app-created default first; the
   Picker is a fast-follow. (Same Picker mechanism as the P1 private-folder read, §3.)
 - ✅ **Reference copies** written as **`Ref_<number>.<jpg|png|webp>`** (original extension preserved).
-- ✅ **Drawings uploaded in-app at session end** (not a manual Drive step), named to correspond to the
-  reference numbering.
-- ✅ **Composites: individual paired images** (one per pose) — reference + drawing side-by-side, built
-  **in-browser via Canvas**: uniform cell + `contain` letterbox on a neutral mat (never crop/stretch);
-  per-pair orientation (`portrait→stack, landscape→side-by-side`); dated caption; margin for hand-drawn
-  red-lines. EXIF auto-orient phone photos via `createImageBitmap(blob,{imageOrientation:'from-image'})`.
+- ✅ **Drawings uploaded in-app at session end** as the **session `.psd`** — one layer per pose, named
+  Photoshop-default `Layer <n>`, exploded in-browser (revised 2026-08-01, was a folder of hand-named
+  JPEGs; a probe on two real session files showed PSD parsing is ~20 lines plus a lazily-imported
+  `ag-psd`, so the layered-PSD "future" item below was promoted into M2's a3). The hidden flag is
+  **ignored** — the owner leaves every layer but the last hidden — and the `Background` sheet is excluded
+  by the name pattern.
+- ✅ **Only the pair is saved, never the bare drawing** (owner's call 2026-08-01): each pose's drawing
+  goes straight into its composite, so a session folder holds `notes.txt`, `Ref_<n>`, and `Pair_<n>`.
+- ✅ **Composites: individual paired images** (one per pose) — **reference left, drawing right**, built
+  **in-browser via Canvas**: two square cells, each `contain`-fitted (never crop/stretch), on **white**.
+  **15% margin on the outer edges and top/bottom, none at the seam**; the halves align *towards* the
+  centre and are then pushed apart by a gap of **15% of the drawing's rendered width** (owner-specified
+  2026-08-01 — centring each half in its own cell left portrait pairs floating a third of the frame
+  apart). EXIF auto-orient phone photos via `createImageBitmap(blob,{imageOrientation:'from-image'})`.
   Export `canvas.toBlob(cb,'image/jpeg',0.9)` back into the session folder.
 - ⭐ **Dated timeline** of sessions (the folder structure already encodes progress) — low-effort payoff.
-- 🟡 Future: layered PSD upload for compositing (too complex now — drawings-by-name for v1).
 - ❌ **Not in v1:** overlay-alignment mode, accuracy scoring, per-drawing metadata, contact-sheet (individual
   pairs first; contact sheet可 later).
 

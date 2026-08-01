@@ -366,3 +366,37 @@ folded the "…to begin" nudge into the picker button and removed the redundant 
 the params panel to the folder-picker width via a shared `--setup-col` set on the Setup screen and
 inherited by FolderInput (custom-property cascade crosses the component boundary — no magic-number
 duplication).
+
+2026-08-01 — **M2 a3: drawings arrive as the session PSD, and only the paired composite is saved.**
+Context: the owner already draws each session into one Photoshop file, one layer per pose, and asked
+whether the layers could be exploded into per-pose images and paired with the references. A probe on the
+two real session files (`session-26-07-2026.psd`, `session-01-08-2026.psd`) settled it: `ag-psd` (MIT,
+~800 KB, lazily imported) parses a 57 MB file's structure in ms and yields a canvas per layer — 11 and 16
+layers, an exact 1:1 with the `Ref_01…N` already in Drive. So the spec's parked 🟡 "layered PSD upload —
+too complex now" was **wrong on the evidence** and got promoted into a3, replacing the planned
+folder-of-hand-named-JPEGs picker. Three findings shaped the reader: every layer but the last is
+**hidden** (working style → the flag is ignored), layer bounds are already **trimmed to the strokes**
+(→ contain-fit, no trim pass), and strokes sit on **transparency** (→ white ground, or JPEG renders them
+on black). Decided in the same session: the bare drawing is **never uploaded** — it goes straight into
+the composite, so a session folder holds `notes.txt` + `Ref_<n>` + `Pair_<n>`. That pulls M3's composite
+*render* into M2; M3 keeps the review surface and the dated timeline. Consequence: `copyReferenceImages`
+became `copySessionFiles`, doing the ref copy and the pair build from **one** byte read per reference —
+attaching a PSD must not double the requests to Google's (already throttling) image CDN. Pair geometry
+(owner-specified, iterated live): white ground, 15% margin outer + top/bottom, **none at the seam**,
+halves aligned towards the centre and pushed apart by 15% of the drawing's rendered width. Verified in
+Chrome against the real 57 MB PSD: 11/11 layers in 1.4 s, a 2800×1400 pair rendered in ~1 s at 156 KB,
+measured margins 210 px and seam gap 169 px vs 165 expected.
+
+2026-08-01 — **Backfilled the two already-logged sessions locally.** The 2026-07-26 and 2026-08-01 Drive
+folders predate a3, so their pairs were built with a throwaway Node script (`ag-psd` + `sharp`) mirroring
+the app's geometry, against refs the owner downloaded from Drive. 11 + 16 pairs written to
+`~/Art Practice/Gestures/<date> Pairs/`. Not committed — one-off, and the app now covers the path.
+Incidental: the two sessions' `Ref_*` are lh3 **w1600 renders**, not byte-copies, which is how we knew
+those runs used a Drive source rather than the local folder.
+
+2026-08-01 — **Google image-endpoint throttle cleared; the diagnosis held.** The 429/503s that blocked
+live-verify of the lh3 display switch and the Drive-ref copy since 2026-07-08 are gone (owner confirmed
+against the live site). They were what they looked like — a time-bound, per-IP rate limit earned by the
+~2k-image bulk upload, not a code regression — so no fix was warranted and none was made. a5's remaining
+half (503/429 retry-with-backoff on image load) is now verifiable; it stays worth building as insurance
+against the next throttle rather than as a fix for this one.
